@@ -1,0 +1,103 @@
+There are a couple of modifications to apply to the systemC source in order to 
+compile for cygwin, the instructions can be found at http://www.ht-lab.com/howto/sccygwin/sccygwin.html.
+
+
+I have reproduced this page hereafter (2/), my own notes follow (3/)
+
+1/ Prerequisites and notes for installation
+
+Do not forget to install g++ and make from the cygwin setup.
+
+
+
+2/ This page gives a brief overview on how to install SystemC 2.2 on Window's Cygwin (1.5.24).
+Installing Cygwin
+
+Hop over to cygwin's website and follow the installation procedure. I would recommend to do a full installation
+Installing SystemC
+
+SystemC's class library and event based simulator can be downloaded from the SystemC.org website. You need to create a login before you can download the files.
+
+I used the following procedure to install it:
+
+   1.
+      Download systemc-2.2.0.tgz and write to a suitable location
+   2.
+      Unzip the file using tar zxvf systemc-2.2.0.tgz
+   3.
+      Navigate to the systemc-2.2.0 directory
+   4.
+      Create a subdirectory as per the INSTALL file called objdir
+   5.
+      Navigate to the objdir directory
+   6. create the destination directory mkdir /usr/local/systemc-2.2
+   7.
+      Execute ../configure --prefix=/usr/local/systemc-2.2
+   8.
+      Modify the default stack size SC_DEFAULT_STACK_SIZE which you can find in <your_dir>/systemc-2.2.0/src/sysc/kernel/sc_constants.h from 0x10000 to 0x50000
+
+Line 57: const int SC_DEFAULT_STACK_SIZE   = 0x50000;
+
+   9.
+      Build systemc using make pthreads
+  10.
+      Install systemc using make install
+  11.
+      Check the installation using make pthreads_check, you might get the following error:
+
+/usr/local/systemc-2.2/include/systemc.h:175: error: `std::wctomb' has not been declared
+/usr/local/systemc-2.2/include/systemc.h:177: error: `std::wcstombs' has not been declared
+
+  12.
+      If this is the case then open /usr/local/systemc-2.2/include/systemc.h and commend out the 2 lines as shown below:
+   
+Line 175: //    using std::wctomb;
+Line 176:        using std::mbstowcs;
+Line 177: //    using std::wcstombs;
+
+  13.
+      re-run make pthreads_check and all tests should pass
+
+3/ My own notes
+
+3.1/ Building
+
++ make all the changes indicated above BEFORE configuring
+
++ configure: 
+  showed a problem with the 'missing' script -> Warning
+
++ compilation:
+  setting CXX as indicated in the INSTALL was not required
+  make was used instead of gmake
+
+3.2/ Testing
+
+After 
+  make install
+I run 
+     make check
+
+3.3/ Optimizing
+
+Because my entire simulation was too slow in my opinion, I was looking at ways to optimize systemc.
+
+Valgrind showed me that I was spending too much time in context switch so I decided to try to compile with quickthreads rather than pthreads:
+
+  make 
+
+instead of
+
+  make pthreads
+
+-> speed was multiplied by about 8!!
+  
+Then, I tried to specify that optimization should be done by changing objdir/Makefile: 
+  OPT_CXXFLAGS = -O3
+changed to
+  OPT_CXXFLAGS = -O4
+
+Then  run
+  make clean
+  make opt
+-> this did not change the output 

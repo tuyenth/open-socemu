@@ -1,0 +1,18 @@
+installation-notes.txt
+
+ Created on: 23 janv. 2009
+     Author: cionescu
+
+Installation steps:
+1/ Install cygwin with the following packages:
+   - gcc
+   - make
+   - g++
+2/ copy the libsystemc.a povided in the same directory as this notes file
+   into your standard C libraries directory (c:\cygwin\lib for example)
+
+Known problems:
+  - depending on your system configuration, you may need to indicate to your
+    project setting that the make tool to be used in the CDT make rather than 
+    the GNU make (see project properties)
+    
