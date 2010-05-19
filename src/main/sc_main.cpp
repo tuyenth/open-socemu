@@ -1,6 +1,7 @@
 #include "Top.h"
 #include "At91sam9261.h"
 #include "Mc13224v.h"
+#include "B2070.h"
 #include "ticpp.h"
 
 void usage(void)
@@ -220,6 +221,10 @@ int sc_main(int argc, char* argv[])
     else if (plateform == "mc13224v")
     {
         Mc13224v mc13224v("mc13224v", Parameters);
+    }
+    else if (plateform == "b2070")
+    {
+        B2070 b2070("b2070", Parameters);
     }
     else
     {
