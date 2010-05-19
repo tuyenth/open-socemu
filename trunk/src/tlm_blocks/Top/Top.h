@@ -26,16 +26,15 @@
 /// Top level plateform module.
 struct Top : sc_core::sc_module
 {
-    Bus<2,TOP_NUM_MEMORIES+2>*   bus;
-    Cpu*        cpu;
-    IntCtrl*    intctrl;
-    Dummy*      dummy;
-    Memory*     memory[TOP_NUM_MEMORIES];
+    Bus<2,TOP_NUM_MEMORIES+2>* bus;
+    Cpu* cpu;
+    IntCtrl* intctrl;
+    Dummy* dummy;
+    Memory* memory[TOP_NUM_MEMORIES];
 
     /** Constructor of the top level module.
-     * @param name Name of the module
-     * @param argc Argument count from the main routine.
-     * @param argv Argument list from the main routine.
+     * @param[in] name Name of the module
+     * @param[in] Parameters Parameters from the configuration file
      */
     Top(sc_core::sc_module_name name, struct Parameters& Parameters);
 };

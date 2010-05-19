@@ -63,6 +63,7 @@
 <listOptionValue builtIn="false" value="../src/tlm_blocks/At91sam9261"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/At91sam9261/Aic"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/At91sam9261/Smc"/>
+<listOptionValue builtIn="false" value="../src/tlm_blocks/B2070"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/Mc13224v"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/Mc13224v/Itc"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/Mc13224v/Crm"/>
