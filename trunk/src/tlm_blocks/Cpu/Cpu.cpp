@@ -9,12 +9,21 @@ using namespace std;
 
 uint64_t *g_numinstr;
 
-Cpu::Cpu(sc_core::sc_module_name name, std::string cpuname, bool gdbserver, bool gdbstart)
+Cpu::Cpu(sc_core::sc_module_name name, std::string &cpuname, Parameters &parameters, MSP &config)
 : bus_m_socket("bus_m_socket")
 , irq_s_socket("irq_s_socket")
 , fiq_s_socket("fiq_s_socket")
 {
     struct mmu::bus bus;
+    Parameter *gdbserver;
+
+    // sanity check
+    if (config.count("gdbserver") != 1)
+    {
+        TLM_ERR("CPU definitions found: %d", parameters.config.count("cpu"));
+        return;
+    }
+    gdbserver = config["gdbserver"];
 
     // force the default values of the BUS transaction
     bus_pl.set_streaming_width(4);
@@ -40,11 +49,11 @@ Cpu::Cpu(sc_core::sc_module_name name, std::string cpuname, bool gdbserver, bool
 
     if (cpuname == "ARM926EJ-S")
     {
-        this->m_arm = new arm926ejs(&bus, gdbserver, gdbstart);
+        this->m_arm = new arm926ejs(&bus, gdbserver->get_bool(), parameters.gdb_wait.get_bool());
     }
     else if (cpuname == "ARM7TDMI")
     {
-        this->m_arm = new arm7tdmi(&bus, gdbserver, gdbstart);
+        this->m_arm = new arm7tdmi(&bus, gdbserver->get_bool(), parameters.gdb_wait.get_bool());
     }
     else
     {

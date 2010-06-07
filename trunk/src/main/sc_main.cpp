@@ -1,235 +1,280 @@
+#include <vector>
+
 #include "Top.h"
 #include "At91sam9261.h"
 #include "Mc13224v.h"
 #include "B2070.h"
-#include "ticpp.h"
 
 void usage(void)
 {
     printf("\n"
             "Synopsis:\n"
-            "    tlm_arm_nx [-d] (configfile)\n\n"
+            "    open-socemu [-d] (configfile)\n\n"
             "Parameters:\n"
             "    - -d : indicates that the connection to the debugger should\n"
             "        be polled on before starting the execution\n\n"
             "    - configfile : XML file containing the configuration of the\n"
-            "        plateform.\n\n"
-            "Config file description:\n"
-            "    - element 'plateform':\n"
-            "        + attribute 'name':\n"
-            "            * example : plain ARM7TDMI with SRAM memory at address 0\n"
-            "            * ref : reference plateform (at91sam9261) and 11nX model\n"
-            "            * TBD\n"
-            "        + attribute 'debug':\n"
-            "            * 1 | true: indicates that the ISS must support debugger connection\n"
-            "            * 0 | false: does not support debugger connection (faster execution)\n"
-            "    - element 'elf':\n"
-            "        + attribute 'name': path to the ELF file\n"
-            "    - element 'rom':\n"
-            "        + attribute 'name': path to the ROM binary content file\n"
-            "    - element 'flash':\n"
-            "        + attribute 'name': path to the FLASH binary content file\n"
-            "        + attribute 'preloaded':\n"
-            "            * 1 | true: FLASH content is preloaded in RAM\n"
-            "            * 0 | false: FLASH content is not preloaded in RAM");
+            "        plateform.\n\n");
 
+}
+
+void recurse_parameters(int level, MSP *children)
+{
+    for (MSP::const_iterator i = children->begin(); i != children->end(); ++i)
+    {
+        printf("  - ");
+        for (int j = 0; j < level; j++)
+            printf("    ");
+        printf("%s = %s\n", (*i).first.c_str(), (*i).second->c_str());
+        // all the equivalent for the sub parameters
+        recurse_parameters(level+1, (*i).second->get_config());
+    }
 }
 
 /// Main SystemC entry point to our environment
 int sc_main(int argc, char* argv[])
 {
-    struct Parameters Parameters;
-    char* configfile = NULL;
-    std::string configpath, plateform, elffile, romfile, flashfile;
-    uint8_t i;
+    MSP *scope;
+    Parameters parameters;
+    Parameter *parameter;
+    char *configfile, *opt, *buf;
+    char line[4096];
+    std::vector<MSP*> stack;
+    int i;
+    FILE* fp;
     size_t pos;
+    int indentation, linenum;
 
     // initialize the parameters
-    Parameters.gdb_enabled = false;
-    Parameters.gdb_wait = false;
-    Parameters.elffile = NULL;
-    Parameters.romfile = NULL;
-    Parameters.flashfile = NULL;
-    Parameters.flash_preloaded = false;
+    parameters.gdb_wait.set_string("FALSE");
 
+    // initialize the configuration file
+    configfile = NULL;
 
-    // checks arguments number
-    if ((argc < 2) || (argc > 3))
+    for (i = 1; i < argc; i++)
     {
-        usage();
-        return -1;
-    }
-
-    for (i=1; i<argc; i++)
-    {
-        if (!memcmp(argv[i], "-d", 2))
+        // retrieve the current option
+        opt = argv[i];
+        if (opt[0] != '-')
         {
-            Parameters.gdb_wait = true;
-            Parameters.gdb_enabled = true;
+            // check if another configuration file was not specified
+            if (configfile != NULL)
+            {
+                usage();
+                printf("\nERROR: configuration file (%s) already provided, (%s) is extra\n", configfile, opt);
+                return -1;
+            }
+            configfile = opt;
         }
         else
         {
-            configfile = argv[i];
+            // handle - and -- the same way
+            if (opt[1] == '-')
+                opt++;
+
+            switch (opt[1])
+            {
+            case 'd':
+                parameters.gdb_wait.set_string("TRUE");
+                break;
+            default:
+                usage();
+                printf("\nERROR: unsupported parameter (%s)\n", opt);
+                return -1;
+                break;
+            }
+
         }
     }
 
     // check that at least a configuration file was provided
     if (configfile == NULL)
     {
-        printf("ERROR: configuration file not provided\n");
+        usage();
+        printf("\nERROR: configuration file not provided\n");
         return -1;
     }
+
+    // save the configfile in the parameters structure
+    parameters.configfile.assign(configfile);
 
     // extract the path from the configuration file
-    configpath.assign(configfile);
+    parameters.configpath.assign(configfile);
+
     // find the last occurrence of / or \ in the string
-    pos = ((int)configpath.rfind('/') > (int)configpath.rfind('\\'))?configpath.rfind('/'):configpath.rfind('\\');
-//    printf("%d,%d => %d", configpath.rfind('/'),configpath.rfind('\\'), pos);
+    pos = (parameters.configpath.rfind('/') > parameters.configpath.rfind('\\'))?
+            parameters.configpath.rfind('/'):parameters.configpath.rfind('\\');
     if (pos != std::string::npos)
-        configpath.erase(pos+1);
+        parameters.configpath.erase(pos+1);
     else
-        configpath.clear();
+        parameters.configpath.clear();
 
-    try
+    // reset the current indentation
+    indentation = linenum = 0;
+    // reset the current scope
+    scope = &parameters.config;
+    // reset the current parameter
+    parameter = NULL;
+
+    // open the configuration file
+    fp = fopen(parameters.configfile.c_str(), "r");
+
+    // read line by line
+    while (fgets(line, 4096, fp) != NULL)
     {
-        ticpp::Document xmldoc(configfile);
-        xmldoc.LoadFile();
+        int diff;
 
-        ticpp::Iterator< ticpp::Element > element;
+        // increment the line number
+        linenum++;
 
-
-        for ( element = element.begin( &xmldoc ); element != element.end(); element++ )
+        // sanity check (line length)
+        if (strlen(line) > 4000)
         {
-            if (element->Value() == "plateform")
+            printf("\nERROR: in configuration file, line %d, too close to maximum line length\n", linenum);
+            return -1;
+        }
+
+        // sanity check (tabs are not supported)
+        buf = line;
+        while (*buf != '\0')
+        {
+            if (*buf == '\t')
             {
-                ticpp::Iterator< ticpp::Attribute > attribute;
-                for ( attribute = attribute.begin( &*element ); attribute != attribute.end(); attribute++ )
-                {
-                    if (attribute->Name() == "name")
-                    {
-                        plateform = attribute->Value();
-                    }
-                    else if ((attribute->Name() == "debug") && !Parameters.gdb_wait)
-                    {
-                        if ((attribute->Value() == "0") || (attribute->Value() == "false"))
-                        {
-                            Parameters.gdb_enabled = false;
-                        }
-                        else if ((attribute->Value() == "1") || (attribute->Value() == "true"))
-                        {
-                            Parameters.gdb_enabled = true;
-                        }
-                        else
-                        {
-                            printf("ERROR: unsupported value (%s) in XML %s.%s\n",
-                                    attribute->Value().c_str(), element->Value().c_str(),
-                                    attribute->Name().c_str());
-                            return -1;
-                        }
-                    }
-                }
+                printf("\nERROR: in configuration file, line %d, tabs not supported in configuration file\n", linenum);
+                return -1;
             }
-            else if (element->Value() == "elf")
+            buf++;
+        }
+
+        // remove the newline char
+        buf = line;
+        while ((*buf != '\r') && (*buf != '\n')) buf++;
+        *buf = '\0';
+
+        // count the leading spaces
+        buf = line;
+        while (*buf == ' ') buf++;
+
+        // check if this was an empty line or a comment
+        if ((*buf == '\0') || (*buf == '#')) continue;
+
+        // compute the difference to the last indentation
+        diff = buf - line - indentation;
+
+        // save the new indentation value
+        indentation = buf - line;
+
+        // debug
+        //printf("line:\n%s\ndiff=%d\n", line, diff);
+
+        // if there is no indentation difference with the previous
+        if (diff == 0)
+        {
+        }
+        else if (diff == 4)
+        {
+            // single indentation
+
+            // sanity check: there is already a parameter created
+            if (parameter == NULL)
             {
-                ticpp::Iterator< ticpp::Attribute > attribute("name");
-                for ( attribute = attribute.begin( &*element ); attribute != attribute.end(); attribute++ )
-                {
-                    elffile = attribute->Value();
-                    // prepend with the configuration file path if not absolute path
-                    if (elffile[0] != '/' && elffile[0] != '\\' &&
-                        elffile[1] != ':')
-                        elffile.insert(0, configpath);
-                    Parameters.elffile = elffile.c_str();
-                }
+                printf("\nERROR: in configuration file, line %d, indentation without preceding parameter definition\n", linenum);
+                return -1;
             }
-            else if (element->Value() == "rom")
+
+            // push the current scope onto the stack
+            stack.push_back(scope);
+
+            // retrieve the new scope
+            scope = parameter->get_config();
+        }
+        else if (diff < 0)
+        {
+            // sanity check: should be a multiple of 4
+            if (diff & 3)
             {
-                ticpp::Iterator< ticpp::Attribute > attribute("name");
-                for ( attribute = attribute.begin( &*element ); attribute != attribute.end(); attribute++ )
-                {
-                    romfile = attribute->Value();
-                    if (romfile[0] != '/' && romfile[0] != '\\' &&
-                        romfile[1] != ':')
-                        romfile.insert(0, configpath);
-                    Parameters.romfile = romfile.c_str();
-                }
+                printf("\nERROR: in configuration file, line %d, line indentation is not multiple of 4\n", linenum);
+                return -1;
             }
-            else if (element->Value() == "flash")
+
+            // pop the scope
+            for (; diff != 0; diff += 4)
             {
-                ticpp::Iterator< ticpp::Attribute > attribute;
-                for ( attribute = attribute.begin( &*element ); attribute != attribute.end(); attribute++ )
-                {
-                    if (attribute->Name() == "name")
-                    {
-                        flashfile = attribute->Value();
-                        if (flashfile[0] != '/' && flashfile[0] != '\\' &&
-                            flashfile[1] != ':')
-                            flashfile.insert(0, configpath);
-                        Parameters.flashfile = flashfile.c_str();
-                    }
-                    else if (attribute->Name() == "preloaded")
-                    {
-                        if ((attribute->Value() == "0") || (attribute->Value() == "false"))
-                        {
-                            Parameters.flash_preloaded = false;
-                        }
-                        else if ((attribute->Value() == "1") || (attribute->Value() == "true"))
-                        {
-                            Parameters.flash_preloaded = true;
-                        }
-                        else
-                        {
-                            printf("ERROR: unsupported value (%s) in XML %s.%s\n",
-                                    attribute->Value().c_str(), element->Value().c_str(),
-                                    attribute->Name().c_str());
-                        }
-                    }
-                }
+                // retrieve the last element
+                scope = stack.back();
+                // pop the last element
+                stack.pop_back();
             }
         }
-    }
-    catch( ticpp::Exception& ex )
-    {
-        std::cout << ex.what();
-        exit(-1);
-    }
+        else
+        {
+            printf("\nERROR: in configuration file, line %d, unsupported configuration line indentation\n", linenum);
+            return -1;
+        }
 
-    if (plateform == "")
+        char *value = buf;
+
+        // look for the next space char and at the same time convert parameter name to lowercase
+        while ((*value != '\0') && (*value != ' '))
+        {
+            *value = tolower(*value);
+            value++;
+        }
+
+        // check if there is at least a value string
+        if (*value == '\0')
+        {
+            printf("\nERROR: in configuration file, line %d, line format not correct\n", linenum);
+            return -1;
+        }
+
+        // end the string of the name of the parameter
+        *value = '\0';
+        value++;
+
+        // debug
+        //fprintf(stderr, "parameter (%s) = (%s)\n", buf, value);
+
+        // create a new parameter
+        parameter = new Parameter(value);
+
+        // append the parameter to the current scope list
+        (*scope)[buf] = parameter;
+    }
+    // close the file
+    fclose(fp);
+
+
+    printf("  - Config file path %s\n", parameters.configpath.c_str());
+    printf("  - Config file name %s\n", parameters.configfile.c_str());
+    printf("  - GDB wait at start %s\n", parameters.gdb_wait.c_str());
+    recurse_parameters(0, &parameters.config);
+
+    // check if there is a platform defined
+    if (parameters.config.count("platform") != 1)
     {
-        printf("ERROR: configuration file does not contain plateform type\n");
+        printf("\nERROR: platform definition not found in configuration file\n");
         return -1;
     }
+    parameter = parameters.config["platform"];
 
-    printf("  - Config file name %s\n", configfile);
-    printf("  - Config file path %s (%d)\n", configpath.c_str(), pos);
-    printf("  - Plateform name %s\n", plateform.c_str());
-    printf("  - GDB server %s\n", Parameters.gdb_enabled?"ON":"OFF");
-    printf("  - GDB wait at start %s\n", Parameters.gdb_wait?"ON":"OFF");
-    if (Parameters.elffile != NULL)
-        printf("  - ELF file name %s\n", Parameters.elffile);
-    if (Parameters.romfile != NULL)
-        printf("  - ROM file name %s\n", Parameters.romfile);
-    if (Parameters.flashfile != NULL)
-        printf("  - FLASH file name %s\n", Parameters.flashfile);
-
-
-    // check if it is an AT91SAM9261 plateform that is requested
-    if (plateform == "ref")
+    // check if it is an AT91SAM9261 platform that is requested
+    if (*parameter->get_string() == "at91sam9261")
     {
-        At91sam9261 at91sam9261("at91sam9261", Parameters);
+        At91sam9261 at91sam9261("at91sam9261", parameters, *parameter->get_config());
     }
-    else if (plateform == "mc13224v")
+    else if (*parameter->get_string() == "mc13224v")
     {
-        Mc13224v mc13224v("mc13224v", Parameters);
+        Mc13224v mc13224v("mc13224v", parameters, *parameter->get_config());
     }
-    else if (plateform == "b2070")
+    else if (*parameter->get_string() == "b2070")
     {
-        B2070 b2070("b2070", Parameters);
+        B2070 b2070("b2070", parameters, *parameter->get_config());
     }
     else
     {
         // create the Top level system
-        Top top("top", Parameters);
+        Top top("top", parameters, *parameter->get_config());
     }
 
     sc_core::sc_start();

@@ -6,18 +6,31 @@
 #define SRAM_BASE_ADDR (0x00000000)
 #define SRAM_SIZE (0x28000)
 
-At91sam9261::At91sam9261(sc_core::sc_module_name name, struct Parameters& Parameters)
+At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
 {
     uint8_t slave_id = 0;
+    Parameter *cpu_parameter;
+    MSP *cpu_config;
+    Parameter *elffile;
+    std::string elffilepath;
+
+    // sanity check: check parameters
+    if (config.count("cpu") != 1)
+    {
+        TLM_ERR("CPU definitions found: %d", parameters.config.count("cpu"));
+        return;
+    }
+    cpu_parameter = config["cpu"];
+    cpu_config = cpu_parameter->get_config();
 
     // create the address decoder instance
     this->addrdec = new AddrDec<4> ("addrdec");
 
-    // ARM926EJ-S CPU:
+    // CPU:
     //   - create instance
-    this->cpu = new Cpu("cpu", "ARM926EJ-S", Parameters.gdb_enabled, Parameters.gdb_wait);
+    this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     //   - bind interfaces
-    this->cpu->bus_m_socket.bind( this->addrdec->bus_s_socket );
+    this->cpu->bus_m_socket.bind(this->addrdec->bus_s_socket);
 
     // SRAM:
     //   - create instance
@@ -33,7 +46,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, struct Parameters& Parame
     //   - set range
     if (this->addrdec->set_range(slave_id, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
     {
-        printf("SRAM address range wrong\n");
+        TLM_ERR("SRAM address range wrong %d", 0);
         return;
     }
     //   - bind interfaces
@@ -47,17 +60,17 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, struct Parameters& Parame
     //   - set range (registers map)
     if (this->addrdec->set_range(slave_id, REG_SMC_BASE_ADDR, REG_SMC_BASE_ADDR+(REG_SMC_COUNT*4)))
     {
-        printf("SMC registers address range wrong\n");
+        TLM_ERR("SMC registers address range wrong %d", 0);
         return;
     }
     //   - bind interfaces
-    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind( this->smc->reg_s_socket );
+    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind(this->smc->reg_s_socket);
     //   - increment the address decoder slave id
     slave_id++;
     //   - set range (memory map)
     if (this->addrdec->set_range(slave_id, 0x10000000, 0x90000000))
     {
-        printf("SMC memory address range wrong\n");
+        TLM_ERR("SMC memory address range wrong %d", 0);
         return;
     }
     //   - bind interfaces
@@ -71,11 +84,11 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, struct Parameters& Parame
     //   - set range
     if (this->addrdec->set_range(slave_id, REG_AIC_BASE_ADDR, REG_AIC_BASE_ADDR+(REG_AIC_COUNT*4)))
     {
-        printf("AIC address range wrong\n");
+        TLM_ERR("AIC address range wrong %d", 0);
         return;
     }
     //   - bind interfaces
-    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind( this->aic->reg_s_socket );
+    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind(this->aic->reg_s_socket);
     this->aic->irq_m_socket.bind(this->cpu->irq_s_socket);
     this->aic->fiq_m_socket.bind(this->cpu->fiq_s_socket);
     //     + by default, hook all the interrupt sources to dummies
@@ -94,12 +107,20 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, struct Parameters& Parame
     //   - increment the address decoder slave id
     slave_id++;
 
+    // check if there is an elf file defined
+    if (cpu_config->count("elffile") != 1)
+    {
+        TLM_ERR("elffile definitions found: %d", cpu_config->count("elffile"));
+    }
+
+    elffile = (*cpu_config)["elffile"];
+    elffilepath = parameters.configpath + *elffile->get_string();
 
     // create an instance of ElfReader
     CElfReader ElfReader;
 
     // open the ELF file
-    ElfReader.Open(Parameters.elffile);
+    ElfReader.Open(elffilepath.c_str());
 
     // use a Segment pointer
     CSegment* Segment;
@@ -117,7 +138,8 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, struct Parameters& Parame
         }
         else
         {
-            SC_REPORT_FATAL("TLM-2", "ELF file can not be loaded");
+            TLM_ERR("ELF file (%s), loadable segment (@=0x%08X, size=%d) goes beyond memory", elffilepath.c_str(),
+                    Segment->Address(), Segment->Size());
         }
     }
 

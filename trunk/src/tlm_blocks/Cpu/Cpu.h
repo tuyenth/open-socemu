@@ -7,6 +7,9 @@
 // obvious inclusion
 #include "systemc"
 
+// command line parameters
+#include "Parameters.h"
+
 // not so obvious inclusions
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
@@ -51,10 +54,10 @@ struct Cpu : sc_core::sc_module
     /** Cpu constructor
      * @param[in] name Name of the module
      * @param[in] cpuname Specifies the CPU core to use
-     * @param[in] gdbserver Specifies if the GDB remote connection must be supported
-     * @param[in] gdbstart Specifies if ISS must wait for GDB remote connection before starting
+     * @param[in] parameters Command line parameters
+     * @param[in] config Parameters of the current block (and sub-blocks)
      */
-    Cpu(sc_core::sc_module_name name, std::string cpuname, bool gdbserver, bool gdbstart);
+    Cpu(sc_core::sc_module_name name, std::string &cpuname, Parameters &parameters, MSP &config);
 
     /// Main module thread
     void
