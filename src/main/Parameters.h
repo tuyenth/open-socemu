@@ -1,14 +1,130 @@
 #ifndef PARAMETERS_H_
 #define PARAMETERS_H_
 
-struct Parameters
+#include <string>
+#include <map>
+
+// forward declaration
+class Parameter;
+
+typedef std::map<std::string, Parameter*> MSP;
+
+/// Parameter definition
+class Parameter
 {
-    bool gdb_enabled;
-    bool gdb_wait;
-    const char* elffile;
-    const char* romfile;
-    const char* flashfile;
-    bool flash_preloaded;
+public:
+    Parameter()
+    {
+        this->value = "";
+        this->lowercase = "";
+    }
+    /**
+     * Constructor of the parameter
+     * @param[in] value Content of the parameter
+     */
+    Parameter(const std::string &value) : value(value), lowercase(value)
+    {
+        // change to lowercase
+        for (size_t i = 0; i < this->lowercase.length(); i++)
+        {
+            this->lowercase[i] = tolower(this->lowercase[i]);
+        }
+    }
+
+    /**
+     * @param[in] str The new parameter value
+     */
+    void set_string(const std::string &value)
+    {
+        this->value = value;
+    }
+
+    /**
+     * @return The pointer to the string containing the parameter content
+     */
+    std::string *get_string()
+    {
+        return &this->value;
+    }
+
+    /**
+     * @return The C string pointer of the parameter content
+     */
+    const char *c_str()
+    {
+        return this->value.c_str();
+    }
+
+    /**
+     * @return A pointer to a lowercase copy of the parameter content
+     */
+    std::string *get_lowercase()
+    {
+        return &this->lowercase;
+    }
+
+    /**
+     * @return The boolean value of the parameter content
+     */
+    bool get_bool()
+    {
+        int foo;
+
+        // check for known words
+        if ((this->lowercase == "true") || (this->lowercase == "on"))
+            return true;
+
+        // try to read an integer
+        foo = this->get_int();
+        if (foo == 1)
+            return true;
+        return false;
+    }
+
+    /**
+     * @return The integer value of the parameter content, if not parsable, value returned is -1
+     */
+    int get_int()
+    {
+        int foo;
+
+        // scan the string for an integer value
+        if (sscanf(this->value.c_str(), "%d", &foo) != 1)
+            return -1;
+
+        return foo;
+    }
+
+    /**
+     * @return The pointer to the sub-parameters of the current parameter
+     */
+    MSP *get_config()
+    {
+        return &this->config;
+    }
+
+private:
+    /// Value of the parameter
+    std::string value;
+    /// Lowercase value of the parameter
+    std::string lowercase;
+    /// Sub-parameters list
+    MSP config;
+};
+
+/// Structure containing command line parameters
+class Parameters
+{
+public:
+    /// Name of the configuration as passed at the command line
+    std::string configfile;
+    /// Path to the configuration file, extracted from the command line
+    std::string configpath;
+    /// Command line parameter indicating that the debug interface should wait at init
+    Parameter gdb_wait;
+
+    /// Parameters parsed from configuration file
+    MSP config;
 };
 
 #endif /*PARAMETERS_H_*/

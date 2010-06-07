@@ -53,11 +53,12 @@ struct Mc13224v : sc_core::sc_module
     // Not necessary if this module does not have a thread
     //SC_HAS_PROCESS(Mc13224v);
 
-    /** Constructor of the top level module
-     * @param name Name of the module
-     * @param Parameters Parsed parameters from the command line and/or input files
+    /** Constructor of the module
+     * @param[in] name Name of the module
+     * @param[in] parameters Command line parameters
+     * @param[in] config Parameters of the current block (and sub-blocks)
      */
-    Mc13224v(sc_core::sc_module_name name, struct Parameters& Parameters);
+    Mc13224v(sc_core::sc_module_name name, Parameters &parameters, MSP &config);
 };
 
 #endif /*MC13224V_H_*/

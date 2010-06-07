@@ -11,17 +11,28 @@ const struct {
 
 
 
-Top::Top(sc_core::sc_module_name name, struct Parameters& Parameters)
+Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
 {
     uint8_t i;
-    CElfReader ElfReader;
-    CSegment* Segment;
+    Parameter *cpu_parameter;
+    MSP *cpu_config;
+    Parameter *elffile;
+    std::string elffilepath;
+
+    // sanity check: check parameters
+    if (config.count("cpu") != 1)
+    {
+        TLM_ERR("CPU definitions found: %d", parameters.config.count("cpu"));
+        return;
+    }
+    cpu_parameter = config["cpu"];
+    cpu_config = cpu_parameter->get_config();
 
     // create the BUS instance
     bus = new Bus<2,TOP_NUM_MEMORIES+2> ("bus");
 
     // create the CPU instance
-    cpu = new Cpu("cpu", "ARM7TDMI", Parameters.gdb_enabled, Parameters.gdb_wait);
+    cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     // bind the CPU socket to the first targ socket of the BUS
     cpu->bus_m_socket.bind( *(bus->targ_socket[0]) );
 
@@ -69,8 +80,23 @@ Top::Top(sc_core::sc_module_name name, struct Parameters& Parameters)
         return;
     }
 
+    // check if there is an elf file defined
+    if (cpu_config->count("elffile") != 1)
+    {
+        TLM_ERR("elffile definitions found: %d", cpu_config->count("elffile"));
+    }
+
+    elffile = (*cpu_config)["elffile"];
+    elffilepath = parameters.configpath + *elffile->get_string();
+
+    // create an instance of ElfReader
+    CElfReader ElfReader;
+
     // open the ELF file
-    ElfReader.Open(Parameters.elffile);
+    ElfReader.Open(elffilepath.c_str());
+
+    // use a Segment pointer
+    CSegment* Segment;
 
     // loop on all the segments and copy the loadables in memory
     while ((Segment = ElfReader.GetNextSegment()) != NULL)
@@ -88,7 +114,8 @@ Top::Top(sc_core::sc_module_name name, struct Parameters& Parameters)
         // check if memory was found
         if (i >= sizeof(Memories)/sizeof(Memories[0]))
         {
-            SC_REPORT_FATAL("TLM-2", "ELF file can not be loaded");
+            TLM_ERR("ELF file (%s), loadable segment (@=0x%08X, size=%d) goes beyond memory", elffilepath.c_str(),
+                    Segment->Address(), Segment->Size());
         }
     }
 

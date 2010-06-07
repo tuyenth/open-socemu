@@ -20,7 +20,7 @@
 // necessary for dummies
 #include "tlm_utils/simple_initiator_socket.h"
 
-/// At91sam9261 level plateform module.
+/// At91sam9261 level platform module.
 struct At91sam9261 : sc_core::sc_module
 {
     /// Address decoder
@@ -37,11 +37,12 @@ struct At91sam9261 : sc_core::sc_module
     // Not necessary if this module does not have a thread
     //SC_HAS_PROCESS(At91sam9261);
 
-    /** Constructor of the top level module
-     * @param name Name of the module
-     * @param Parameters Parsed parameters from the command line and/or input files
+    /** Constructor of the module
+     * @param[in] name Name of the module
+     * @param[in] parameters Command line parameters
+     * @param[in] config Parameters of the current block (and sub-blocks)
      */
-    At91sam9261(sc_core::sc_module_name name, struct Parameters& Parameters);
+    At91sam9261(sc_core::sc_module_name name, Parameters &parameters, MSP &config);
 };
 
 #endif /*AT91SAM9261_H_*/

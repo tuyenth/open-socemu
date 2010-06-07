@@ -17,41 +17,55 @@
 #define REG_UART1_BASE_ADDR 0x80005000
 #define REG_UART2_BASE_ADDR 0x8000B000
 
-Mc13224v::Mc13224v(sc_core::sc_module_name name, struct Parameters& Parameters)
+Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
 {
+    Parameter *cpu_parameter, *romfile, *flashfile, *srampreloadedwithflash;
+    MSP *cpu_config;
+    uint32_t *romdata, *sramdata, *flashdata;
+
+    // sanity check
+    if (config.count("cpu") != 1)
+    {
+        TLM_ERR("CPU definitions found: %d", parameters.config.count("cpu"));
+        return;
+    }
+    if (config.count("romfile") != 1)
+    {
+        TLM_ERR("ROMFILE definitions found: %d\n", parameters.config.count("romfile"));
+        return;
+    }
+    if (config.count("flashfile") != 1)
+    {
+        TLM_ERR("FLASHFILE definitions found: %d", parameters.config.count("flashfile"));
+        return;
+    }
+    if (config.count("srampreloadedwithflash") != 1)
+    {
+        TLM_ERR("SRAMPRELOADEDWITHFLASH definitions found: %d", parameters.config.count("srampreloadedwithflash"));
+        return;
+    }
+    cpu_parameter = config["cpu"];
+    romfile = config["romfile"];
+    flashfile = config["flashfile"];
+    srampreloadedwithflash = config["srampreloadedwithflash"];
+    cpu_config = cpu_parameter->get_config();
+
     // create the address decoder instance
     this->addrdec = new AddrDec<9> ("addrdec");
 
     // ARM7TDMI CPU:
     //   - create instance
-    this->cpu = new Cpu("cpu", "ARM7TDMI", Parameters.gdb_enabled, Parameters.gdb_wait);
+    this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     //   - bind interfaces (CPU access to address decoder)
     this->cpu->bus_m_socket.bind( this->addrdec->bus_s_socket );
 
     // ROM:
     //   - create instance
-    {
-        uint32_t* data;
-        int fd;
-
-        // allocate the memory needed
-        data = (uint32_t*)malloc(ROM_SIZE);
-
-        // open the ROM file specified
-        fd = open(Parameters.romfile, O_RDONLY);
-        if (fd == -1)
-        {
-            TLM_ERR("ROM file (%s) could not be read\n", Parameters.romfile);
-        }
-
-        read(fd, data, ROM_SIZE);
-
-        close(fd);
-
-        // create the memory
-        this->rom = new Memory("rom", data, ROM_SIZE);
-    }
-    //   - bind interface (rom is hooked to the address decoder)
+    //       * allocate the memory needed
+    romdata = (uint32_t*)malloc(ROM_SIZE);
+    //       * create the memory
+    this->rom = new Memory("rom", romdata, ROM_SIZE);
+    //   - bind interface (ROM is hooked to the address decoder)
     if (this->addrdec->bind(&this->rom->socket, ROM_BASE_ADDR, ROM_BASE_ADDR+ROM_SIZE))
     {
         TLM_ERR("ROM address range wrong %d", 0);
@@ -60,15 +74,10 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, struct Parameters& Parameters)
 
     // SRAM:
     //   - create instance
-    {
-        uint32_t* data;
-
-        // allocate the memory needed
-        data = (uint32_t*)malloc(SRAM_SIZE);
-
-        // create the memory
-        this->sram = new Memory("sram", data, SRAM_SIZE);
-    }
+    //       * allocate the memory needed
+    sramdata = (uint32_t*)malloc(SRAM_SIZE);
+    //       * create the memory
+    this->sram = new Memory("sram", sramdata, SRAM_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
     if (this->addrdec->bind(&this->sram->socket, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
     {
@@ -107,36 +116,10 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, struct Parameters& Parameters)
 
     // SPIF:
     //   - create instance
-    {
-        uint8_t* data;
-        int fd;
-
-        // allocate the memory needed
-        data = (uint8_t*)malloc(FLASH_SIZE);
-
-        // open the FLASH file specified
-        fd = open(Parameters.flashfile, O_RDONLY);
-        if (fd == -1)
-        {
-            TLM_ERR("FLASH file (%s) could not be read\n", Parameters.flashfile);
-        }
-
-        // load the FLASH content into the model
-        read(fd, data, FLASH_SIZE);
-
-        // if the SRAM was preloaded with the FLASH
-        if (Parameters.flash_preloaded)
-        {
-            memcpy(this->sram->m_data, &(data[8]), U32(data[4]));
-
-            // initialize the CRM
-            this->crm->m_reg[STATUS_INDEX] = 3;
-        }
-
-        close(fd);
-
-        this->spif = new Spif("spif", data, FLASH_SIZE);
-    }
+    //       * allocate the memory needed
+    flashdata = (uint32_t*)malloc(FLASH_SIZE);
+    //       * create the flash controller
+    this->spif = new Spif("spif", (uint8_t*)flashdata, FLASH_SIZE);
     //   - bind interfaces
     //      -> address decoder
     if (this->addrdec->bind(&this->spif->reg_s_socket, REG_SPIF_BASE_ADDR,
@@ -217,44 +200,39 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, struct Parameters& Parameters)
         }
     }
 
-#if 0
-    // create an instance of ElfReader
-    CElfReader ElfReader;
-
-    // open the ELF file
-    ElfReader.Open(Parameters.elffile);
-
-    // use a Segment pointer
-    CSegment* Segment;
-
-    // loop on all the segments and copy the loadables in memory
-    while ((Segment = ElfReader.GetNextSegment()) != NULL)
     {
-        // check if the segment is mapped to the sram
-        if ((Segment->Address() >= SRAM_BASE_ADDR) &&
-            ((Segment->Address()+Segment->Size()) <= (SRAM_SIZE)))
+        int fd;
+        // open the ROM file specified
+        fd = open(romfile->c_str(), O_RDONLY);
+        if (fd == -1)
         {
-            // then load the segment in the sram
-            memcpy(&sram->m_data[Segment->Address()-SRAM_BASE_ADDR], Segment->Data(), Segment->Size());
-            break;
+            TLM_ERR("ROM file (%s) could not be read\n", romfile->c_str());
         }
-        else
-        {
-            SC_REPORT_FATAL("TLM-2", "ELF file can not be loaded");
-        }
-    }
-#endif
+        read(fd, romdata, ROM_SIZE);
+        close(fd);
 
-#if 0
-    // create a trace file
-    sc_trace_file* Tf;
-    Tf = sc_create_vcd_trace_file("traces");
-    sc_trace(Tf, this->cpu->m_currentaddr, "CPUADDR");
-    sc_trace(Tf, this->cpu->m_currentdata, "CPUDATA");
-    sc_trace(Tf, this->cpu->m_currentrw, "CPURW");
-    sc_trace(Tf, this->cpu->m_currentirq, "CPUIRQ");
-    sc_trace(Tf, this->cpu->m_currentfiq, "CPUFIQ");
-#endif
+        // open the FLASH file specified
+        fd = open(flashfile->c_str(), O_RDONLY);
+        if (fd == -1)
+        {
+            TLM_ERR("FLASH file (%s) could not be read\n", flashfile->c_str());
+        }
+
+        // load the FLASH content into the model
+        read(fd, flashdata, FLASH_SIZE);
+
+        // if the SRAM was preloaded with the FLASH content
+        if (srampreloadedwithflash->get_bool())
+        {
+            memcpy(sramdata, &(flashdata[8]), U32(flashdata[4]));
+
+            // initialize the CRM
+            this->crm->m_reg[STATUS_INDEX] = 3;
+        }
+
+        close(fd);
+
+    }
 }
 
 

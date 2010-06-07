@@ -23,7 +23,7 @@
 // Definition
 #define TOP_NUM_MEMORIES 1
 
-/// Top level plateform module.
+/// Top level platform module.
 struct Top : sc_core::sc_module
 {
     Bus<2,TOP_NUM_MEMORIES+2>* bus;
@@ -34,9 +34,10 @@ struct Top : sc_core::sc_module
 
     /** Constructor of the top level module.
      * @param[in] name Name of the module
-     * @param[in] Parameters Parameters from the configuration file
+     * @param[in] parameters Command line parameters
+     * @param[in] config Parameters of the current block (and sub-blocks)
      */
-    Top(sc_core::sc_module_name name, struct Parameters& Parameters);
+    Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config);
 };
 
 #endif /*TOP_H_*/
