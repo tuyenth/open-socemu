@@ -1,12 +1,12 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-/// macro to configure debug the utils tools (could be configured for a single file)
+/// Macro to configure debug the utils tools (could be configured for a single file)
 #ifndef UTILS_DEBUG_LEVEL
     #define UTILS_DEBUG_LEVEL 0
 #endif
 
-/// macro to get a register field value in a register r with mask m and at bit position p
+/// Macro to get a register field value in a register r with mask m and at bit position p
 /// @param[in] __r register value
 /// @param[in] __m field mask BEFORE shifting
 /// @param[in] __p position of the lowest bit of the field
@@ -14,7 +14,7 @@
 #define GETF(__r, __m, __p)                                                 \
     (( (__r) & (__m) ) >> (__p))
 
-/// macro to set a value v in a register field at bit position p in register r with mask m
+/// Macro to set a value v in a register field at bit position p in register r with mask m
 /// @param[in] __r register value
 /// @param[in] __v value to put in field
 /// @param[in] __m field mask BEFORE shifting
