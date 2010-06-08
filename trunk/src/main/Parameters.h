@@ -22,21 +22,26 @@ public:
      * Constructor of the parameter
      * @param[in] value Content of the parameter
      */
-    Parameter(const std::string &value) : value(value), lowercase(value)
+    Parameter(const std::string &value)
     {
+        this->set_string(value);
+    }
+
+    /**
+     * Set the non parsed value of the parameter content as a string
+     * @param[in] str The new parameter value
+     */
+    void set_string(const std::string &value)
+    {
+        // copy the value from the parameter
+        this->value = value;
+        this->lowercase = value;
+
         // change to lowercase
         for (size_t i = 0; i < this->lowercase.length(); i++)
         {
             this->lowercase[i] = tolower(this->lowercase[i]);
         }
-    }
-
-    /**
-     * @param[in] str The new parameter value
-     */
-    void set_string(const std::string &value)
-    {
-        this->value = value;
     }
 
     /**
@@ -101,6 +106,25 @@ public:
     MSP *get_config()
     {
         return &this->config;
+    }
+
+    /**
+     * Add a path in front of the parameter
+     * @param[in] path String of the path to add in front of the parameter
+     * @warning This is not an immediate prepend in front of the current parameter,
+     * the values are checked for existing path delimiters
+     */
+    void add_path(const std::string &path)
+    {
+        if (this->value[0] != '/' && this->value[0] != '\\' &&
+            this->value[1] != ':')
+        {
+            // make sure that path ends with a slash
+            if ((path.length() != 0) && (path[path.length()-1] != '/'))
+                this->set_string(path + "/" + this->value);
+            else
+                this->set_string(path + this->value);
+        }
     }
 
 private:

@@ -17,7 +17,6 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
     Parameter *cpu_parameter;
     MSP *cpu_config;
     Parameter *elffile;
-    std::string elffilepath;
 
     // sanity check: check parameters
     if (config.count("cpu") != 1)
@@ -87,13 +86,13 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
     }
 
     elffile = (*cpu_config)["elffile"];
-    elffilepath = parameters.configpath + *elffile->get_string();
+    elffile->add_path(parameters.configpath);
 
     // create an instance of ElfReader
     CElfReader ElfReader;
 
     // open the ELF file
-    ElfReader.Open(elffilepath.c_str());
+    ElfReader.Open(elffile->c_str());
 
     // use a Segment pointer
     CSegment* Segment;
@@ -114,7 +113,7 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
         // check if memory was found
         if (i >= sizeof(Memories)/sizeof(Memories[0]))
         {
-            TLM_ERR("ELF file (%s), loadable segment (@=0x%08X, size=%d) goes beyond memory", elffilepath.c_str(),
+            TLM_ERR("ELF file (%s), loadable segment (@=0x%08X, size=%d) goes beyond memory", elffile->c_str(),
                     Segment->Address(), Segment->Size());
         }
     }
