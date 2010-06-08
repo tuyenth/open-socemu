@@ -17,7 +17,7 @@
 /// debug level
 #define SIMPLEMASTER_DEBUG 0
 
-/// Macro to print debug messages.
+/// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
 /// @param __f format of the debug string
 /// @param ... variable arguments
@@ -47,9 +47,9 @@ struct SimpleMaster : sc_core::sc_module
         #endif
     {
         // force the default values of the BUS transaction
-        master_nb_pl.set_streaming_width(4);
-        master_nb_pl.set_byte_enable_ptr(0);
-        master_nb_pl.set_dmi_allowed(false);
+        master_b_pl.set_streaming_width(4);
+        master_b_pl.set_byte_enable_ptr(0);
+        master_b_pl.set_dmi_allowed(false);
         // register callbacks for incoming interface method calls
         master_socket.register_nb_transport_bw(this, &SimpleMaster::master_nb_transport_bw);
 
@@ -78,20 +78,33 @@ struct SimpleMaster : sc_core::sc_module
         return tlm::TLM_COMPLETED;
     }
 
+    /** Bind a slave socket to the local master socket
+     * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
+     */
+    void bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave_socket)
+    {
+        // hook the slave socket
+        this->master_socket.bind(*slave_socket);
+    }
+
     // Indicate that device is free for a new request, used for validation
     #if SIMPLEMASTER_DEBUG
     bool m_free;
     #endif
 
 protected:
-    /** Generic payload transaction to use for master requests.  This is used
+    /** Generic payload transaction to use for master blocking requests.  This is used
      * to speed up the simulation by not allocating dynamically a payload for
      * each blocking transaction.
-     * @warn This prevents can only be used for blocking accesses
+     * @warn This can only be used for blocking accesses
      */
-    tlm::tlm_generic_payload master_nb_pl;
-    /// Time object for delay to use for master requests
-    sc_core::sc_time master_nb_delay;
+    tlm::tlm_generic_payload master_b_pl;
+    /** Time object for delay to use for master blocking requests.  This is used
+     * to speed up the simulation by not allocating dynamically a time object for
+     * each blocking transaction.
+     * @warn This can only be used for blocking accesses
+     */
+    sc_core::sc_time master_b_delay;
 };
 
 #endif /*SIMPLEMASTER_H_*/
