@@ -1,5 +1,4 @@
 #include "At91sam9261.h"
-#include "elfreader.h"
 
 #include "systemc.h"
 
@@ -11,12 +10,11 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters &parameters, M
     uint8_t slave_id = 0;
     Parameter *cpu_parameter;
     MSP *cpu_config;
-    Parameter *elffile;
 
     // sanity check: check parameters
     if (config.count("cpu") != 1)
     {
-        TLM_ERR("CPU definitions found: %d", parameters.config.count("cpu"));
+        TLM_ERR("CPU definitions found: %d", config.count("cpu"));
         return;
     }
     cpu_parameter = config["cpu"];
@@ -105,42 +103,6 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters &parameters, M
     }
     //   - increment the address decoder slave id
     slave_id++;
-
-    // check if there is an elf file defined
-    if (cpu_config->count("elffile") != 1)
-    {
-        TLM_ERR("elffile definitions found: %d", cpu_config->count("elffile"));
-    }
-
-    elffile = (*cpu_config)["elffile"];
-    elffile->add_path(parameters.configpath);
-
-    // create an instance of ElfReader
-    CElfReader ElfReader;
-
-    // open the ELF file
-    ElfReader.Open(elffile->c_str());
-
-    // use a Segment pointer
-    CSegment* Segment;
-
-    // loop on all the segments and copy the loadables in memory
-    while ((Segment = ElfReader.GetNextSegment()) != NULL)
-    {
-        // check if the segment is mapped to the sram
-        if ((Segment->Address() >= SRAM_BASE_ADDR) &&
-            ((Segment->Address()+Segment->Size()) <= (SRAM_SIZE)))
-        {
-            // then load the segment in the sram
-            memcpy(&sram->m_data[Segment->Address()-SRAM_BASE_ADDR], Segment->Data(), Segment->Size());
-            break;
-        }
-        else
-        {
-            TLM_ERR("ELF file (%s), loadable segment (@=0x%08X, size=%d) goes beyond memory", elffile->c_str(),
-                    Segment->Address(), Segment->Size());
-        }
-    }
 
 #if 0
     // create a trace file

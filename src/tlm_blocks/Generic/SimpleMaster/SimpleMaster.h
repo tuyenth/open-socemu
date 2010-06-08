@@ -42,9 +42,6 @@ struct SimpleMaster : sc_core::sc_module
      */
     SimpleMaster(sc_core::sc_module_name name)
         : master_socket("master_socket")
-        #if SIMPLEMASTER_DEBUG
-        , m_free(true)
-        #endif
     {
         // force the default values of the BUS transaction
         master_b_pl.set_streaming_width(4);
@@ -86,11 +83,6 @@ struct SimpleMaster : sc_core::sc_module
         // hook the slave socket
         this->master_socket.bind(*slave_socket);
     }
-
-    // Indicate that device is free for a new request, used for validation
-    #if SIMPLEMASTER_DEBUG
-    bool m_free;
-    #endif
 
 protected:
     /** Generic payload transaction to use for master blocking requests.  This is used

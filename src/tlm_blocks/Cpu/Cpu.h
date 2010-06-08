@@ -241,7 +241,7 @@ struct Cpu : sc_core::sc_module
      * @return The value read
      */
     static uint32_t
-    rd_l_cb(void *obj, uint32_t addr);
+    rd_l_cb(void* obj, uint32_t addr);
 
     /** Callback to read a short from the system, going through timing process
      * @warning This function is static because it is used as a callback
@@ -250,7 +250,7 @@ struct Cpu : sc_core::sc_module
      * @return The value read
      */
     static uint32_t
-    rd_s_cb(void *obj, uint32_t addr);
+    rd_s_cb(void* obj, uint32_t addr);
 
     /** Callback to read a byte from the system, going through timing process
      * @warning This function is static because it is used as a callback
@@ -259,7 +259,7 @@ struct Cpu : sc_core::sc_module
      * @return The value read
      */
     static uint32_t
-    rd_b_cb(void *obj, uint32_t addr);
+    rd_b_cb(void* obj, uint32_t addr);
 
     /** Callback to write a long into the system, going through the timing process
      * @warning This function is static because it is used as a callback
@@ -268,7 +268,7 @@ struct Cpu : sc_core::sc_module
      * @param[in] data Data to write
      */
     static void
-    wr_l_cb(void *obj, uint32_t addr, uint32_t data);
+    wr_l_cb(void* obj, uint32_t addr, uint32_t data);
 
     /** Callback to write a short into the system, going through the timing process
      * @warning This function is static because it is used as a callback
@@ -277,7 +277,7 @@ struct Cpu : sc_core::sc_module
      * @param[in] data Data to write
      */
     static void
-    wr_s_cb(void *obj, uint32_t addr, uint32_t data);
+    wr_s_cb(void* obj, uint32_t addr, uint32_t data);
 
     /** Callback to write a byte into the system, going through the timing process
      * @warning This function is static because it is used as a callback
@@ -286,7 +286,7 @@ struct Cpu : sc_core::sc_module
      * @param[in] data Data to write
      */
     static void
-    wr_b_cb(void *obj, uint32_t addr, uint32_t data);
+    wr_b_cb(void* obj, uint32_t addr, uint32_t data);
 
     /** Callback to make a debug read access into the system
      * @warning This function is static because it is used as a callback
@@ -297,7 +297,7 @@ struct Cpu : sc_core::sc_module
      * @return The number of bytes actually read
      */
     static int
-    gdb_rd_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len);
+    gdb_rd_cb(void* obj, uint64_t addr, uint8_t* dataptr, uint32_t len);
 
     /** Callback to make a debug write access into the system
      * @warning This function is static because it is used as a callback
@@ -308,7 +308,7 @@ struct Cpu : sc_core::sc_module
      * @return The number of bytes actually written
      */
     static int
-    gdb_wr_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len);
+    gdb_wr_cb(void* obj, uint64_t addr, uint8_t* dataptr, uint32_t len);
 
     /** Callback to wait for some CPU cycles
      * @warning This function is static because it is used as a callback
@@ -316,16 +316,19 @@ struct Cpu : sc_core::sc_module
      * @param[in] cycles Number of cycles to wait for
      */
     static void
-    exec_cycles_cb(void *obj, int cycles);
+    exec_cycles_cb(void* obj, int cycles);
 
     /** Callback to wait for an interrupt to happen
      * @warning This function is static because it is used as a callback
      * @param[in, out] obj Pointer to the instance to use
      */
     static void
-    wfi_cb(void *obj);
+    wfi_cb(void* obj);
 
 private:
+    /// ELF file name and path
+    std::string* elfpath;
+
     /// MMU class (can be any kind of ARM)
     struct mmu* m_arm;
 

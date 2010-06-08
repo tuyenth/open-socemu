@@ -31,7 +31,7 @@
         }                                                                               \
     } while (false)
 
-/// Base class for a slave only device
+/// Base class for a master and slave device (not using multiple inheritance for speed)
 struct SimpleMasterSlave : SimpleSlave
 {
     /// TLM-2 master socket, defaults to 32-bits wide, base protocol
@@ -50,9 +50,9 @@ struct SimpleMasterSlave : SimpleSlave
         , master_socket("master_socket")
     {
         // force the default values of the BUS transaction
-        master_nb_pl.set_streaming_width(4);
-        master_nb_pl.set_byte_enable_ptr(0);
-        master_nb_pl.set_dmi_allowed(false);
+        master_b_pl.set_streaming_width(4);
+        master_b_pl.set_byte_enable_ptr(0);
+        master_b_pl.set_dmi_allowed(false);
         // register callbacks for incoming interface method calls
         master_socket.register_nb_transport_bw(this, &SimpleMasterSlave::master_nb_transport_bw);
 
@@ -80,15 +80,28 @@ struct SimpleMasterSlave : SimpleSlave
         return tlm::TLM_COMPLETED;
     }
 
-private:
-    /** Generic payload transaction to use for master requests.  This is used
+    /** Bind a slave socket to the local master socket
+     * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
+     */
+    void bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave_socket)
+    {
+        // hook the slave socket
+        this->master_socket.bind(*slave_socket);
+    }
+
+protected:
+    /** Generic payload transaction to use for master blocking requests.  This is used
      * to speed up the simulation by not allocating dynamically a payload for
      * each blocking transaction.
      * @warn This prevents can only be used for blocking accesses
      */
-    tlm::tlm_generic_payload master_nb_pl;
-    /// Time object for delay to use for master requests
-    sc_core::sc_time master_nb_delay;
+    tlm::tlm_generic_payload master_b_pl;
+    /** Time object for delay to use for master blocking requests.  This is used
+     * to speed up the simulation by not allocating dynamically a time object for
+     * each blocking transaction.
+     * @warn This can only be used for blocking accesses
+     */
+    sc_core::sc_time master_b_delay;
 };
 
 #endif /*SIMPLEMASTERSLAVE_H_*/
