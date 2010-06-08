@@ -102,7 +102,7 @@ struct SimpleSlave : sc_core::sc_module
             mask = 0xFFFF;
             break;
         case 4:
-            mask = 0xFFFFFF;
+            mask = 0xFFFFFFFF;
             break;
         default:
             SC_REPORT_FATAL("TLM-2", "Access unsupported length");
