@@ -24,7 +24,7 @@
 /// debug level
 #define CPU_DEBUG_LEVEL 0
 
-/// Macro to print debug messages.
+/// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
 /// @param __f format of the debug string
 /// @param ... variable arguments
@@ -34,10 +34,6 @@
             TLM_DBG(__f, __VA_ARGS__);                                                  \
         }                                                                               \
     } while (false)
-
-// **************************************************************************************
-// Initiator module generating a single generic payload transaction at a time
-// **************************************************************************************
 
 struct Cpu : sc_core::sc_module
 {
@@ -63,16 +59,28 @@ struct Cpu : sc_core::sc_module
     void
     thread_process();
 
-    /// Bus socket backward path.
+    /** Bus master socket backward path
+     * @param[in, out] trans Transport generic payload
+     * @param[in, out] phase Transport phase
+     * @param[in, out] delay Transport delay
+     */
     virtual tlm::tlm_sync_enum
     bus_m_nb_transport_bw(tlm::tlm_generic_payload& trans,
                           tlm::tlm_phase& phase, sc_core::sc_time& delay);
 
-    /// IRQ blocking socket call handler.
+    /** IRQ slave socket blocking call handler
+     * @param[in, out] trans Transport generic payload
+     * @param[in, out] phase Transport phase
+     * @param[in, out] delay Transport delay
+     */
     virtual void
     irq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 
-    /// FIQ blocking socket call handler.
+    /** FIQ slave socket blocking call handler
+     * @param[in, out] trans Transport generic payload
+     * @param[in, out] phase Transport phase
+     * @param[in, out] delay Transport delay
+     */
     virtual void
     fiq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 
@@ -324,12 +332,10 @@ private:
     /// Event used to wait for an interrupt
     sc_core::sc_event m_interrupt;
 
-    /// Generic payload transaction to use for BUS requests
+    /// Generic payload transaction to use for BUS requests (to speed up simulation)
     tlm::tlm_generic_payload bus_pl;
-    /// Time object for delay to use for BUS requests
+    /// Time object for delay to use for BUS requests (to speed up simulation)
     sc_core::sc_time bus_delay;
 };
-
-
 
 #endif /*CPU_H_*/

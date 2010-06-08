@@ -49,7 +49,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters &parameters, M
         return;
     }
     //   - bind interfaces
-    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind(this->sram->socket);
+    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind(this->sram->slave_socket);
     //   - increment the address decoder slave id
     slave_id++;
 

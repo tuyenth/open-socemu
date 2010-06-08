@@ -44,7 +44,7 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
         // create the MEMORY instance with specific size
         memory[i] = new Memory("memory", data, Memories[i].size);
         // bind the init port of the BUS to the MEMORY
-        ( *(bus->init_socket[i]) ).bind( memory[i]->socket );
+        ( *(bus->init_socket[i]) ).bind( memory[i]->slave_socket );
         // specify the MEMORY address range from the BUS perspective
         if (bus->set_range(i, Memories[i].base, Memories[i].mask))
         {

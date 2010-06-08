@@ -15,16 +15,19 @@
 #include "Cpu.h"
 #include "Memory.h"
 
-/// B2070 level plateform module.
+/// B2070 level platform module
 struct B2070 : sc_core::sc_module
 {
-    /// Address decoder
+    /// Address decoder instance pointer
     AddrDec<2>* addrdec;
+    /// CPU instance pointer
     Cpu* cpu;
+    /// ROM instance pointer
     Memory* rom;
+    /// SRAM instance pointer
     Memory* sram;
 
-    /** Constructor of the top level module.
+    /** Constructor of the top level module
      * @param[in] name Name of the module
      * @param[in] parameters Command line parameters
      * @param[in] config Parameters of the current block (and sub-blocks)
