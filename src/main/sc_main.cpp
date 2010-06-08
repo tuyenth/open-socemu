@@ -102,8 +102,11 @@ int sc_main(int argc, char* argv[])
     parameters.configpath.assign(configfile);
 
     // find the last occurrence of / or \ in the string
-    pos = (parameters.configpath.rfind('/') > parameters.configpath.rfind('\\'))?
+    // cast rfind to int because otherwise returns -1 as unsigned which leads to error
+    pos = ((int)parameters.configpath.rfind('/') > (int)parameters.configpath.rfind('\\'))?
             parameters.configpath.rfind('/'):parameters.configpath.rfind('\\');
+    //printf("configpath = %s\n", parameters.configpath.c_str());
+    //printf("configpath pos = %d\n", pos);
     if (pos != std::string::npos)
         parameters.configpath.erase(pos+1);
     else

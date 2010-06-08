@@ -47,6 +47,8 @@ Cpu::Cpu(sc_core::sc_module_name name, std::string &cpuname, Parameters &paramet
     bus.exec_cycles = &exec_cycles_cb;
     bus.wfi = &wfi_cb;
 
+    TLM_DBG("CPU: gdbserver = %s", gdbserver->get_bool()?"TRUE":"FALSE");
+    TLM_DBG("CPU: gdbwait = %s", parameters.gdb_wait.get_bool()?"TRUE":"FALSE");
     if (cpuname == "ARM926EJ-S")
     {
         this->m_arm = new arm926ejs(&bus, gdbserver->get_bool(), parameters.gdb_wait.get_bool());
