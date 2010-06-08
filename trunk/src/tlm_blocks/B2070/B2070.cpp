@@ -1,5 +1,4 @@
 #include "B2070.h"
-#include "elfreader.h"
 
 #define ROM_BASE_ADDR (0x00000000)
 #define ROM_SIZE (352*1024)
@@ -12,12 +11,11 @@ B2070::B2070(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
     uint32_t *romdata, *sramdata;
     Parameter *cpu_parameter;
     MSP *cpu_config;
-    Parameter *elffile;
 
     // sanity check: check parameters
     if (config.count("cpu") != 1)
     {
-        TLM_ERR("CPU definitions found: %d", parameters.config.count("cpu"));
+        TLM_ERR("CPU definitions found: %d", config.count("cpu"));
         return;
     }
     cpu_parameter = config["cpu"];
@@ -76,43 +74,6 @@ B2070::B2070(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
         sprintf(txt, "dummy_irq_m_socket");
         dummy_m_socket = new tlm_utils::simple_initiator_socket<B2070>(txt);
         dummy_m_socket->bind(this->cpu->irq_s_socket);
-    }
-
-    // check if there is an elf file defined
-    if (cpu_config->count("elffile") != 1)
-    {
-        TLM_ERR("elffile definitions found: %d", cpu_config->count("elffile"));
-    }
-
-    elffile = (*cpu_config)["elffile"];
-    elffile->add_path(parameters.configpath);
-
-    // create an instance of ElfReader
-    CElfReader ElfReader;
-
-    // open the ELF file
-    ElfReader.Open(elffile->c_str());
-
-    // use a Segment pointer
-    CSegment* Segment;
-
-    // loop on all the segments and copy the loadables in memory
-    while ((Segment = ElfReader.GetNextSegment()) != NULL)
-    {
-        TLM_DBG("Segment = 0x%x[%d]", Segment->Address(), Segment->Size());
-
-        // empty segments are not taken into account
-        if (Segment->Size())
-        {
-            // make sure that this fits in the ROM
-            if ((Segment->Address() < ROM_BASE_ADDR) ||
-                (Segment->Address()+Segment->Size()) > (ROM_BASE_ADDR + ROM_SIZE))
-            {
-                TLM_ERR("ELF segment (0x%x[%d]) does not fit in ROM (0x%x[%d])",
-                        Segment->Address(), Segment->Size(), ROM_BASE_ADDR, ROM_SIZE);
-            }
-            memcpy(&romdata[(Segment->Address()-ROM_BASE_ADDR)/4], Segment->Data(), Segment->Size());
-        }
     }
 }
 

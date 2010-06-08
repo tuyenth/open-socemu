@@ -1,6 +1,7 @@
 #include "Cpu.h"
 
 // include the tools
+#include "elfreader.h"
 #include "arm926ejs.h"
 #include "arm7tdmi.h"
 
@@ -15,13 +16,25 @@ Cpu::Cpu(sc_core::sc_module_name name, std::string &cpuname, Parameters &paramet
 , fiq_s_socket("fiq_s_socket")
 {
     struct mmu::bus bus;
-    Parameter *gdbserver;
+    Parameter* gdbserver;
+    Parameter* elffile;
 
     // sanity check
     if (config.count("gdbserver") != 1)
     {
-        TLM_ERR("CPU definitions found: %d", parameters.config.count("cpu"));
-        return;
+        TLM_ERR("CPU definitions found: %d", config.count("cpu"));
+    }
+    // check if there is an elf file defined
+    if (config.count("elffile") == 0)
+    {
+        this->elfpath = NULL;
+    }
+    else
+    {
+        elffile = config["elffile"];
+        elffile->add_path(parameters.configpath);
+        // copy the path into an internal variable
+        this->elfpath = elffile->get_string();
     }
     gdbserver = config["gdbserver"];
 
@@ -70,6 +83,25 @@ Cpu::Cpu(sc_core::sc_module_name name, std::string &cpuname, Parameters &paramet
 
 void Cpu::thread_process()
 {
+    // create an instance of ElfReader
+    CElfReader ElfReader;
+
+    // check if there was an ELF file specified for this CPU
+    if (this->elfpath != NULL)
+    {
+        // open the ELF file
+        ElfReader.Open(this->elfpath->c_str());
+
+        // use a Segment pointer
+        CSegment* Segment;
+
+        // loop on all the segments and copy the loadables in memory
+        while ((Segment = ElfReader.GetNextSegment()) != NULL)
+        {
+            TLM_DBG_WR(bus_m_socket, this->bus_pl, Segment->Address(), Segment->Data(), Segment->Size());
+        }
+    }
+
     // run armulator (should never return)
     this->m_arm->run();
 

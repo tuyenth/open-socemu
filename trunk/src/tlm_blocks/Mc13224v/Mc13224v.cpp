@@ -1,5 +1,4 @@
 #include "Mc13224v.h"
-#include "elfreader.h"
 
 #include "systemc.h"
 
@@ -26,22 +25,22 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters &parameters, MSP &co
     // sanity check
     if (config.count("cpu") != 1)
     {
-        TLM_ERR("CPU definitions found: %d", parameters.config.count("cpu"));
+        TLM_ERR("CPU definitions found: %d", config.count("cpu"));
         return;
     }
     if (config.count("romfile") != 1)
     {
-        TLM_ERR("ROMFILE definitions found: %d\n", parameters.config.count("romfile"));
+        TLM_ERR("ROMFILE definitions found: %d\n", config.count("romfile"));
         return;
     }
     if (config.count("flashfile") != 1)
     {
-        TLM_ERR("FLASHFILE definitions found: %d", parameters.config.count("flashfile"));
+        TLM_ERR("FLASHFILE definitions found: %d", config.count("flashfile"));
         return;
     }
     if (config.count("srampreloadedwithflash") != 1)
     {
-        TLM_ERR("SRAMPRELOADEDWITHFLASH definitions found: %d", parameters.config.count("srampreloadedwithflash"));
+        TLM_ERR("SRAMPRELOADEDWITHFLASH definitions found: %d", config.count("srampreloadedwithflash"));
         return;
     }
     cpu_parameter = config["cpu"];
@@ -57,7 +56,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters &parameters, MSP &co
     //   - create instance
     this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     //   - bind interfaces (CPU access to address decoder)
-    this->cpu->bus_m_socket.bind( this->addrdec->bus_s_socket );
+    this->cpu->bus_m_socket.bind(this->addrdec->bus_s_socket);
 
     // ROM:
     //   - create instance

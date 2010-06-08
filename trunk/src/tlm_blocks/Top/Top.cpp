@@ -1,5 +1,4 @@
 #include "Top.h"
-#include "elfreader.h"
 
 const struct {
     uint32_t size;
@@ -9,19 +8,16 @@ const struct {
         {65536, 0x00000000, 0xFFFFFFFFFF000000LL}
 };
 
-
-
 Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
 {
     uint8_t i;
     Parameter *cpu_parameter;
     MSP *cpu_config;
-    Parameter *elffile;
 
     // sanity check: check parameters
     if (config.count("cpu") != 1)
     {
-        TLM_ERR("CPU definitions found: %d", parameters.config.count("cpu"));
+        TLM_ERR("CPU definitions found: %d", config.count("cpu"));
         return;
     }
     cpu_parameter = config["cpu"];
@@ -48,7 +44,7 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
         // specify the MEMORY address range from the BUS perspective
         if (bus->set_range(i, Memories[i].base, Memories[i].mask))
         {
-            printf("Memory address range wrong\n");
+            TLM_ERR("Memory address range wrong @0x%08llX mask=0x%08llX", Memories[i].base, Memories[i].mask);
             return;
         }
     }
@@ -78,46 +74,6 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
         printf("Dummy address range wrong\n");
         return;
     }
-
-    // check if there is an elf file defined
-    if (cpu_config->count("elffile") != 1)
-    {
-        TLM_ERR("elffile definitions found: %d", cpu_config->count("elffile"));
-    }
-
-    elffile = (*cpu_config)["elffile"];
-    elffile->add_path(parameters.configpath);
-
-    // create an instance of ElfReader
-    CElfReader ElfReader;
-
-    // open the ELF file
-    ElfReader.Open(elffile->c_str());
-
-    // use a Segment pointer
-    CSegment* Segment;
-
-    // loop on all the segments and copy the loadables in memory
-    while ((Segment = ElfReader.GetNextSegment()) != NULL)
-    {
-        // look for the corresponding memory
-        for (i = 0; i < sizeof(Memories)/sizeof(Memories[0]); i++)
-        {
-            if ((Segment->Address() >= Memories[i].base) &&
-                ((Segment->Address()+Segment->Size()) <= (Memories[i].base+Memories[i].size)))
-            {
-                memcpy(&memory[i]->m_data[Segment->Address()-Memories[i].base], Segment->Data(), Segment->Size());
-                break;
-            }
-        }
-        // check if memory was found
-        if (i >= sizeof(Memories)/sizeof(Memories[0]))
-        {
-            TLM_ERR("ELF file (%s), loadable segment (@=0x%08X, size=%d) goes beyond memory", elffile->c_str(),
-                    Segment->Address(), Segment->Size());
-        }
-    }
-
 }
 
 
