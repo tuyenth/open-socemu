@@ -7,7 +7,6 @@
 
 At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
-    uint8_t slave_id = 0;
     Parameter *cpu_parameter;
     MSP *cpu_config;
 
@@ -27,7 +26,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
     //   - create instance
     this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     //   - bind interfaces
-    this->cpu->bind(this->addrdec->slave_socket);
+    this->cpu->bind(*this->addrdec);
 
     // SRAM:
     //   - create instance
@@ -41,51 +40,38 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
         this->sram = new Memory("sram", data, SRAM_SIZE);
     }
     //   - set range
-    if (this->addrdec->set_range(slave_id, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
+    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, (SRAM_BASE_ADDR+SRAM_SIZE)))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;
     }
-    //   - bind interfaces
-    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind(this->sram->slave_socket);
-    //   - increment the address decoder slave id
-    slave_id++;
 
     // SMC:
     //   - create instance
     this->smc = new Smc("smc");
     //   - set range (registers map)
-    if (this->addrdec->set_range(slave_id, REG_SMC_BASE_ADDR, REG_SMC_BASE_ADDR+(REG_SMC_COUNT*4)))
+    if (this->addrdec->bind(this->smc->reg_s_socket, REG_SMC_BASE_ADDR, REG_SMC_BASE_ADDR+(REG_SMC_COUNT*4)))
     {
         TLM_ERR("SMC registers address range wrong %d", 0);
         return;
     }
-    //   - bind interfaces
-    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind(this->smc->reg_s_socket);
-    //   - increment the address decoder slave id
-    slave_id++;
     //   - set range (memory map)
-    if (this->addrdec->set_range(slave_id, 0x10000000, 0x90000000))
+    if (this->addrdec->bind(this->smc->bus_s_socket, 0x10000000, 0x90000000))
     {
         TLM_ERR("SMC memory address range wrong %d", 0);
         return;
     }
-    //   - bind interfaces
-    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind(this->smc->bus_s_socket);
-    //   - increment the address decoder slave id
-    slave_id++;
 
     // AIC:
     //   - create instance
     this->aic = new Aic("aic");
     //   - set range
-    if (this->addrdec->set_range(slave_id, REG_AIC_BASE_ADDR, REG_AIC_BASE_ADDR+(REG_AIC_COUNT*4)))
+    if (this->addrdec->bind(this->aic->reg_s_socket, REG_AIC_BASE_ADDR, REG_AIC_BASE_ADDR+(REG_AIC_COUNT*4)))
     {
         TLM_ERR("AIC address range wrong %d", 0);
         return;
     }
     //   - bind interfaces
-    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind(this->aic->reg_s_socket);
     this->aic->irq_m_socket.bind(this->cpu->irq_s_socket);
     this->aic->fiq_m_socket.bind(this->cpu->fiq_s_socket);
     //     + by default, hook all the interrupt sources to dummies
@@ -101,8 +87,6 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
             dummy_int_m_socket->bind(*this->aic->int_s_socket[i]);
         }
     }
-    //   - increment the address decoder slave id
-    slave_id++;
 
 #if 0
     // create a trace file
