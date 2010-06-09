@@ -1,51 +1,95 @@
 #ifndef DUMMY_H_
 #define DUMMY_H_
 
-// necessary define for processes in simple_target_socket
-#define SC_INCLUDE_DYNAMIC_PROCESSES
+#include "SimpleMasterSlave.h"
 
-// obvious inclusion
-#include "systemc"
+/// debug level
+#define DUMMY_DEBUG 0
 
-// not so obvious inclusions
-#include "tlm.h"
-#include "tlm_utils/simple_initiator_socket.h"
-#include "tlm_utils/simple_target_socket.h"
+/// Macro to print debug messages
+/// @param __l level of debug message (0 means always printed)
+/// @param __f format of the debug string
+/// @param ... variable arguments
+#define DUMMY_TLM_DBG(__l, __f, ...)                                                    \
+    do {                                                                                \
+        if (DUMMY_DEBUG_LEVEL >= __l) {                                                 \
+            TLM_DBG(__f, __VA_ARGS__);                                                  \
+        }                                                                               \
+    } while (false)
 
-// **************************************************************************************
-// Dummy module able to handle two pipelined transactions
-// **************************************************************************************
-
-struct Dummy : sc_core::sc_module
+/// "Dummy" module with a bus slave socket and an interrupt master socket
+struct Dummy : SimpleMasterSlave
 {
-    // TLM-2 socket, defaults to 32-bits wide, base protocol
-    tlm_utils::simple_initiator_socket<Dummy> init_socket;
-    tlm_utils::simple_target_socket<Dummy> targ_socket;
-    tlm_utils::simple_initiator_socket<Dummy> int_socket;
+    /** Dummy default constructor
+     * @param[in] name Name of the module
+     */
+    Dummy(sc_core::sc_module_name name)
+    : SimpleMasterSlave(name, NULL, 0)
+    {
+        this->set_data(this->m_registers, sizeof(this->m_registers));
+    }
 
-    // Not necessary if this module does not have a thread
-    SC_HAS_PROCESS(Dummy);
+    /// Module thread
+    void thread_process()
+    {
+        while (1)
+        {
+            // wait for an event
+            wait();
+        }
+    }
 
-    Dummy(sc_core::sc_module_name name);
+    /** slave_socket blocking transport method (default behavior, can be overridden)
+     * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
+     * @param[in, out] delay Time object, allocated by initiator, filled here
+     */
+    virtual void
+    slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
+    {
+        // sanity check
+        TLM_WORD_SANITY(trans);
 
-    /// Module thread.
-    void thread_process();
+        // retrieve the required parameters
+        sc_dt::uint64 index = trans.get_address()/4;
+        uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
 
-    // TLM-2 blocking transport method
-    virtual void b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
+        // sanity check
+        assert(index < REG_SIZE);
 
-    /// TLM-2 non-blocking transport method.
-    virtual tlm::tlm_sync_enum nb_transport_fw( tlm::tlm_generic_payload& trans,
-            tlm::tlm_phase& phase, sc_core::sc_time& delay );
+        // mark as busy
+        #if SIMPLESLAVE_DEBUG
+        m_free = false;
+        #endif
 
-    /// TLM-2 non-blocking transport method.
-    virtual tlm::tlm_sync_enum nb_transport_bw( tlm::tlm_generic_payload& trans,
-            tlm::tlm_phase& phase, sc_core::sc_time& delay );
+        // internal delay
+        wait(100, sc_core::SC_NS);
 
-    /// TLM-2 debug transport method.
-    virtual unsigned int transport_dbg(tlm::tlm_generic_payload& trans);
+        if (trans.get_command() == tlm::TLM_READ_COMMAND)
+        {
+            *ptr = m_registers[index];
+        }
+        else
+        {
+            switch (index)
+            {
+            case REG_COMMAND:
+                TLM_INT_SET(master_socket, master_b_pl, master_b_delay);
+                break;
+            case REG_ACK:
+                TLM_INT_CLR(master_socket, master_b_pl, master_b_delay);
+                break;
+            }
+        }
+        trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
-    /// Registers definition.
+        // mark as free
+        #if SIMPLESLAVE_DEBUG
+        m_free = true;
+        #endif
+
+    }
+
+    /// Registers definition
     enum {
         REG_STATUS,
         REG_ACK,
@@ -56,16 +100,8 @@ struct Dummy : sc_core::sc_module
         REG_SIZE        = 256
     };
 
-    /// Registers content.
+    /// Registers content
     uint32_t m_registers[REG_SIZE];
-
-    /// Indicate if busy for sanity check.
-    bool m_free;
-
-    /// Generic payload transaction to use for interrupt requests
-    tlm::tlm_generic_payload int_pl;
-    /// Time object for delay to use for interrupt requests
-    sc_core::sc_time int_delay;
 };
 
 #endif /*DUMMY_H_*/
