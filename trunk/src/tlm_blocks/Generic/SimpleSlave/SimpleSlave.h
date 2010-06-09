@@ -20,7 +20,7 @@
 /// debug level
 #define SIMPLESLAVE_DEBUG 0
 
-/// Macro to print debug messages.
+/// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
 /// @param __f format of the debug string
 /// @param ... variable arguments
@@ -54,6 +54,16 @@ struct SimpleSlave : sc_core::sc_module
         slave_socket.register_b_transport(this, &SimpleSlave::slave_b_transport);
         slave_socket.register_nb_transport_fw(this, &SimpleSlave::slave_nb_transport_fw);
         slave_socket.register_transport_dbg(this, &SimpleSlave::slave_dbg_transport);
+    }
+
+    /** Set the data container of the module
+     * @param[in, out] data Pointer to the data container
+     * @param[in] size Size of the data
+     */
+    void set_data(uint32_t* data, uint32_t size)
+    {
+        this->m_data = data;
+        this->m_size = size;
     }
 
     /** slave_socket blocking transport method (default behavior, can be overridden)
@@ -178,6 +188,7 @@ struct SimpleSlave : sc_core::sc_module
         TLM_DBG_EXEC(trans, this->m_data, this->m_size);
     }
 
+protected:
     /// Pointer to the content of the device (as words)
     uint32_t* m_data;
 
