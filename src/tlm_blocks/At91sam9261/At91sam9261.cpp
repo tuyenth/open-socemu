@@ -5,7 +5,7 @@
 #define SRAM_BASE_ADDR (0x00000000)
 #define SRAM_SIZE (0x28000)
 
-At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
+At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
     uint8_t slave_id = 0;
     Parameter *cpu_parameter;

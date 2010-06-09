@@ -16,7 +16,7 @@
 #define REG_UART1_BASE_ADDR 0x80005000
 #define REG_UART2_BASE_ADDR 0x8000B000
 
-Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
+Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
     Parameter *cpu_parameter, *romfile, *flashfile, *srampreloadedwithflash;
     MSP *cpu_config;

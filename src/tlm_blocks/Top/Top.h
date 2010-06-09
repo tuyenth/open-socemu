@@ -42,7 +42,7 @@ struct Top : sc_core::sc_module
      * @param[in] parameters Command line parameters
      * @param[in] config Parameters of the current block (and sub-blocks)
      */
-    Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config);
+    Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config);
 };
 
 #endif /*TOP_H_*/

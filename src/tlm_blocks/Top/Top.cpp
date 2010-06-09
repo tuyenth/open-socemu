@@ -8,7 +8,7 @@ const struct {
         {65536, 0x00000000, 0xFFFFFFFFFF000000LL}
 };
 
-Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
+Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
     uint8_t i;
     Parameter *cpu_parameter;

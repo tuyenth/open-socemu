@@ -53,6 +53,7 @@ struct SimpleSlave : sc_core::sc_module
         // register callback functions for incoming interface method calls
         slave_socket.register_b_transport(this, &SimpleSlave::slave_b_transport);
         slave_socket.register_nb_transport_fw(this, &SimpleSlave::slave_nb_transport_fw);
+        slave_socket.register_get_direct_mem_ptr(this, &SimpleSlave::bus_s_get_direct_mem_ptr);
         slave_socket.register_transport_dbg(this, &SimpleSlave::slave_dbg_transport);
     }
 
@@ -170,6 +171,17 @@ struct SimpleSlave : sc_core::sc_module
     {
         SC_REPORT_FATAL("TLM-2", "Non blocking not implemented");
         return tlm::TLM_COMPLETED;
+    }
+
+    /** slave_socket direct memory access transport method
+     * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
+     * @param[in, out] dmi_data Direct Memory Interface object
+     */
+    virtual bool bus_s_get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
+            tlm::tlm_dmi& dmi_data)
+    {
+        SC_REPORT_FATAL("TLM-2", "DMI not implemented");
+        return false;
     }
 
     /** slave_socket debug transport method (default behavior, can be overridden)

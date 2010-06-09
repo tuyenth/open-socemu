@@ -32,7 +32,7 @@ struct B2070 : sc_core::sc_module
      * @param[in] parameters Command line parameters
      * @param[in] config Parameters of the current block (and sub-blocks)
      */
-    B2070(sc_core::sc_module_name name, Parameters &parameters, MSP &config);
+    B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config);
 };
 
 #endif /*B2070_H_*/

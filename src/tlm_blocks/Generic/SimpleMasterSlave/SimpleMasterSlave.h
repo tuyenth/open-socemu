@@ -55,6 +55,7 @@ struct SimpleMasterSlave : SimpleSlave
         master_b_pl.set_dmi_allowed(false);
         // register callbacks for incoming interface method calls
         master_socket.register_nb_transport_bw(this, &SimpleMasterSlave::master_nb_transport_bw);
+        master_socket.register_invalidate_direct_mem_ptr(this, &SimpleMasterSlave::master_invalidate_direct_mem_ptr);
 
         // create the module thread
         SC_THREAD(thread_process);
@@ -80,10 +81,22 @@ struct SimpleMasterSlave : SimpleSlave
         return tlm::TLM_COMPLETED;
     }
 
+    /** master_socket tagged non-blocking forward transport method
+     * @param[in] start_range Start address of the memory invalidate command
+     * @param[in] end_range End address of the memory invalidate command
+     */
+    virtual void
+    master_invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
+                                        sc_dt::uint64 end_range)
+    {
+        SC_REPORT_FATAL("TLM-2", "DMI not implemented");
+    }
+
     /** Bind a slave socket to the local master socket
      * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
      */
-    void bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave_socket)
+    void
+    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave_socket)
     {
         // hook the slave socket
         this->master_socket.bind(*slave_socket);
