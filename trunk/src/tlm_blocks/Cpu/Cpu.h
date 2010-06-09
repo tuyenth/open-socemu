@@ -1,22 +1,12 @@
 #ifndef CPU_H_
 #define CPU_H_
 
-// necessary define for processes in simple_target_socket
-#define SC_INCLUDE_DYNAMIC_PROCESSES
+#include "SimpleMaster.h"
 
-// obvious inclusion
-#include "systemc"
-
-// command line parameters
-#include "Parameters.h"
-
-// not so obvious inclusions
-#include "tlm.h"
-#include "tlm_utils/simple_initiator_socket.h"
 #include "tlm_utils/simple_target_socket.h"
 
-// tools
-#include "utils.h"
+// command line and configuration parameters
+#include "Parameters.h"
 
 // other objects
 #include "mmu.h"
@@ -35,10 +25,8 @@
         }                                                                               \
     } while (false)
 
-struct Cpu : sc_core::sc_module
+struct Cpu : SimpleMaster
 {
-    /// Base socket to perform accesses to the bus
-    tlm_utils::simple_initiator_socket<Cpu> bus_m_socket;
     /// Socket to receive IRQ set and clear commands
     tlm_utils::simple_target_socket<Cpu> irq_s_socket;
     /// Socket to receive FIQ set and clear commands
@@ -58,15 +46,6 @@ struct Cpu : sc_core::sc_module
     /// Main module thread
     void
     thread_process();
-
-    /** Bus master socket backward path
-     * @param[in, out] trans Transport generic payload
-     * @param[in, out] phase Transport phase
-     * @param[in, out] delay Transport delay
-     */
-    virtual tlm::tlm_sync_enum
-    bus_m_nb_transport_bw(tlm::tlm_generic_payload& trans,
-                          tlm::tlm_phase& phase, sc_core::sc_time& delay);
 
     /** IRQ slave socket blocking call handler
      * @param[in, out] trans Transport generic payload
@@ -96,7 +75,7 @@ struct Cpu : sc_core::sc_module
 
         CPU_TLM_DBG(3, "rd L addr=0x%08X", addr);
 
-        TLM_B_RD_WORD(bus_m_socket, bus_pl, bus_delay, addr, data);
+        TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, addr, data);
 
         CPU_TLM_DBG(2, "rd L addr=0x%08X data=0x%08X", addr, data);
         return data;
@@ -110,7 +89,7 @@ struct Cpu : sc_core::sc_module
     rd_s(uint32_t addr)
     {
         uint32_t data;
-        TLM_B_RD_HALFWORD(bus_m_socket, bus_pl, bus_delay, addr, data);
+        TLM_B_RD_HALFWORD(master_socket, master_b_pl, master_b_delay, addr, data);
 
         CPU_TLM_DBG(2, "rd H addr=0x%08X data=0x%08X", addr, data);
         return data;
@@ -124,7 +103,7 @@ struct Cpu : sc_core::sc_module
     rd_b(uint32_t addr)
     {
         uint32_t data;
-        TLM_B_RD_BYTE(bus_m_socket, bus_pl, bus_delay, addr, data);
+        TLM_B_RD_BYTE(master_socket, master_b_pl, master_b_delay, addr, data);
 
         CPU_TLM_DBG(2, "rd B addr=0x%08X data=0x%08X", addr, data);
         return data;
@@ -139,7 +118,7 @@ struct Cpu : sc_core::sc_module
     {
         CPU_TLM_DBG(2, "wr W addr=0x%08X data=0x%08X", addr, data);
 
-        TLM_B_WR_WORD(bus_m_socket, bus_pl, bus_delay, addr, data);
+        TLM_B_WR_WORD(master_socket, master_b_pl, master_b_delay, addr, data);
     }
 
     /** Function to write a short into the system, going through the timing process
@@ -151,7 +130,7 @@ struct Cpu : sc_core::sc_module
     {
         CPU_TLM_DBG(2, "wr H addr=0x%08X data=0x%08X", addr, data);
 
-        TLM_B_WR_HALFWORD(bus_m_socket, bus_pl, bus_delay, addr, data);
+        TLM_B_WR_HALFWORD(master_socket, master_b_pl, master_b_delay, addr, data);
     }
 
     /** Function to write a byte into the system, going through the timing process
@@ -163,7 +142,7 @@ struct Cpu : sc_core::sc_module
     {
         CPU_TLM_DBG(2, "wr B addr=0x%08X data=0x%08X", addr, data);
 
-        TLM_B_WR_BYTE(bus_m_socket, bus_pl, bus_delay, addr, data);
+        TLM_B_WR_BYTE(master_socket, master_b_pl, master_b_delay, addr, data);
     }
 
     /** Function to make a debug read access into the system
@@ -173,7 +152,7 @@ struct Cpu : sc_core::sc_module
     int
     gdb_rd(uint64_t addr, uint8_t* dataptr, uint32_t len)
     {
-        TLM_DBG_RD(bus_m_socket, bus_pl, addr, dataptr, len);
+        TLM_DBG_RD(master_socket, master_b_pl, addr, dataptr, len);
 
         CPU_TLM_DBG(2, "rd D addr=0x%08llX n_bytes=%d", addr, n_bytes);
 
@@ -187,7 +166,7 @@ struct Cpu : sc_core::sc_module
     int
     gdb_wr(uint64_t addr, uint8_t* dataptr, uint32_t len)
     {
-        TLM_DBG_WR(bus_m_socket, bus_pl, addr, dataptr, len);
+        TLM_DBG_WR(master_socket, master_b_pl, addr, dataptr, len);
 
         CPU_TLM_DBG(2, "wr D addr=0x%08llX n_bytes=%d", addr, n_bytes);
 
@@ -334,11 +313,6 @@ private:
 
     /// Event used to wait for an interrupt
     sc_core::sc_event m_interrupt;
-
-    /// Generic payload transaction to use for BUS requests (to speed up simulation)
-    tlm::tlm_generic_payload bus_pl;
-    /// Time object for delay to use for BUS requests (to speed up simulation)
-    sc_core::sc_time bus_delay;
 };
 
 #endif /*CPU_H_*/

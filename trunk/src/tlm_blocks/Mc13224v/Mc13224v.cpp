@@ -56,7 +56,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //   - create instance
     this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     //   - bind interfaces (CPU access to address decoder)
-    this->cpu->bus_m_socket.bind(this->addrdec->slave_socket);
+    this->cpu->bind(this->addrdec->slave_socket);
 
     // ROM:
     //   - create instance

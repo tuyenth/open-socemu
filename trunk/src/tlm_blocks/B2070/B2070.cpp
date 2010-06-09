@@ -28,7 +28,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - create instance
     this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     //   - bind interfaces (CPU access to address decoder)
-    this->cpu->bus_m_socket.bind(this->addrdec->slave_socket);
+    this->cpu->bind(this->addrdec->slave_socket);
 
     // ROM:
     //   - allocate the memory needed
