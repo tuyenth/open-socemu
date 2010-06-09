@@ -1,18 +1,9 @@
 #ifndef ADDRDEC_H_
 #define ADDRDEC_H_
 
-// necessary define for processes in simple_target_socket
-#define SC_INCLUDE_DYNAMIC_PROCESSES
+#include "SimpleSlave.h"
 
-// obvious inclusion
-#include "systemc"
-
-// not so obvious inclusions
-#include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
-#include "tlm_utils/simple_target_socket.h"
-
-#include "utils.h"
 
 /// debug level
 #define ADDRDEC_DEBUG 0
@@ -33,10 +24,8 @@
  * several slaves
  */
 template<uint8_t N_TARGETS>
-struct AddrDec : sc_core::sc_module
+struct AddrDec : SimpleSlave
 {
-    /// TLM-2 slave socket to receive bus accesses
-    tlm_utils::simple_target_socket<AddrDec> bus_s_socket;
     /// TLM-2 master socket to forward bus accesses
     tlm_utils::simple_initiator_socket_tagged<AddrDec>* bus_m_socket[N_TARGETS];
 
@@ -46,18 +35,10 @@ struct AddrDec : sc_core::sc_module
      *            window)
      */
     AddrDec(sc_core::sc_module_name name, sc_dt::uint64 mask = 0xFFFFFFFFFFFFFFFFLL)
-        : bus_s_socket("bus_s_socket")
+        : SimpleSlave(name, NULL, 0)
         , m_mask(mask)
-        , m_free(true)
-        , m_index(0)
+        , m_num_slaves(0)
     {
-        // hook the slave callbacks
-        bus_s_socket.register_b_transport(this, &AddrDec::bus_s_b_transport);
-        bus_s_socket.register_nb_transport_fw(this, &AddrDec::bus_s_nb_transport_fw);
-        bus_s_socket.register_get_direct_mem_ptr(this, &AddrDec::bus_s_get_direct_mem_ptr);
-        bus_s_socket.register_transport_dbg(this, &AddrDec::bus_s_transport_dbg);
-
-
         for (uint8_t i = 0; i < N_TARGETS; i++)
         {
             char txt[20];
@@ -75,7 +56,7 @@ struct AddrDec : sc_core::sc_module
     }
 
     /** Set a target's address range
-     * @param[in] id Identifier of the target
+     * @param[in] id Target identifier
      * @param[in] start Decoding start address (inclusive)
      * @param[in] end Decoding end address (exclusive, first address not to be decoded)
      * @return true if there was an error, false otherwise
@@ -124,16 +105,18 @@ struct AddrDec : sc_core::sc_module
         return false;
     }
 
-    /** bus_s_socket blocking transport method
+    /** slave_socket blocking transport method
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @param[in, out] delay Time object, allocated by initiator, filled here
      */
-    virtual void bus_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
+    virtual void slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         // sanity check
+        #if SIMPLESLAVE_DEBUG
         assert(this->m_free == true);
+        #endif
 
-        // Forward path
+        // forward path
         sc_dt::uint64 address = trans.get_address();
         sc_dt::uint64 masked_address;
         uint8_t target_nr = decode_address(address & m_mask, masked_address);
@@ -141,47 +124,37 @@ struct AddrDec : sc_core::sc_module
         // check that the address is correct
         if (target_nr < N_TARGETS)
         {
-            // Modify address within transaction
+            // modify address within transaction
             trans.set_address(masked_address);
 
             // mark the bus as busy
+            #if SIMPLESLAVE_DEBUG
             this->m_free = false;
+            #endif
 
-            // Forward transaction to appropriate target
+            // forward transaction to appropriate target
             (*bus_m_socket[target_nr])->b_transport(trans, delay);
 
-            // Replace original address
+            // replace original address
             trans.set_address(address);
 
             // mark the bus as free
+            #if SIMPLESLAVE_DEBUG
             this->m_free = true;
+            #endif
         }
         else
         {
             // address was wrong
-            trans.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
+            trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
         }
     }
 
-    /** bus_s_socket non-blocking forward transport method
-     * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
-     * @param[in, out] phase Phase payload object, allocated by initiator
-     * @param[in, out] delay Time object, allocated by initiator, filled here
-     * @return The base protocol non blocking state
-     */
-    virtual tlm::tlm_sync_enum bus_s_nb_transport_fw(tlm::tlm_generic_payload& trans,
-            tlm::tlm_phase& phase, sc_core::sc_time& delay)
-    {
-        SC_REPORT_FATAL("TLM-2", "Non blocking not yet implemented");
-
-        return tlm::TLM_COMPLETED;
-    }
-
-    /** bus_s_socket direct memory access transport method
+    /** slave_socket direct memory access transport method
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @param[in, out] dmi_data Direct Memory Interface object
      */
-    virtual bool bus_s_get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
+    virtual bool slave_get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
             tlm::tlm_dmi& dmi_data)
     {
         sc_dt::uint64 address = trans.get_address();
@@ -194,18 +167,18 @@ struct AddrDec : sc_core::sc_module
 
         trans.set_address(masked_address);
 
-        bool status = ( *bus_m_socket[target_nr] )->get_direct_mem_ptr( trans, dmi_data );
+        bool status = ( *bus_m_socket[target_nr] )->get_direct_mem_ptr(trans, dmi_data);
 
         trans.set_address(address);
 
         // Calculate DMI address of target in system address space
-        dmi_data.set_start_address( compose_address( target_nr, dmi_data.get_start_address() ));
-        dmi_data.set_end_address  ( compose_address( target_nr, dmi_data.get_end_address() ));
+        dmi_data.set_start_address(compose_address(target_nr, dmi_data.get_start_address()));
+        dmi_data.set_end_address(compose_address(target_nr, dmi_data.get_end_address()));
 
         return status;
     }
 
-    /** bus_s_socket debug transport method
+    /** slave_socket debug transport method
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @return The number of bytes read or written
      */
@@ -292,7 +265,7 @@ struct AddrDec : sc_core::sc_module
         sc_dt::uint64 bw_end_range   = compose_address(id, end_range);
 
         // propagate call backward to initiator
-        bus_s_socket->invalidate_direct_mem_ptr(bw_start_range, bw_end_range);
+        slave_socket->invalidate_direct_mem_ptr(bw_start_range, bw_end_range);
     }
 
     /** Fixed address decoding
@@ -374,22 +347,22 @@ struct AddrDec : sc_core::sc_module
      * @param[in] end First address after start for which transactions are NOT forward to this slave
      * @return True if there was an error, False otherwise
      */
-    bool bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave,
+    bool bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>& slave,
             sc_dt::uint64 start, sc_dt::uint64 end)
     {
         bool status;
 
         // sanity check
-        assert(m_index < N_TARGETS);
+        assert(m_num_slaves < N_TARGETS);
 
         // hook the slave socket
-        bus_m_socket[m_index]->bind(*slave);
+        bus_m_socket[m_num_slaves]->bind(slave);
 
         // add the range specification
-        status = this->set_range(m_index, start, end);
+        status = this->set_range(m_num_slaves, start, end);
 
         // increment the index
-        m_index++;
+        m_num_slaves++;
 
         return status;
     }
@@ -397,20 +370,17 @@ struct AddrDec : sc_core::sc_module
 
     /// Array of structures containing the address ranges of the targets
     struct {
-        /// start address of the range (included in range)
+        /// Start address of the range (included in range)
         sc_dt::uint64 start;
-        /// end address of the range (not included in range)
+        /// End address of the range (not included in range)
         sc_dt::uint64 end;
     } m_bus_m_range[N_TARGETS];
 
-    /// Main mask decoding
+    /// Decoder global address mask
     sc_dt::uint64 m_mask;
 
-    // Indicate that bus is free for a new request.
-    bool m_free;
-
-    // Slave index
-    int m_index;
+    /// Number of slave socket connections (equals number of internal master sockets)
+    int m_num_slaves;
 
 };
 
