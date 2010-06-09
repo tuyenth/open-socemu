@@ -91,10 +91,10 @@ struct SimpleMaster : sc_core::sc_module
      * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
      */
     void
-    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave_socket)
+    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>& slave_socket)
     {
         // hook the slave socket
-        this->master_socket.bind(*slave_socket);
+        this->master_socket.bind(slave_socket);
     }
 
 protected:

@@ -29,7 +29,7 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // create the CPU instance
     cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     // bind the CPU socket to the first targ socket of the BUS
-    cpu->bus_m_socket.bind(*(bus->targ_socket[0]));
+    cpu->bind(*(bus->targ_socket[0]));
 
     for (i = 0; i < sizeof(Memories)/sizeof(Memories[0]); i++)
     {

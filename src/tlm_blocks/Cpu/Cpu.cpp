@@ -11,7 +11,7 @@ using namespace std;
 uint64_t *g_numinstr;
 
 Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& parameters, MSP& config)
-: bus_m_socket("bus_m_socket")
+: SimpleMaster(name)
 , irq_s_socket("irq_s_socket")
 , fiq_s_socket("fiq_s_socket")
 {
@@ -39,11 +39,9 @@ Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& p
     gdbserver = config["gdbserver"];
 
     // force the default values of the BUS transaction
-    bus_pl.set_streaming_width(4);
-    bus_pl.set_byte_enable_ptr(0);
-    bus_pl.set_dmi_allowed(false);
-    // register callbacks for incoming interface method calls
-    bus_m_socket.register_nb_transport_bw(this, &Cpu::bus_m_nb_transport_bw);
+    master_b_pl.set_streaming_width(4);
+    master_b_pl.set_byte_enable_ptr(0);
+    master_b_pl.set_dmi_allowed(false);
     // only blocking calls supported by IRQ and FIQ sockets
     irq_s_socket.register_b_transport(this, &Cpu::irq_s_b_transport);
     fiq_s_socket.register_b_transport(this, &Cpu::fiq_s_b_transport);
@@ -78,7 +76,6 @@ Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& p
     // save the reference to the number of instructions executed
     g_numinstr = &(m_arm->m_NumInstrs);
 
-    SC_THREAD(thread_process);
 }
 
 void Cpu::thread_process()
@@ -98,7 +95,7 @@ void Cpu::thread_process()
         // loop on all the segments and copy the loadables in memory
         while ((Segment = ElfReader.GetNextSegment()) != NULL)
         {
-            TLM_DBG_WR(bus_m_socket, this->bus_pl, Segment->Address(), Segment->Data(), Segment->Size());
+            TLM_DBG_WR(this->master_socket, this->master_b_pl, Segment->Address(), Segment->Data(), Segment->Size());
         }
     }
 
@@ -107,14 +104,6 @@ void Cpu::thread_process()
 
     // should never reach here
     assert(0);
-}
-
-tlm::tlm_sync_enum Cpu::bus_m_nb_transport_bw( tlm::tlm_generic_payload& trans,
-        tlm::tlm_phase& phase, sc_core::sc_time& delay )
-{
-    SC_REPORT_FATAL("TLM-2", "Non blocking not yet implemented");
-
-    return tlm::TLM_ACCEPTED;
 }
 
 void Cpu::irq_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
