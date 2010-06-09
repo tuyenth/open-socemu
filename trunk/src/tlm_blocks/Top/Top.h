@@ -23,13 +23,18 @@
 // Definition
 #define TOP_NUM_MEMORIES 1
 
-/// Top level platform module.
+/// "Top" platform module
 struct Top : sc_core::sc_module
 {
-    Bus<2,TOP_NUM_MEMORIES+2>* bus;
+    /// Bus instance (specify the number of masters and slaves)
+    Bus<1,TOP_NUM_MEMORIES+2>* bus;
+    /// CPU instance
     Cpu* cpu;
+    /// Interrupt controller instance
     IntCtrl* intctrl;
+    /// Dummy peripheral instance
     Dummy* dummy;
+    /// Memory instances array
     Memory* memory[TOP_NUM_MEMORIES];
 
     /** Constructor of the top level module.

@@ -23,13 +23,13 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
     cpu_parameter = config["cpu"];
     cpu_config = cpu_parameter->get_config();
 
-    // create the BUS instance
-    bus = new Bus<2,TOP_NUM_MEMORIES+2> ("bus");
+    // create the BUS instance (1 masters, memories+2 slaves))
+    bus = new Bus<1,TOP_NUM_MEMORIES+2> ("bus");
 
     // create the CPU instance
     cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     // bind the CPU socket to the first targ socket of the BUS
-    cpu->bus_m_socket.bind( *(bus->targ_socket[0]) );
+    cpu->bus_m_socket.bind(*(bus->targ_socket[0]));
 
     for (i = 0; i < sizeof(Memories)/sizeof(Memories[0]); i++)
     {
@@ -40,7 +40,7 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
         // create the MEMORY instance with specific size
         memory[i] = new Memory("memory", data, Memories[i].size);
         // bind the init port of the BUS to the MEMORY
-        ( *(bus->init_socket[i]) ).bind( memory[i]->slave_socket );
+        ( *(bus->init_socket[i]) ).bind(memory[i]->slave_socket);
         // specify the MEMORY address range from the BUS perspective
         if (bus->set_range(i, Memories[i].base, Memories[i].mask))
         {
@@ -51,7 +51,7 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
 
     intctrl = new IntCtrl("intctrl");
     // bind the init port of the BUS to the INTCTRL
-    ( *(bus->init_socket[TOP_NUM_MEMORIES]) ).bind( intctrl->reg_socket );
+    ( *(bus->init_socket[TOP_NUM_MEMORIES]) ).bind(intctrl->reg_socket);
     intctrl->irq_socket.bind(cpu->irq_s_socket);
     intctrl->fiq_socket.bind(cpu->fiq_s_socket);
 
@@ -62,16 +62,16 @@ Top::Top(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
         return;
     }
 
+    // create the dummy module
     dummy = new Dummy("dummy");
     // bind the MAC socket to the second targ socket of the BUS
-    dummy->init_socket.bind( *(bus->targ_socket[1]) );
-    dummy->int_socket.bind(intctrl->int_socket);
+    dummy->bind(&intctrl->int_socket);
     // bind the init port of the BUS to the MAC
-    ( *(bus->init_socket[TOP_NUM_MEMORIES+1]) ).bind(dummy->targ_socket);
+    ( *(bus->init_socket[TOP_NUM_MEMORIES+1]) ).bind(dummy->slave_socket);
     // specify the MAC address range from the BUS perspective
     if (bus->set_range(TOP_NUM_MEMORIES+1, 0x02000000, 0xFFFFFFFFFF000000LL))
     {
-        printf("Dummy address range wrong\n");
+        TLM_ERR("Dummy address range is wrong %d", -1);
         return;
     }
 }
