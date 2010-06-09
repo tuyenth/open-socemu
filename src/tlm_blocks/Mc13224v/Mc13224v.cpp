@@ -56,7 +56,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //   - create instance
     this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     //   - bind interfaces (CPU access to address decoder)
-    this->cpu->bus_m_socket.bind(this->addrdec->bus_s_socket);
+    this->cpu->bus_m_socket.bind(this->addrdec->slave_socket);
 
     // ROM:
     //   - create instance
@@ -65,7 +65,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //       * create the memory
     this->rom = new Memory("rom", romdata, ROM_SIZE);
     //   - bind interface (ROM is hooked to the address decoder)
-    if (this->addrdec->bind(&this->rom->slave_socket, ROM_BASE_ADDR, ROM_BASE_ADDR+ROM_SIZE))
+    if (this->addrdec->bind(this->rom->slave_socket, ROM_BASE_ADDR, ROM_BASE_ADDR+ROM_SIZE))
     {
         TLM_ERR("ROM address range wrong %d", 0);
         return;
@@ -78,7 +78,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //       * create the memory
     this->sram = new Memory("sram", sramdata, SRAM_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
-    if (this->addrdec->bind(&this->sram->slave_socket, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
+    if (this->addrdec->bind(this->sram->slave_socket, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;
@@ -92,7 +92,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->itc->irq_m_socket.bind(this->cpu->irq_s_socket);
     this->itc->fiq_m_socket.bind(this->cpu->fiq_s_socket);
     //      -> address decoder
-    if (this->addrdec->bind(&this->itc->reg_s_socket, REG_ITC_BASE_ADDR,
+    if (this->addrdec->bind(this->itc->reg_s_socket, REG_ITC_BASE_ADDR,
         REG_ITC_BASE_ADDR + (REG_ITC_COUNT*4)))
     {
         TLM_ERR("ITC address range wrong %d", 0);
@@ -104,7 +104,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->crm = new Crm("crm");
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(&this->crm->reg_s_socket, REG_CRM_BASE_ADDR,
+    if (this->addrdec->bind(this->crm->reg_s_socket, REG_CRM_BASE_ADDR,
         REG_CRM_BASE_ADDR + (REG_CRM_COUNT*4)))
     {
         TLM_ERR("CRM address range wrong %d", 0);
@@ -121,7 +121,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->spif = new Spif("spif", (uint8_t*)flashdata, FLASH_SIZE);
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(&this->spif->reg_s_socket, REG_SPIF_BASE_ADDR,
+    if (this->addrdec->bind(this->spif->reg_s_socket, REG_SPIF_BASE_ADDR,
         REG_SPIF_BASE_ADDR + (REG_SPIF_COUNT*4)))
     {
         TLM_ERR("SPIF address range wrong %d", 0);
@@ -135,7 +135,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->spi = new Spi("spi");
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(&this->spi->reg_s_socket, REG_SPI_BASE_ADDR,
+    if (this->addrdec->bind(this->spi->reg_s_socket, REG_SPI_BASE_ADDR,
         REG_SPI_BASE_ADDR + (REG_SPI_COUNT*4)))
     {
         TLM_ERR("SPI address range wrong %d", 0);
@@ -149,7 +149,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->gpio = new Gpio("gpio");
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(&this->gpio->reg_s_socket, REG_GPIO_BASE_ADDR,
+    if (this->addrdec->bind(this->gpio->reg_s_socket, REG_GPIO_BASE_ADDR,
         REG_GPIO_BASE_ADDR + (REG_GPIO_COUNT*4)))
     {
         TLM_ERR("GPIO address range wrong %d", 0);
@@ -161,7 +161,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->uart1 = new Uart(0, "uart1");
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(&this->uart1->reg_s_socket, REG_UART1_BASE_ADDR,
+    if (this->addrdec->bind(this->uart1->reg_s_socket, REG_UART1_BASE_ADDR,
         REG_UART1_BASE_ADDR + (REG_UART_COUNT*4)))
     {
         TLM_ERR("UART1 address range wrong %d", 0);
@@ -175,7 +175,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->uart2 = new Uart(1, "uart2");
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(&this->uart2->reg_s_socket, REG_UART2_BASE_ADDR,
+    if (this->addrdec->bind(this->uart2->reg_s_socket, REG_UART2_BASE_ADDR,
         REG_UART2_BASE_ADDR + (REG_UART_COUNT*4)))
     {
         TLM_ERR("UART2 address range wrong %d", 0);

@@ -27,7 +27,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
     //   - create instance
     this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     //   - bind interfaces
-    this->cpu->bus_m_socket.bind(this->addrdec->bus_s_socket);
+    this->cpu->bus_m_socket.bind(this->addrdec->slave_socket);
 
     // SRAM:
     //   - create instance
@@ -71,7 +71,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
         return;
     }
     //   - bind interfaces
-    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind( this->smc->bus_s_socket );
+    ( *(this->addrdec->bus_m_socket[slave_id]) ).bind(this->smc->bus_s_socket);
     //   - increment the address decoder slave id
     slave_id++;
 
