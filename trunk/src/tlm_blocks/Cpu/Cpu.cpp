@@ -10,7 +10,7 @@ using namespace std;
 
 uint64_t *g_numinstr;
 
-Cpu::Cpu(sc_core::sc_module_name name, std::string &cpuname, Parameters &parameters, MSP &config)
+Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& parameters, MSP& config)
 : bus_m_socket("bus_m_socket")
 , irq_s_socket("irq_s_socket")
 , fiq_s_socket("fiq_s_socket")

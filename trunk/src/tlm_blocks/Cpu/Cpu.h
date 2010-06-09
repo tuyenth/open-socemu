@@ -53,7 +53,7 @@ struct Cpu : sc_core::sc_module
      * @param[in] parameters Command line parameters
      * @param[in] config Parameters of the current block (and sub-blocks)
      */
-    Cpu(sc_core::sc_module_name name, std::string &cpuname, Parameters &parameters, MSP &config);
+    Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& parameters, MSP& config);
 
     /// Main module thread
     void

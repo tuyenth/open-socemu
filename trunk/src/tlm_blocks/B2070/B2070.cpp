@@ -6,7 +6,7 @@
 #define SRAM_BASE_ADDR (0x00080000)
 #define SRAM_SIZE (104*1024)
 
-B2070::B2070(sc_core::sc_module_name name, Parameters &parameters, MSP &config)
+B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
     uint32_t *romdata, *sramdata;
     Parameter *cpu_parameter;

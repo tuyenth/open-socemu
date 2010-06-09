@@ -58,7 +58,7 @@ struct Mc13224v : sc_core::sc_module
      * @param[in] parameters Command line parameters
      * @param[in] config Parameters of the current block (and sub-blocks)
      */
-    Mc13224v(sc_core::sc_module_name name, Parameters &parameters, MSP &config);
+    Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& config);
 };
 
 #endif /*MC13224V_H_*/

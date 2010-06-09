@@ -69,7 +69,7 @@ struct Arm : SimpleMaster
     fiq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 
     /** Function to read an 32 bit instruction from the system, going through timing process
-     * @param[in] addr Address to read
+     * @param[in] addr Address to read the instruction at
      * @return The value read
      */
     virtual uint32_t

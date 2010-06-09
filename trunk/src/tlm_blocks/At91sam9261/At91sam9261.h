@@ -42,7 +42,7 @@ struct At91sam9261 : sc_core::sc_module
      * @param[in] parameters Command line parameters
      * @param[in] config Parameters of the current block (and sub-blocks)
      */
-    At91sam9261(sc_core::sc_module_name name, Parameters &parameters, MSP &config);
+    At91sam9261(sc_core::sc_module_name name, Parameters& parameters, MSP& config);
 };
 
 #endif /*AT91SAM9261_H_*/
