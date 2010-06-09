@@ -4,11 +4,9 @@
 // necessary define for processes in simple_target_socket
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-// obvious inclusion
-#include "systemc"
+#include "SimpleSlave.h"
 
-// not so obvious inclusions
-#include "tlm.h"
+// master socket
 #include "tlm_utils/simple_initiator_socket.h"
 
 // for the helper macros
@@ -31,9 +29,6 @@
 /// Base class for a slave only device
 struct SimpleMaster : sc_core::sc_module
 {
-    /// TLM-2 master socket, defaults to 32-bits wide, base protocol
-    tlm_utils::simple_initiator_socket<SimpleMaster> master_socket;
-
     // Module has a thread
     SC_HAS_PROCESS(SimpleMaster);
 
@@ -97,7 +92,20 @@ struct SimpleMaster : sc_core::sc_module
         this->master_socket.bind(slave_socket);
     }
 
+    /** Bind a slave element to the local master socket
+     * @param[in, out] slave SimpleSlave inherited instance
+     */
+    void
+    bind(SimpleSlave& slave)
+    {
+        // hook the slave socket
+        this->master_socket.bind(slave);
+    }
+
 protected:
+    /// TLM-2 master socket, defaults to 32-bits wide, base protocol
+    tlm_utils::simple_initiator_socket<SimpleMaster> master_socket;
+
     /** Generic payload transaction to use for master blocking requests.  This is used
      * to speed up the simulation by not allocating dynamically a payload for
      * each blocking transaction.

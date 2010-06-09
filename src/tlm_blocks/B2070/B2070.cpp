@@ -28,7 +28,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - create instance
     this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
     //   - bind interfaces (CPU access to address decoder)
-    this->cpu->bind(this->addrdec->slave_socket);
+    this->cpu->bind(*this->addrdec);
 
     // ROM:
     //   - allocate the memory needed
@@ -36,7 +36,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - create the memory instance
     this->rom = new Memory("rom", romdata, ROM_SIZE);
     //   - bind interface (rom is hooked to the address decoder)
-    if (this->addrdec->bind(this->rom->slave_socket, ROM_BASE_ADDR, ROM_BASE_ADDR+ROM_SIZE))
+    if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR, ROM_BASE_ADDR+ROM_SIZE))
     {
         TLM_ERR("ROM address range wrong %d", 0);
         return;
@@ -49,7 +49,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - create the memory instance
     this->sram = new Memory("sram", sramdata, SRAM_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
-    if (this->addrdec->bind(this->sram->slave_socket, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
+    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;

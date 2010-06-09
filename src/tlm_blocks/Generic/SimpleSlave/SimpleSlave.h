@@ -34,18 +34,13 @@
 /// Base class for a slave only device
 struct SimpleSlave : sc_core::sc_module
 {
-    /// TLM-2 slave socket, defaults to 32-bits wide, base protocol
-    tlm_utils::simple_target_socket<SimpleSlave> slave_socket;
-
     /** SimpleSlave class constructor
      * @param[in] name Name of the module
      * @param[in, out] data Pointer to the device data content
      * @param[in] size Size in bytes of the device data
      */
-    SimpleSlave(sc_core::sc_module_name name, uint32_t* data, uint32_t size)
+    SimpleSlave(sc_core::sc_module_name name, uint32_t* data = NULL, uint32_t size = 0)
         : slave_socket("slave_socket")
-        , m_data(data)
-        , m_size(size)
         #if SIMPLESLAVE_DEBUG
         , m_free(true)
         #endif
@@ -55,16 +50,34 @@ struct SimpleSlave : sc_core::sc_module
         slave_socket.register_nb_transport_fw(this, &SimpleSlave::slave_nb_transport_fw);
         slave_socket.register_get_direct_mem_ptr(this, &SimpleSlave::slave_get_direct_mem_ptr);
         slave_socket.register_transport_dbg(this, &SimpleSlave::slave_dbg_transport);
+
+        // set the data container
+        set_data(data, size);
     }
 
     /** Set the data container of the module
      * @param[in, out] data Pointer to the data container
      * @param[in] size Size of the data
      */
-    void set_data(uint32_t* data, uint32_t size)
+    void
+    set_data(uint32_t* data, uint32_t size)
     {
         this->m_data = data;
         this->m_size = size;
+    }
+
+    operator tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types> & ()
+    {
+        return this->slave_socket;
+    }
+
+    /** Get the reference to the slave socket
+     * @return The reference to the slave socket
+     */
+    tlm_utils::simple_target_socket<SimpleSlave>&
+    socket()
+    {
+        return this->slave_socket;
     }
 
     /** slave_socket blocking transport method (default behavior, can be overridden)
@@ -201,6 +214,9 @@ struct SimpleSlave : sc_core::sc_module
     }
 
 protected:
+    /// TLM-2 slave socket, defaults to 32-bits wide, base protocol
+    tlm_utils::simple_target_socket<SimpleSlave> slave_socket;
+
     /// Pointer to the content of the device (as words)
     uint32_t* m_data;
 

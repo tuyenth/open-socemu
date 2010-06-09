@@ -40,7 +40,7 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         // create the MEMORY instance with specific size
         memory[i] = new Memory("memory", data, Memories[i].size);
         // bind the init port of the BUS to the MEMORY
-        ( *(bus->init_socket[i]) ).bind(memory[i]->slave_socket);
+        ( *(bus->init_socket[i]) ).bind(*memory[i]);
         // specify the MEMORY address range from the BUS perspective
         if (bus->set_range(i, Memories[i].base, Memories[i].mask))
         {
@@ -67,7 +67,7 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // bind the MAC socket to the second targ socket of the BUS
     dummy->bind(&intctrl->int_socket);
     // bind the init port of the BUS to the MAC
-    ( *(bus->init_socket[TOP_NUM_MEMORIES+1]) ).bind(dummy->slave_socket);
+    ( *(bus->init_socket[TOP_NUM_MEMORIES+1]) ).bind(*dummy);
     // specify the MAC address range from the BUS perspective
     if (bus->set_range(TOP_NUM_MEMORIES+1, 0x02000000, 0xFFFFFFFFFF000000LL))
     {
