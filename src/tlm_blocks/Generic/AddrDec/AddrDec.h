@@ -6,7 +6,7 @@
 #include "tlm_utils/simple_initiator_socket.h"
 
 /// debug level
-#define ADDRDEC_DEBUG 0
+#define ADDRDEC_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)

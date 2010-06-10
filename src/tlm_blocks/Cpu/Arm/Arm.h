@@ -1,23 +1,14 @@
 #ifndef ARM_H_
 #define ARM_H_
 
-// necessary define for processes in simple_target_socket
-#define SC_INCLUDE_DYNAMIC_PROCESSES
-
-// obvious inclusion
-#include "systemc"
-
-// not so obvious inclusions
-#include "tlm.h"
-#include "tlm_utils/simple_target_socket.h"
-
+#if 0
 // main derived class
-#include "SimpleMaster.h"
+#include "CpuBase.h"
 
 /// debug level
 #define ARM_DEBUG_LEVEL 0
 
-/// Macro to print debug messages.
+/// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
 /// @param __f format of the debug string
 /// @param ... variable arguments
@@ -28,16 +19,32 @@
         }                                                                               \
     } while (false)
 
-#if 0
-struct Arm : SimpleMaster
+struct Arm : CpuBase
 {
+    /// Define the ARM specific features
+    enum arm_features {
+        ARM_FEATURE_VFP,
+        ARM_FEATURE_AUXCR,  // ARM1026 Auxiliary control register
+        ARM_FEATURE_XSCALE, // Intel XScale extensions
+        ARM_FEATURE_IWMMXT, // Intel iwMMXt extension
+        ARM_FEATURE_V6,
+        ARM_FEATURE_V6K,
+        ARM_FEATURE_V7,
+        ARM_FEATURE_THUMB2,
+        ARM_FEATURE_MPU, // Only has Memory Protection Unit, not full MMU
+        ARM_FEATURE_VFP3,
+        ARM_FEATURE_VFP_FP16,
+        ARM_FEATURE_NEON,
+        ARM_FEATURE_DIV,
+        ARM_FEATURE_M, // Microcontroller profile
+        ARM_FEATURE_OMAPCP, // OMAP specific CP15 ops handling
+        ARM_FEATURE_THUMB2EE
+    };
+
     /// Socket to receive IRQ set and clear commands
     tlm_utils::simple_target_socket<Arm> irq_s_socket;
     /// Socket to receive FIQ set and clear commands
     tlm_utils::simple_target_socket<Arm> fiq_s_socket;
-
-    // Module has a thread
-    SC_HAS_PROCESS(Arm);
 
     /** Arm constructor
      * @param[in] name Name of the module
@@ -45,7 +52,7 @@ struct Arm : SimpleMaster
      * @param[in] gdbstart Specifies if ISS must wait for GDB remote connection before starting
      */
     Arm(sc_core::sc_module_name name, bool gdbserver, bool gdbstart)
-    : SimpleMaster(name)
+    : CpuBase(name)
     , irq_s_socket("irq_s_socket")
     , fiq_s_socket("fiq_s_socket")
     {
@@ -53,7 +60,6 @@ struct Arm : SimpleMaster
         irq_s_socket.register_b_transport(this, &Arm::irq_s_b_transport);
         fiq_s_socket.register_b_transport(this, &Arm::fiq_s_b_transport);
 
-        SC_THREAD(thread_process);
     }
 
     /// Main module thread
@@ -79,21 +85,10 @@ struct Arm : SimpleMaster
 
         ARM_TLM_DBG(3, "rd instruction L addr=0x%08X", addr);
 
-        if (unlikely(addr & 3))
-        {
-            uint32_t datal, datah, addrm;
-
-            addrm = addr & (~3);
-            TLM_B_RD_WORD(master_socket, master_nb_pl, master_nb_delay, addrm, datal);
-            TLM_B_RD_WORD(master_socket, master_nb_pl, master_nb_delay, addrm + 4, datah);
-            data = (datah << 16) | (datal >> 16);
-        }
-        else
-        {
-            TLM_B_RD_WORD(master_socket, master_nb_pl, master_nb_delay, addr, data);
-        }
+        data = CpuBase::rd_l_unaligned(addr);
 
         ARM_TLM_DBG(2, "rd instruction L addr=0x%08X data=0x%08X", addr, data);
+
         return data;
     }
 
@@ -109,7 +104,7 @@ struct Arm : SimpleMaster
         ARM_TLM_DBG(3, "rd instruction H addr=0x%08X", addr);
 
         // read the word at the word aligned address
-        TLM_B_RD_WORD(master_socket, master_nb_pl, master_nb_delay, addr & (~3), data);
+        TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, addr & (~3), data);
 
         // check the alignment
         if (addr & 2)
@@ -133,7 +128,7 @@ struct Arm : SimpleMaster
 
         ARM_TLM_DBG(3, "rd L addr=0x%08X", addr);
 
-        TLM_B_RD_WORD(master_socket, master_nb_pl, master_nb_delay, addr, data);
+        TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, addr, data);
 
         ARM_TLM_DBG(2, "rd L addr=0x%08X data=0x%08X", addr, data);
         return data;
@@ -147,7 +142,7 @@ struct Arm : SimpleMaster
     rd_s(uint32_t addr)
     {
         uint32_t data;
-        TLM_B_RD_HALFWORD(master_socket, master_nb_pl, master_nb_delay, addr, data);
+        TLM_B_RD_HALFWORD(master_socket, master_b_pl, master_b_delay, addr, data);
 
         ARM_TLM_DBG(2, "rd H addr=0x%08X data=0x%08X", addr, data);
         return data;
@@ -161,7 +156,7 @@ struct Arm : SimpleMaster
     rd_b(uint32_t addr)
     {
         uint32_t data;
-        TLM_B_RD_BYTE(master_socket, master_nb_pl, master_nb_delay, addr, data);
+        TLM_B_RD_BYTE(master_socket, master_b_pl, master_b_delay, addr, data);
 
         ARM_TLM_DBG(2, "rd B addr=0x%08X data=0x%08X", addr, data);
         return data;
@@ -176,7 +171,7 @@ struct Arm : SimpleMaster
     {
         ARM_TLM_DBG(2, "wr W addr=0x%08X data=0x%08X", addr, data);
 
-        TLM_B_WR_WORD(master_socket, master_nb_pl, master_nb_delay, addr, data);
+        TLM_B_WR_WORD(master_socket, master_b_pl, master_b_delay, addr, data);
     }
 
     /** Function to write a short into the system, going through the timing process
@@ -188,7 +183,7 @@ struct Arm : SimpleMaster
     {
         ARM_TLM_DBG(2, "wr H addr=0x%08X data=0x%08X", addr, data);
 
-        TLM_B_WR_HALFWORD(master_socket, master_nb_pl, master_nb_delay, addr, data);
+        TLM_B_WR_HALFWORD(master_socket, master_b_pl, master_b_delay, addr, data);
     }
 
     /** Function to write a byte into the system, going through the timing process
@@ -200,36 +195,9 @@ struct Arm : SimpleMaster
     {
         ARM_TLM_DBG(2, "wr B addr=0x%08X data=0x%08X", addr, data);
 
-        TLM_B_WR_BYTE(master_socket, master_nb_pl, master_nb_delay, addr, data);
+        TLM_B_WR_BYTE(master_socket, master_b_pl, master_b_delay, addr, data);
     }
 
-    /** Function to make a debug read access into the system
-     * @param[in] addr Address to write to
-     * @param[in] data Data to write
-     */
-    int
-    gdb_rd(uint64_t addr, uint8_t* dataptr, uint32_t len)
-    {
-        TLM_DBG_RD(master_socket, master_nb_pl, addr, dataptr, len);
-
-        ARM_TLM_DBG(2, "rd D addr=0x%08llX n_bytes=%d", addr, n_bytes);
-
-        return n_bytes;
-    }
-
-    /** Function to make a debug write access into the system
-     * @param[in] addr Address to write to
-     * @param[in] data Data to write
-     */
-    int
-    gdb_wr(uint64_t addr, uint8_t* dataptr, uint32_t len)
-    {
-        TLM_DBG_WR(master_socket, master_nb_pl, addr, dataptr, len);
-
-        ARM_TLM_DBG(2, "wr D addr=0x%08llX n_bytes=%d", addr, n_bytes);
-
-        return n_bytes;
-    }
 
     /** Function to wait for some ARM cycles
      * @param[in] cycles Number of cycles to wait for
@@ -272,82 +240,11 @@ struct Arm : SimpleMaster
         ARM_TLM_DBG(1, "WFI: exit %d", 0);
     }
 
-
-    /** Callback to read a word from the system, going through timing process
-     * @warning This function is static because it is used as a callback
-     * @param[in, out] obj Pointer to the instance to use
-     * @param[in] addr Address to read from
-     * @return The value read
-     */
-    static uint32_t
-    rd_l_cb(void *obj, uint32_t addr);
-
-    /** Callback to read a short from the system, going through timing process
-     * @warning This function is static because it is used as a callback
-     * @param[in, out] obj Pointer to the instance to use
-     * @param[in] addr Address to read from
-     * @return The value read
-     */
-    static uint32_t
-    rd_s_cb(void *obj, uint32_t addr);
-
-    /** Callback to read a byte from the system, going through timing process
-     * @warning This function is static because it is used as a callback
-     * @param[in, out] obj Pointer to the instance to use
-     * @param[in] addr Address to read from
-     * @return The value read
-     */
-    static uint32_t
-    rd_b_cb(void *obj, uint32_t addr);
-
-    /** Callback to write a long into the system, going through the timing process
-     * @warning This function is static because it is used as a callback
-     * @param[in, out] obj Pointer to the instance to use
-     * @param[in] addr Address to write to
-     * @param[in] data Data to write
-     */
-    static void
-    wr_l_cb(void *obj, uint32_t addr, uint32_t data);
-
-    /** Callback to write a short into the system, going through the timing process
-     * @warning This function is static because it is used as a callback
-     * @param[in, out] obj Pointer to the instance to use
-     * @param[in] addr Address to write to
-     * @param[in] data Data to write
-     */
-    static void
-    wr_s_cb(void *obj, uint32_t addr, uint32_t data);
-
-    /** Callback to write a byte into the system, going through the timing process
-     * @warning This function is static because it is used as a callback
-     * @param[in, out] obj Pointer to the instance to use
-     * @param[in] addr Address to write to
-     * @param[in] data Data to write
-     */
-    static void
-    wr_b_cb(void *obj, uint32_t addr, uint32_t data);
-
-    /** Callback to make a debug read access into the system
-     * @warning This function is static because it is used as a callback
-     * @param[in, out] obj Pointer to the instance to use
-     * @param[in] addr Address to read at
-     * @param[in, out] dataptr Pointer to the buffer to fill
-     * @param[in] len Length of the data to read
-     * @return The number of bytes actually read
-     */
-    static int
-    gdb_rd_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len);
-
-    /** Callback to make a debug write access into the system
-     * @warning This function is static because it is used as a callback
-     * @param[in, out] obj Pointer to the instance to use
-     * @param[in] addr Address to write at
-     * @param[in] dataptr Pointer to the buffer to read from
-     * @param[in] len Length of the data to write
-     * @return The number of bytes actually written
-     */
-    static int
-    gdb_wr_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len);
+    int
+    arm_feature(int feature)
+    {
+        return ((this->features & (1u << feature)) != 0);
+    }
 
 protected:
     /** Load a register from the current mode bank
@@ -372,17 +269,19 @@ protected:
     /// features supported by this core
     uint32_t features;
 
-    /// Program Counter
-    uint32_t pc;
-
     /// Processor is in thumb mode
     bool thumb;
 
-private:
+    /// current registers pointer
+    uint32_t* regs;
+
     /// Event used to wait for an interrupt
     sc_core::sc_event m_interrupt;
-};
-#endif
 
+};
+//
+#define IS_M() arm_feature(ARM_FEATURE_M)
+
+#endif
 
 #endif /*ARM_H_*/

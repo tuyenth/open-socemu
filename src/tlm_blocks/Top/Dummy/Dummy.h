@@ -4,7 +4,7 @@
 #include "SimpleMasterSlave.h"
 
 /// debug level
-#define DUMMY_DEBUG 0
+#define DUMMY_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
