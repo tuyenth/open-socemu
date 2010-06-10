@@ -147,7 +147,7 @@ struct Cpu : SimpleMaster
 
     /** Function to make a debug read access into the system
      * @param[in] addr Address to write to
-     * @param[in] data Data to write
+     * @param[in] dataptr Data to write
      */
     int
     gdb_rd(uint64_t addr, uint8_t* dataptr, uint32_t len)

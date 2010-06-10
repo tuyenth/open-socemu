@@ -13,7 +13,7 @@
 #include "utils.h"
 
 /// debug level
-#define SIMPLEMASTER_DEBUG 0
+#define SIMPLEMASTER_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)

@@ -18,7 +18,7 @@
 #include "utils.h"
 
 /// debug level
-#define SIMPLEMASTERSLAVE_DEBUG 0
+#define SIMPLEMASTERSLAVE_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
