@@ -15,6 +15,7 @@ Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& p
 , irq_s_socket("irq_s_socket")
 , fiq_s_socket("fiq_s_socket")
 {
+    // structure whose definition belongs to a specific class
     struct mmu::bus bus;
     Parameter* gdbserver;
     Parameter* elffile;
@@ -38,10 +39,6 @@ Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& p
     }
     gdbserver = config["gdbserver"];
 
-    // force the default values of the BUS transaction
-    master_b_pl.set_streaming_width(4);
-    master_b_pl.set_byte_enable_ptr(0);
-    master_b_pl.set_dmi_allowed(false);
     // only blocking calls supported by IRQ and FIQ sockets
     irq_s_socket.register_b_transport(this, &Cpu::irq_s_b_transport);
     fiq_s_socket.register_b_transport(this, &Cpu::fiq_s_b_transport);
@@ -81,7 +78,7 @@ Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& p
 void Cpu::thread_process()
 {
     // create an instance of ElfReader
-    CElfReader ElfReader;
+    ElfReader ElfReader;
 
     // check if there was an ELF file specified for this CPU
     if (this->elfpath != NULL)
@@ -90,7 +87,7 @@ void Cpu::thread_process()
         ElfReader.Open(this->elfpath->c_str());
 
         // use a Segment pointer
-        CSegment* Segment;
+        Segment* Segment;
 
         // loop on all the segments and copy the loadables in memory
         while ((Segment = ElfReader.GetNextSegment()) != NULL)

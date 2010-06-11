@@ -2,31 +2,31 @@
  * @brief Definition of the API to read ELF files segments
  * 
  * File containing an API to retrieve the segments from an ELF (Executable and Linking 
- * Format) file.  Typically, the user uses the class CElfReader and its methods to parse 
- * the ELF file and retrieve successively the pointers to the CSegment instances that 
+ * Format) file.  Typically, the user uses the class ElfReader and its methods to parse
+ * the ELF file and retrieve successively the pointers to the Segment instances that
  * represent all the segments of the ELF file.
  * 
  * An typical use case of this API, the ELF file containing 3 segments:
  * @msc
  *  Caller,ElfReader;
- *  Caller=>ElfReader [label="Open(ElfFileName)", URL="\ref CElfReader::Open()"];
- *  Caller=>ElfReader [label="GetNextSegment()", URL="\ref CElfReader::GetNextSegment()"];
- *  Caller<<ElfReader [label="CSegment*", URL="\ref CSegment", ID="1"];
+ *  Caller=>ElfReader [label="Open(ElfFileName)", URL="\ref ElfReader::Open()"];
+ *  Caller=>ElfReader [label="GetNextSegment()", URL="\ref ElfReader::GetNextSegment()"];
+ *  Caller<<ElfReader [label="Segment*", URL="\ref Segment", ID="1"];
  *  ---               [label="Use the segment to load the system memory"];
- *  Caller=>ElfReader [label="GetNextSegment()", URL="\ref CElfReader::GetNextSegment()"];
- *  Caller<<ElfReader [label="CSegment*", URL="\ref CSegment", ID="2"];
+ *  Caller=>ElfReader [label="GetNextSegment()", URL="\ref ElfReader::GetNextSegment()"];
+ *  Caller<<ElfReader [label="Segment*", URL="\ref Segment", ID="2"];
  *  ---               [label="Use the segment to load the system memory"];
- *  Caller=>ElfReader [label="GetNextSegment()", URL="\ref CElfReader::GetNextSegment()"];
- *  Caller<<ElfReader [label="CSegment*", URL="\ref CSegment", ID="3"];
+ *  Caller=>ElfReader [label="GetNextSegment()", URL="\ref ElfReader::GetNextSegment()"];
+ *  Caller<<ElfReader [label="Segment*", URL="\ref Segment", ID="3"];
  *  ---               [label="Use the segment to load the system memory"];
- *  Caller=>ElfReader [label="GetNextSegment()", URL="\ref CElfReader::GetNextSegment()"];
+ *  Caller=>ElfReader [label="GetNextSegment()", URL="\ref ElfReader::GetNextSegment()"];
  *  Caller<<ElfReader [label="NULL"];
  *  ---               [label="No more segments"];
  * @endmsc
  * The equivalent code of this picture is:
  * @code
- * CElfReader ElfReader;
- * CSegment* Segment;
+ * ElfReader ElfReader;
+ * Segment* Segment;
  * ElfReader.Open("ElfFileName");
  * while ((Segment = ElfReader.GetNextSegment()) != NULL)
  * {
@@ -34,8 +34,8 @@
  * }
  * @endcode
  * 
- * @see CElfReader
- * @see CSegment
+ * @see ElfReader
+ * @see Segment
  * @see http://fr.wikipedia.org/wiki/Executable_and_Linking_Format
  * For more information about the ELF file format.
  */
@@ -48,9 +48,9 @@
 /** @brief Class representing a loadable segment of an ELF file
  * Contains all the relevant information concerning a loadable segment of an ELF file.
  * This information is extracted from the program headers of the ELF file.
- * @see CElfReader
+ * @see ElfReader
  */
-class CSegment
+class Segment
 {
 private:
     /// Segment data pointer
@@ -66,13 +66,13 @@ public:
      * @param[in] Size Size of the Segment
      * @param[in] Address Address of the segment in memory
      */
-    CSegment(char* Data, int Size, uint32_t Address) : 
+    Segment(char* Data, int Size, uint32_t Address) :
         m_Data(Data), m_Size(Size), m_Address(Address) {}
     
     /** @brief Retrieve the segment data pointer
      * The pointer points to a location in the ELF file.  The ELF file content is memory
      * mapped, this pointer contains a memory address and can be accessed immediately.
-     * @see CElfReader::Open()
+     * @see ElfReader::Open()
      */
     char* Data() { return m_Data; }
     
@@ -96,9 +96,9 @@ public:
 /** @brief Class representing an ELF file
  * This class helps in parsing the loadable segments of an ELF file into a system memory.
  * It hides all the complexity of the ELF format behind a few method calls.
- * @see CSegment
+ * @see Segment
  */
-class CElfReader
+class ElfReader
 {
 private:
     /// File descriptor of the ELF file
@@ -112,7 +112,7 @@ private:
     /// Contains the number of segments in the ELF file
     int m_CurrentSegment;
     /// Array of the segments in the ELF file
-    CSegment** m_Segments;
+    Segment** m_Segments;
     
 public:
     /** @brief Default constructor
@@ -120,14 +120,14 @@ public:
      * sure that any misuse of the API can not lead to crash.  But no dynamic allocation
      * is performed during this phase.
      */
-    CElfReader() : 
+    ElfReader() :
         m_Fd(-1), m_MmapBuf(NULL), m_MmapSize(0), m_SegmentsNum(0), m_CurrentSegment(0) {}
 
     /** @brief Default destructor
      * The destructor takes care of freeing all the memory that was allocated during the
      * lifetime of the instance.
      */
-    ~CElfReader();
+    ~ElfReader();
     
     /** @brief Open and parse the ELF file
      * The function fills the internal array with the ELF file loadable segments
@@ -136,17 +136,17 @@ public:
      * @warning If the user omits to call this function, no segments can be retrieved but
      * this mistake is handled and can not lead to a crash.
      * @param[in] file Name of the ELF file to parse.
-     * @see CElfReader::GetNextSegment()
+     * @see ElfReader::GetNextSegment()
      */
     void Open(const char* file);
     
     /** Retrieve the next segment in the ELF file
      * @warning If the Open method has not been called or was not able to complete
      * successfully, this function always returns NULL.
-     * @return Pointer to a CSegment class instance or NULL if there are no more instances.
-     * @see CElfReader::Open()
+     * @return Pointer to a Segment class instance or NULL if there are no more instances.
+     * @see ElfReader::Open()
      */
-    CSegment* GetNextSegment();
+    Segment* GetNextSegment();
 };
 
 #endif /*ELFREADER_H_*/

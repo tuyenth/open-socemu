@@ -25,7 +25,7 @@
 
 using namespace std;
 
-CElfReader::~CElfReader()
+ElfReader::~ElfReader()
 {
     int i;
     
@@ -42,7 +42,7 @@ CElfReader::~CElfReader()
         close(this->m_Fd);
         
 
-        // destroy the CSegment instances
+        // destroy the Segment instances
         for (i=0; i < this->m_SegmentsNum; i++)
         {
             delete this->m_Segments[i];
@@ -54,7 +54,7 @@ CElfReader::~CElfReader()
 }
 
 void
-CElfReader::Open(const char* file)
+ElfReader::Open(const char* file)
 {
     int i;
     struct stat stat;
@@ -241,8 +241,8 @@ CElfReader::Open(const char* file)
     // initialize the number of segments
     this->m_SegmentsNum = Ehdr->e_phnum;
     
-    // allocate the array of CSegment pointers
-    this->m_Segments = new CSegment * [this->m_SegmentsNum];
+    // allocate the array of Segment pointers
+    this->m_Segments = new Segment * [this->m_SegmentsNum];
     
     // fill the arrays
     for (i=0; i < Ehdr->e_phnum; i++)
@@ -250,7 +250,7 @@ CElfReader::Open(const char* file)
         // map the program header
         Phdr = (Elf32_Phdr*)((uint32_t)Ehdr + Ehdr->e_phoff + (Ehdr->e_phentsize * i));
         
-        this->m_Segments[i] = new CSegment((char*)Ehdr + Phdr->p_offset, Phdr->p_filesz, Phdr->p_vaddr);
+        this->m_Segments[i] = new Segment((char*)Ehdr + Phdr->p_offset, Phdr->p_filesz, Phdr->p_vaddr);
         
         elfreader_dbg("  - segment %d: %d bytes at 0x%08X\n", i, this->m_Segments[i]->Size(), 
                 (int)this->m_Segments[i]->Address());
@@ -262,8 +262,8 @@ elfreader_exit:
     return;
 }
 
-CSegment*
-CElfReader::GetNextSegment()
+Segment*
+ElfReader::GetNextSegment()
 {
     // check if the current segment is within boundaries
     if (this->m_CurrentSegment < this->m_SegmentsNum)
