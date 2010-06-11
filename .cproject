@@ -43,6 +43,7 @@
 <listOptionValue builtIn="false" value="../src"/>
 <listOptionValue builtIn="false" value="../src/utils"/>
 <listOptionValue builtIn="false" value="../src/utils/elfreader"/>
+<listOptionValue builtIn="false" value="../src/utils/GdbServerNone"/>
 <listOptionValue builtIn="false" value="../src/main"/>
 <listOptionValue builtIn="false" value="../src/iss"/>
 <listOptionValue builtIn="false" value="../src/iss/arch/arm"/>
