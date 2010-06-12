@@ -1,4 +1,4 @@
-/** @file elfreader.h
+/** @file ElfReader.h
  * @brief Definition of the API to read ELF files segments
  * 
  * File containing an API to retrieve the segments from an ELF (Executable and Linking 

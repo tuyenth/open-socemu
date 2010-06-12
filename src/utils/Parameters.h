@@ -13,6 +13,7 @@ typedef std::map<std::string, Parameter*> MSP;
 class Parameter
 {
 public:
+    /// Minimal constructor
     Parameter()
     {
         this->value = "";
@@ -127,6 +128,10 @@ public:
         }
     }
 
+    bool operator ==(const std::string& b)
+    {
+        return this->value == b;
+    }
 private:
     /// Value of the parameter
     std::string value;
