@@ -3,6 +3,7 @@
 
 #include "SimpleMaster.h"
 
+#include "ElfReader.h"
 #include "Parameters.h"
 
 /// debug level
@@ -43,7 +44,6 @@ struct CpuBase: SimpleMaster
         // structure whose definition belongs to a specific class
         struct GDB::GdbCb callbacks;
 
-
         // set the default callbacks
         callbacks.gdb_set_pc_cb = &(this->gdb_set_pc_cb);
         callbacks.gdb_read_registers_cb = &(this->gdb_read_registers_cb);
@@ -69,12 +69,68 @@ struct CpuBase: SimpleMaster
         SC_THREAD(thread_process);
     }
 
+    /// Reset the CPU
+    virtual void
+    reset(void)
+    {
+        this->pc = 0;
+    }
+
+    /// Load the ELF file using the debug transport from the CPU point of view
+    virtual void
+    load_elf(void)
+    {
+        // create an instance of ElfReader
+        ElfReader ElfReader;
+        // use a Segment pointer
+        Segment* Segment;
+
+        // check if there was an ELF file specified for this CPU
+        if (this->elfpath != NULL)
+        {
+            // open the ELF file
+            ElfReader.Open(this->elfpath->c_str());
+
+            // loop on all the segments and copy the loadables in memory
+            while ((Segment = ElfReader.GetNextSegment()) != NULL)
+            {
+                // do a debug write operation
+                TLM_DBG_WR(this->master_socket, this->master_b_pl, Segment->Address(), Segment->Data(), Segment->Size());
+            }
+        }
+    }
+
+    /// Execute a single instruction from the current CPU state
+    virtual void
+    execute_insn(void)
+    {
+        // fetch the next instruction
+
+        // check if the debugger wants to halt and if it wants to execute the current instruction
+        if (unlikely(!this->gdbserver.after_ins_fetch()))
+            return;
+
+        // increment the PC
+        this->pc += 4;
+
+        // execute the instruction
+    }
+
     /// Main module thread, runs the CPU startup and instruction loop
     virtual void
-    thread_process()
+    thread_process(void)
     {
-        // wait forever
-        sc_core::wait();
+        // load the elf file
+        this->load_elf();
+
+        // reset the CPU
+        this->reset();
+
+        while (true)
+        {
+            // execute the instructions
+            this->execute_insn();
+        }
     }
 
     /** Function to read an 32 bit word from the system, going through timing process

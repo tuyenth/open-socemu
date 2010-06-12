@@ -1,4 +1,4 @@
-/** @file elfreader.cpp
+/** @file ElfReader.cpp
  * @brief Implementation of the API to read ELF files segments.
  */
 
@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <elf.h>
 
-#include "elfreader.h"
+#include "ElfReader.h"
 
 /// Define this for debug purpose.
 //#define ELFREADER_DEBUG is_defined

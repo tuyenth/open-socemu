@@ -1,4 +1,6 @@
 #include "Top.h"
+#include "CpuBase.h"
+#include "GdbServerNone.h"
 
 const struct {
     uint32_t size;
@@ -26,11 +28,21 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // create the BUS instance (1 masters, memories+2 slaves))
     bus = new Bus<1,TOP_NUM_MEMORIES+2> ("bus");
 
-    // create the CPU instance
-    cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
-    // bind the CPU socket to the first targ socket of the BUS
-    cpu->bind(*(bus->targ_socket[0]));
+    // check if the CPU requested is the cpubase
+    if (*cpu_parameter == "CpuBase")
+    {
+        cpubase = new CpuBase<GdbServerNone>("cpu", parameters, *cpu_config);
+        cpubase->bind(*(bus->targ_socket[0]));
+    }
+    else
+    {
+        // old style CPU
+        // create the CPU instance
+        cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
+        // bind the CPU socket to the first targ socket of the BUS
+        cpu->bind(*(bus->targ_socket[0]));
 
+    }
     for (i = 0; i < sizeof(Memories)/sizeof(Memories[0]); i++)
     {
         uint32_t* data;

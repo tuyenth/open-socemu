@@ -30,6 +30,8 @@ struct Top : sc_core::sc_module
     Bus<1,TOP_NUM_MEMORIES+2>* bus;
     /// CPU instance
     Cpu* cpu;
+    /// CPU with debugger instance
+    SimpleMaster* cpubase;
     /// Interrupt controller instance
     IntCtrl* intctrl;
     /// Dummy peripheral instance
