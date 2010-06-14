@@ -1,6 +1,12 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
+// necessary define for processes in simple_target_socket
+#define SC_INCLUDE_DYNAMIC_PROCESSES
+
+// obvious inclusion
+#include "systemc"
+
 /// Macro to configure debug the utils tools (could be configured for a single file)
 #ifndef UTILS_DEBUG_LEVEL
     #define UTILS_DEBUG_LEVEL 0
@@ -32,6 +38,17 @@
 do {                                                                        \
     char __mystring[1024];                                                  \
     sprintf(__mystring, "%s: " format, this->name(), __VA_ARGS__);          \
+    std::cerr<<__mystring <<" at "<<sc_core::sc_time_stamp()<<std::endl;    \
+    exit(-1);                                                               \
+} while (0)
+
+/// Macro to print error and exit
+/// @param[in] name name to print
+/// @param[in] format print format
+#define SYS_ERR(name, format, ...)                                          \
+do {                                                                        \
+    char __mystring[1024];                                                  \
+    sprintf(__mystring, "%s: " format, name, __VA_ARGS__);                  \
     std::cerr<<__mystring <<" at "<<sc_core::sc_time_stamp()<<std::endl;    \
     exit(-1);                                                               \
 } while (0)

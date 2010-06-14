@@ -2,6 +2,8 @@
 #define GDBSERVERNONE_H_
 #include <stdint.h>
 
+#include "Parameters.h"
+
 struct GdbServerNone
 {
     /// Define the interface from the remote GDB commands to the ISS
@@ -19,9 +21,15 @@ struct GdbServerNone
         int (*gdb_wr_cb)(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len);
     };
 
-    /// Constructor
-    GdbServerNone()
+    /** Constructor
+     * @param[in] parameters Command line parameters
+     * @param[in] config Parameters of the current block (and sub-blocks)
+     */
+    GdbServerNone(Parameters& parameters, MSP& config)
     {
+        // get the gdb wait indication from the command line parameters
+        this->gdb_wait = parameters.gdb_wait.get_bool();
+
     }
 
     /** Set the CB interface
@@ -33,13 +41,8 @@ struct GdbServerNone
         this->callbacks = cb;
     }
 
-    /** Start the GDB server
-     * This function waits for the GDB connection to the server before returning.
-     * @param port Indicates the TCP port on which the server must wait
-     * @param enabled Indicates if the GDBSERVER must be enabled
-     * @param blocking Indicates if the socket must be configured in blocking mode
-     */
-    virtual void start(int port, bool enabled, bool blocking)
+    /// Start the GDB server
+    virtual void start()
     {
     }
 
@@ -72,8 +75,11 @@ struct GdbServerNone
         return 0;
     }
 
-private:
+protected:
+    // structure containing the callbacks for the gdb server interaction with ISS
     struct GdbCb callbacks;
+    /// Indicates that when starting, wait for the GDB connection
+    bool gdb_wait;
 };
 
 #endif /*GDBSERVERNONE_H_*/
