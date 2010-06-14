@@ -35,16 +35,17 @@ struct CpuBase: SimpleMaster
     /** CpuBase constructor
      * @param[in] name Name of the module
      * @param[in] parameters Command line parameters
-     * @param[in] config Parameters of the current block (and sub-blocks)
+     * @param[in, out] config Parameters of the current block (and sub-blocks)
      */
     CpuBase(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     : SimpleMaster(name)
+    , gdbserver(parameters, config)
     {
         Parameter* elffile;
         // structure whose definition belongs to a specific class
         struct GDB::GdbCb callbacks;
 
-        // set the default callbacks
+        // set the gdbserver callbacks
         callbacks.gdb_set_pc_cb = &(this->gdb_set_pc_cb);
         callbacks.gdb_read_registers_cb = &(this->gdb_read_registers_cb);
         callbacks.gdb_write_registers_cb = &(this->gdb_write_registers_cb);
@@ -125,6 +126,9 @@ struct CpuBase: SimpleMaster
 
         // reset the CPU
         this->reset();
+
+        // start the GDB server
+        this->gdbserver.start();
 
         while (true)
         {
