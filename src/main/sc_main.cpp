@@ -262,22 +262,27 @@ int sc_main(int argc, char* argv[])
     parameter = parameters.config["platform"];
 
     // check if it is an AT91SAM9261 platform that is requested
-    if (*parameter->get_string() == "at91sam9261")
+    if (*parameter == "at91sam9261")
     {
-        At91sam9261 at91sam9261("at91sam9261", parameters, *parameter->get_config());
+        At91sam9261 at91sam9261("at91sam9261", parameters, *parameter);
     }
-    else if (*parameter->get_string() == "mc13224v")
+    else if (*parameter == "mc13224v")
     {
-        Mc13224v mc13224v("mc13224v", parameters, *parameter->get_config());
+        Mc13224v mc13224v("mc13224v", parameters, *parameter);
     }
-    else if (*parameter->get_string() == "b2070")
+    else if (*parameter == "b2070")
     {
-        B2070 b2070("b2070", parameters, *parameter->get_config());
+        B2070 b2070("b2070", parameters, *parameter);
+    }
+    else if (*parameter == "top")
+    {
+        // create the Top level system
+        Top top("top", parameters, *parameter);
     }
     else
     {
-        // create the Top level system
-        Top top("top", parameters, *parameter->get_config());
+        printf("\nERROR: unknown platform %s\n", parameter->c_str());
+        return -1;
     }
 
     // start the simulation

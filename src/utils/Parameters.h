@@ -132,6 +132,17 @@ public:
     {
         return this->value == b;
     }
+
+    operator MSP& ()
+    {
+        return *this->get_config();
+    }
+
+    operator std::string& ()
+    {
+        return *this->get_string();
+    }
+
 private:
     /// Value of the parameter
     std::string value;

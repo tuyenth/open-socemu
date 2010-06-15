@@ -8,7 +8,6 @@
 At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
     Parameter *cpu_parameter;
-    MSP *cpu_config;
 
     // sanity check: check parameters
     if (config.count("cpu") != 1)
@@ -17,14 +16,13 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
         return;
     }
     cpu_parameter = config["cpu"];
-    cpu_config = cpu_parameter->get_config();
 
     // create the address decoder instance
     this->addrdec = new AddrDec<4> ("addrdec");
 
     // CPU:
     //   - create instance
-    this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
+    this->cpu = new Cpu("cpu", *cpu_parameter, parameters, *cpu_parameter);
     //   - bind interfaces
     this->cpu->bind(*this->addrdec);
 

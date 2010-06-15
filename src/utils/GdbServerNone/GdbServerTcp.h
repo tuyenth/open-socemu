@@ -19,6 +19,18 @@
 /// debug level
 #define GDBSERVERTCP_DEBUG_LEVEL 0
 
+/// Macro to print debug messages
+/// @param __l level of debug message (0 means always printed)
+/// @param __f format of the debug string
+/// @param ... variable arguments
+#define GDBSERVERTCP_TLM_DBG(__l, __f, ...)                                             \
+    do {                                                                                \
+        if (CPUBASE_DEBUG_LEVEL >= __l) {                                               \
+            SYS_DBG("gdbservertcp", __f, __VA_ARGS__);                                  \
+        }                                                                               \
+    } while (false)
+
+
 /// GDB server with TCP connection
 struct GdbServerTcp:GdbServerNone
 {
@@ -51,17 +63,22 @@ struct GdbServerTcp:GdbServerNone
         } while (false);
     }
 
+    virtual ~GdbServerTcp()
+    {
+
+    }
+
     /// Start the GDB server
     virtual void start()
     {
         struct sockaddr_in sockaddr;
-        int fd, val, ret;
+        int val, ret;
 
         // by default, no remote debugger connected
         this->clientfd = -1;
 
         // open the server socket
-        if ((this->serverfd = socket(PF_INET, SOCK_STREAM, 0)) < -1)
+        if ((this->serverfd = socket(PF_INET, SOCK_STREAM, 0)) < 0)
         {
             SYS_ERR("gdbservertcp", "Can not open server socket %d", this->serverfd);
         }
@@ -80,7 +97,7 @@ struct GdbServerTcp:GdbServerNone
             SYS_ERR("gdbservertcp", "Can not bind server socket %d", ret);
         }
 
-        ret = listen(fd, 0);
+        ret = listen(this->serverfd, 0);
         if (ret < 0)
         {
             SYS_ERR("gdbservertcp", "Can not listen on server socket %d", ret);
@@ -106,14 +123,15 @@ struct GdbServerTcp:GdbServerNone
         this->put_packet(buf);
     }
 
-    /** Debugger call right after instruction fetched and before decoded
-     * This function enables the debugger to check for a breakpoint reached, or for an
+    /** Debugger call right after instruction fetched and before decoded and executed
+     * This function allows the debugger to check for a breakpoint reached, or for an
      * incoming connection request.
+     * @param[in] pc Current program counter
      * @return True if the programs should resume normally, false if the just fetched instruction
      * should not be executed
      */
     virtual bool
-    after_ins_fetch(void)
+    after_ins_fetch(uint64_t pc)
     {
         // if no client already accepted
         if (this->clientfd == -1)
@@ -132,6 +150,7 @@ struct GdbServerTcp:GdbServerNone
             this->clientfd = accept(this->serverfd, (struct sockaddr *)&sockaddr, &len);
             if (this->clientfd < 0)
             {
+                // no connection request -> return
                 return true;
             }
 
@@ -144,12 +163,12 @@ struct GdbServerTcp:GdbServerNone
             // this is a first connection -> handle messages from debugger
             this->handlesig(0);
 
-            return true;
         }
-        else
+
+        // check if there was a single step or a breakpoint reached or a break received
+        if ((this->singlestep) || this->brkpts.count(pc) || this->checkctrlc())
         {
-            // client already accepted
-            return true;
+            this->handlesig(SIGTRAP);
         }
 
         return true;
@@ -591,10 +610,9 @@ private:
 
     /** Handle a signal from the ISS
      * This function sends the signaling packet to the remote GDB.
-     * @param sig Signal id to send to the remote GDB (0 means stop until continue from gdb)
-     * @return 0 if OK, different than 0 if error
+     * @param sig Signal id to send to the remote GDB (0 means no signal to send)
      */
-    int
+    void
     handlesig(int sig)
     {
         char buf[256];
@@ -610,7 +628,6 @@ private:
             this->put_packet(buf);
         }
 
-        sig = 0;
         this->state = DS_IDLE;
         this->run = false;
         while (!this->run) {
@@ -624,13 +641,36 @@ private:
             }
             else if (n == 0 || errno != EAGAIN)
             {
-                /// connection closed -> wait for a new connection
+                // connection closed -> wait for a new connection
                 this->clientfd = -1;
-                return sig;
+
+                // force run mode
+                this->run = true;
+
+                // disable single step if it was enabled
+                this->set_singlestep(false);
             }
         }
-        return sig;
     }
+
+    bool
+    checkctrlc(void)
+    {
+        char buf[256];
+        int n;
+
+        n = read(this->clientfd, buf, 256);
+        // check if ctrl-c was received
+        if ((n == 1) && buf[0] == 3)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
 
     /// Port number on which the socket server should wait
     int port;
