@@ -34,6 +34,12 @@ struct GdbServerNone
         this->gdb_wait = parameters.gdb_wait.get_bool();
     }
 
+    /// Destructor
+    virtual ~GdbServerNone()
+    {
+    }
+
+
     /** Set the CB interface
      * @param[in] cb Reference to the callbacks from ISS
      */
@@ -60,11 +66,12 @@ struct GdbServerNone
     /** Debugger call right after instruction fetched and before decoded
      * This function enables the debugger to check for a breakpoint reached, or for an
      * incoming connection request.
+     * @param[in] pc Current program counter
      * @return True if the programs should resume normally, false if the just fetched instruction
      * should not be executed
      */
     virtual bool
-    after_ins_fetch(void)
+    after_ins_fetch(uint64_t pc)
     {
         return true;
     }

@@ -62,6 +62,16 @@ do {                                                                        \
     std::cout<<__mystring <<" at "<<sc_core::sc_time_stamp()<<std::endl;    \
 } while (0)
 
+/// Macro to print debug information
+/// @param[in] name name to print
+/// @param[in] format print format
+#define SYS_DBG(name, format, ...)                                          \
+do {                                                                        \
+    char __mystring[1024];                                                  \
+    sprintf(__mystring, "%s: " format, name, __VA_ARGS__);                  \
+    std::cout<<__mystring <<" at "<<sc_core::sc_time_stamp()<<std::endl;    \
+} while (0)
+
 /// Macro that checks the sanity of an AHB transaction
 /// @param[in] __t transaction to check
 #define TLM_TRANS_SANITY(__t)                                               \

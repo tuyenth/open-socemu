@@ -1,6 +1,6 @@
 #include "Top.h"
 #include "CpuBase.h"
-#include "GdbServerNone.h"
+#include "GdbServerTcp.h"
 
 const struct {
     uint32_t size;
@@ -14,7 +14,9 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
     uint8_t i;
     Parameter *cpu_parameter;
-    MSP *cpu_config;
+    tlm_utils::simple_target_socket<Cpu>* irq;
+    /// Socket to receive FIQ set and clear commands
+    tlm_utils::simple_target_socket<Cpu>* fiq;
 
     // sanity check: check parameters
     if (config.count("cpu") != 1)
@@ -23,7 +25,6 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         return;
     }
     cpu_parameter = config["cpu"];
-    cpu_config = cpu_parameter->get_config();
 
     // create the BUS instance (1 masters, memories+2 slaves))
     bus = new Bus<1,TOP_NUM_MEMORIES+2> ("bus");
@@ -31,17 +32,21 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // check if the CPU requested is the cpubase
     if (*cpu_parameter == "CpuBase")
     {
-        cpubase = new CpuBase<GdbServerNone>("cpu", parameters, *cpu_config);
+        cpubase = new CpuBase<GdbServerTcp>("cpu", parameters, *cpu_parameter);
         cpubase->bind(*(bus->targ_socket[0]));
+        irq = new tlm_utils::simple_target_socket<Cpu>("false_irq");
+        fiq = new tlm_utils::simple_target_socket<Cpu>("false_fiq");
     }
     else
     {
         // old style CPU
         // create the CPU instance
-        cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
+        cpu = new Cpu("cpu", *cpu_parameter, parameters, *cpu_parameter);
         // bind the CPU socket to the first targ socket of the BUS
         cpu->bind(*(bus->targ_socket[0]));
 
+        irq = &cpu->irq_s_socket;
+        fiq = &cpu->fiq_s_socket;
     }
     for (i = 0; i < sizeof(Memories)/sizeof(Memories[0]); i++)
     {
@@ -63,9 +68,9 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 
     intctrl = new IntCtrl("intctrl");
     // bind the init port of the BUS to the INTCTRL
-    ( *(bus->init_socket[TOP_NUM_MEMORIES]) ).bind(intctrl->reg_socket);
-    intctrl->irq_socket.bind(cpu->irq_s_socket);
-    intctrl->fiq_socket.bind(cpu->fiq_s_socket);
+    (*(bus->init_socket[TOP_NUM_MEMORIES])).bind(intctrl->reg_socket);
+    intctrl->irq_socket.bind(*irq);
+    intctrl->fiq_socket.bind(*fiq);
 
     // specify the INTCTRL address range from the BUS perspective
     if (bus->set_range(TOP_NUM_MEMORIES, 0x01000000, 0xFFFFFFFFFF000000LL))
@@ -79,7 +84,7 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // bind the MAC socket to the second targ socket of the BUS
     dummy->bind(&intctrl->int_socket);
     // bind the init port of the BUS to the MAC
-    ( *(bus->init_socket[TOP_NUM_MEMORIES+1]) ).bind(*dummy);
+    (*(bus->init_socket[TOP_NUM_MEMORIES+1])).bind(*dummy);
     // specify the MAC address range from the BUS perspective
     if (bus->set_range(TOP_NUM_MEMORIES+1, 0x02000000, 0xFFFFFFFFFF000000LL))
     {

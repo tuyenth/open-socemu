@@ -7,7 +7,7 @@
 #include "Parameters.h"
 
 /// debug level
-#define CPUBASE_DEBUG 0
+#define CPUBASE_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
@@ -15,7 +15,7 @@
 /// @param ... variable arguments
 #define CPUBASE_TLM_DBG(__l, __f, ...)                                                  \
     do {                                                                                \
-        if (CPUBASE_DEBUG >= __l) {                                                     \
+        if (CPUBASE_DEBUG_LEVEL >= __l) {                                               \
             TLM_DBG(__f, __VA_ARGS__);                                                  \
         }                                                                               \
     } while (false)
@@ -57,6 +57,7 @@ struct CpuBase: SimpleMaster
         // check if there is an elf file defined
         if (config.count("elffile") == 0)
         {
+            CPUBASE_TLM_DBG(1, "No ELF file found %d", config.count("elffile"));
             this->elfpath = NULL;
         }
         else
@@ -65,10 +66,8 @@ struct CpuBase: SimpleMaster
             elffile->add_path(parameters.configpath);
             // copy the path into an internal variable
             this->elfpath = elffile->get_string();
+            CPUBASE_TLM_DBG(1, "ELF file found %s", this->elfpath->c_str());
         }
-
-        // create the module thread
-        SC_THREAD(thread_process);
     }
 
     /// Reset the CPU
@@ -109,7 +108,7 @@ struct CpuBase: SimpleMaster
         // fetch the next instruction
 
         // check if the debugger wants to halt and if it wants to execute the current instruction
-        if (unlikely(!this->gdbserver.after_ins_fetch()))
+        if (unlikely(!this->gdbserver.after_ins_fetch(this->pc)))
             return;
 
         // increment the PC
