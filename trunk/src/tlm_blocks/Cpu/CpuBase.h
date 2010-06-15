@@ -46,11 +46,12 @@ struct CpuBase: SimpleMaster
         struct GDB::GdbCb callbacks;
 
         // set the gdbserver callbacks
+        callbacks.obj = (void*)this;
         callbacks.gdb_set_pc_cb = &(this->gdb_set_pc_cb);
-        callbacks.gdb_read_registers_cb = &(this->gdb_read_registers_cb);
-        callbacks.gdb_write_registers_cb = &(this->gdb_write_registers_cb);
-        callbacks.gdb_rd_cb = &(this->gdb_rd_cb);
-        callbacks.gdb_wr_cb = &(this->gdb_wr_cb);
+        callbacks.gdb_rd_reg_cb = &(this->gdb_rd_reg_cb);
+        callbacks.gdb_wr_reg_cb = &(this->gdb_wr_reg_cb);
+        callbacks.gdb_rd_mem_cb = &(this->gdb_rd_mem_cb);
+        callbacks.gdb_wr_mem_cb = &(this->gdb_wr_mem_cb);
         gdbserver.set_callbacks(callbacks);
 
         // check if there is an elf file defined
@@ -217,10 +218,33 @@ struct CpuBase: SimpleMaster
      * large enough to hold all the registers.
      */
     virtual int
-    gdb_read_registers(uint8_t *mem_buf)
+    gdb_rd_reg(uint8_t *mem_buf)
     {
-        std::cout << "ERROR: virtual function '" << __FUNCTION__ << "' undefined" << std::endl;
-        return 0;
+        int i;
+        uint8_t *ptr;
+
+        ptr = mem_buf;
+
+        // 15 core integer registers (4 bytes each)
+        for (i = 0; i < 15; i++)
+        {
+            *(uint32_t *)ptr = i;
+            ptr += 4;
+        }
+
+        // R15 = Program Counter register
+        *(uint32_t *)ptr = this->pc;
+        ptr += 4;
+
+        // 8 FPA registers (12 bytes each), FPS (4 bytes), not implemented
+        memset (ptr, 0, (8 * 12) + 4);
+        ptr += 8 * 12 + 4;
+        /* CPSR (4 bytes).  */
+        *(uint32_t *)ptr = 0x10;
+        ptr += 4;
+
+        // return the size of the buffer filled
+        return ptr - mem_buf;
     }
 
     /** Callback to read the CPU registers and fill the buffer
@@ -232,10 +256,10 @@ struct CpuBase: SimpleMaster
      * large enough to hold all the registers.
      */
     static int
-    gdb_read_registers_cb(void *obj, uint8_t *mem_buf)
+    gdb_rd_reg_cb(void *obj, uint8_t *mem_buf)
     {
         struct CpuBase* myself = (struct CpuBase*)obj;
-        return myself->gdb_read_registers(mem_buf);
+        return myself->gdb_rd_reg(mem_buf);
     }
 
     /** Write the CPU registers
@@ -243,7 +267,7 @@ struct CpuBase: SimpleMaster
      * @param[in] size Size of the buffer
      */
     virtual void
-    gdb_write_registers(uint8_t *mem_buf, int size)
+    gdb_wr_reg(uint8_t *mem_buf, int size)
     {
         std::cout << "ERROR: virtual function '" << __FUNCTION__ << "' undefined" << std::endl;
     }
@@ -255,20 +279,20 @@ struct CpuBase: SimpleMaster
      * @param[in] size Size of the buffer
      */
     static void
-    gdb_write_registers_cb(void *obj, uint8_t *mem_buf, int size)
+    gdb_wr_reg_cb(void *obj, uint8_t *mem_buf, int size)
     {
         struct CpuBase* myself = (struct CpuBase*)obj;
-        return myself->gdb_write_registers(mem_buf, size);
+        return myself->gdb_wr_reg(mem_buf, size);
     }
 
     /** Make a debug read access into the system
      * @param[in] addr Address to read at
      * @param[in, out] dataptr Pointer to the buffer to fill
      * @param[in] len Length of the data to read
-     * @return The number of bytes actually read
+     * @return The number of bytes actually read (-1 in case of error)
      */
     virtual int
-    gdb_rd(uint64_t addr, uint8_t* dataptr, uint32_t len)
+    gdb_rd_mem(uint64_t addr, uint8_t* dataptr, uint32_t len)
     {
         TLM_DBG_RD(master_socket, master_b_pl, addr, dataptr, len);
 
@@ -283,23 +307,23 @@ struct CpuBase: SimpleMaster
      * @param[in] addr Address to read at
      * @param[in, out] dataptr Pointer to the buffer to fill
      * @param[in] len Length of the data to read
-     * @return The number of bytes actually read
+     * @return The number of bytes actually read (-1 in case of error)
      */
     static int
-    gdb_rd_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len)
+    gdb_rd_mem_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len)
     {
         struct CpuBase* myself = (struct CpuBase*)obj;
-        return myself->gdb_rd(addr, dataptr, len);
+        return myself->gdb_rd_mem(addr, dataptr, len);
     }
 
     /** Make a debug write access into the system
      * @param[in] addr Address to write at
      * @param[in] dataptr Pointer to the buffer to read from
      * @param[in] len Length of the data to write
-     * @return The number of bytes actually written
+     * @return The number of bytes actually written (-1 in case of error)
      */
     virtual int
-    gdb_wr(uint64_t addr, uint8_t* dataptr, uint32_t len)
+    gdb_wr_mem(uint64_t addr, uint8_t* dataptr, uint32_t len)
     {
         TLM_DBG_WR(master_socket, master_b_pl, addr, dataptr, len);
 
@@ -314,13 +338,13 @@ struct CpuBase: SimpleMaster
      * @param[in] addr Address to write at
      * @param[in] dataptr Pointer to the buffer to read from
      * @param[in] len Length of the data to write
-     * @return The number of bytes actually written
+     * @return The number of bytes actually written (-1 in case of error)
      */
     static int
-    gdb_wr_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len)
+    gdb_wr_mem_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len)
     {
         struct CpuBase* myself = (struct CpuBase*)obj;
-        return myself->gdb_wr(addr, dataptr, len);
+        return myself->gdb_wr_mem(addr, dataptr, len);
     }
 
 protected:

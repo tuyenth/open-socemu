@@ -213,7 +213,7 @@ gdbserver::RSState gdbserver::handle_packet(const char *line_buf)
             gdb_set_pc(addr);
         }
         m_running_state = 1;
-	return RS_IDLE;
+        return RS_IDLE;
     case 's':
         if (*p != '\0') {
             addr = strtoull(p, (char **)&p, 16);
@@ -387,47 +387,45 @@ void gdbserver::read_byte(int ch)
     int i, csum;
     uint8_t reply;
 
-    {
-        switch(m_state) {
-        case RS_IDLE:
-            if (ch == '$') {
-                m_line_buf_index = 0;
-                m_state = RS_GETLINE;
-            }
-            break;
-        case RS_GETLINE:
-            if (ch == '#') {
-            m_state = RS_CHKSUM1;
-            } else if (m_line_buf_index >= sizeof(m_line_buf) - 1) {
-                m_state = RS_IDLE;
-            } else {
-            m_line_buf[m_line_buf_index++] = ch;
-            }
-            break;
-        case RS_CHKSUM1:
-            m_line_buf[m_line_buf_index] = '\0';
-            m_line_csum = fromhex(ch) << 4;
-            m_state = RS_CHKSUM2;
-            break;
-        case RS_CHKSUM2:
-            m_line_csum |= fromhex(ch);
-            csum = 0;
-            for(i = 0; i < m_line_buf_index; i++) {
-                csum += m_line_buf[i];
-            }
-            if (m_line_csum != (csum & 0xff)) {
-                reply = '-';
-                this->put_buffer(&reply, 1);
-                m_state = RS_IDLE;
-            } else {
-                reply = '+';
-                this->put_buffer(&reply, 1);
-                m_state = this->handle_packet(m_line_buf);
-            }
-            break;
-        default:
-            abort();
+    switch(m_state) {
+    case RS_IDLE:
+        if (ch == '$') {
+            m_line_buf_index = 0;
+            m_state = RS_GETLINE;
         }
+        break;
+    case RS_GETLINE:
+        if (ch == '#') {
+            m_state = RS_CHKSUM1;
+        } else if (m_line_buf_index >= sizeof(m_line_buf) - 1) {
+            m_state = RS_IDLE;
+        } else {
+            m_line_buf[m_line_buf_index++] = ch;
+        }
+        break;
+    case RS_CHKSUM1:
+        m_line_buf[m_line_buf_index] = '\0';
+        m_line_csum = fromhex(ch) << 4;
+        m_state = RS_CHKSUM2;
+        break;
+    case RS_CHKSUM2:
+        m_line_csum |= fromhex(ch);
+        csum = 0;
+        for(i = 0; i < m_line_buf_index; i++) {
+            csum += m_line_buf[i];
+        }
+        if (m_line_csum != (csum & 0xff)) {
+            reply = '-';
+            this->put_buffer(&reply, 1);
+            m_state = RS_IDLE;
+        } else {
+            reply = '+';
+            this->put_buffer(&reply, 1);
+            m_state = this->handle_packet(m_line_buf);
+        }
+        break;
+    default:
+        abort();
     }
 }
 

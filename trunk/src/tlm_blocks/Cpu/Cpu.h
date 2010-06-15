@@ -195,7 +195,7 @@ struct Cpu : SimpleMaster
         // check if neither the IRQ nor the FIQ is asserted
         while ((!this->m_arm->irq_get()) && (!this->m_arm->fiq_get()))
         {
-            // wait for an interrupt (timeout to poll on keyboard activity)
+            // wait for an interrupt (timeout to poll on debugger activity)
             sc_core::wait(1, sc_core::SC_MS, m_interrupt);
 
             // check if there is a remote connection (or a request)
