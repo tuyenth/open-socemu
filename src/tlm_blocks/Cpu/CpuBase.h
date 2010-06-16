@@ -29,9 +29,6 @@
 template<typename GDB>
 struct CpuBase: SimpleMaster
 {
-    // Module has a thread
-    SC_HAS_PROCESS(CpuBase);
-
     /** CpuBase constructor
      * @param[in] name Name of the module
      * @param[in] parameters Command line parameters
@@ -70,6 +67,15 @@ struct CpuBase: SimpleMaster
         }
     }
 
+    /** Check if there is a pending exception
+     * @return True if there is a pending exception, false otherwise
+     */
+    virtual bool
+    handle_exception()
+    {
+        return false;
+    }
+
     /// Reset the CPU
     virtual void
     reset(void)
@@ -101,20 +107,18 @@ struct CpuBase: SimpleMaster
         }
     }
 
-    /// Execute a single instruction from the current CPU state
+    /// Fetch the next instruction
     virtual void
-    execute_insn(void)
+    fetch_insn()
     {
-        // fetch the next instruction
+    }
 
-        // check if the debugger wants to halt and if it wants to execute the current instruction
-        if (unlikely(!this->gdbserver.after_ins_fetch(this->pc)))
-            return;
-
+    /// Execute a single instruction
+    virtual void
+    execute_insn()
+    {
         // increment the PC
         this->pc += 4;
-
-        // execute the instruction
     }
 
     /// Main module thread, runs the CPU startup and instruction loop
@@ -132,7 +136,20 @@ struct CpuBase: SimpleMaster
 
         while (true)
         {
-            // execute the instructions
+            // fetch the next instruction
+            this->fetch_insn();
+
+            // check if there is a pending exception
+            if (unlikely(this->handle_exception()))
+            {
+                continue;
+            }
+
+            // check if the debugger wants to halt and if it wants to execute the current instruction
+            if (unlikely(!this->gdbserver.after_ins_fetch(this->pc)))
+                continue;
+
+            // execute the instruction fetched
             this->execute_insn();
         }
     }
@@ -142,11 +159,11 @@ struct CpuBase: SimpleMaster
      * @return The value read
      */
     virtual uint32_t
-    rd_l_unaligned(uint32_t addr)
+    rd_l_unaligned(uint64_t addr)
     {
         uint32_t data;
 
-        CPUBASE_TLM_DBG(3, "rd L unaligned addr=0x%08X", addr);
+        CPUBASE_TLM_DBG(3, "rd L unaligned addr=0x%08llX", addr);
 
         // sanity check: byte aligned accesses not supported
         assert((addr & 1) == 0);
@@ -166,7 +183,7 @@ struct CpuBase: SimpleMaster
             TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, addr, data);
         }
 
-        CPUBASE_TLM_DBG(2, "rd L unaligned addr=0x%08X data=0x%08X", addr, data);
+        CPUBASE_TLM_DBG(2, "rd L unaligned addr=0x%08llX data=0x%08X", addr, data);
         return data;
     }
 
@@ -175,17 +192,17 @@ struct CpuBase: SimpleMaster
      * @return The value read
      */
     virtual uint32_t
-    rd_l_aligned(uint32_t addr)
+    rd_l_aligned(uint64_t addr)
     {
         uint32_t data;
 
-        CPUBASE_TLM_DBG(3, "rd L aligned addr=0x%08X", addr);
+        CPUBASE_TLM_DBG(3, "rd L aligned addr=0x%08llX", addr);
 
         // sanity check: byte aligned accesses not supported
         assert((addr & 3) == 0);
         TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, addr, data);
 
-        CPUBASE_TLM_DBG(2, "rd L aligned addr=0x%08X data=0x%08X", addr, data);
+        CPUBASE_TLM_DBG(2, "rd L aligned addr=0x%08llX data=0x%08X", addr, data);
         return data;
     }
 
