@@ -25,7 +25,7 @@
 /// @param ... variable arguments
 #define GDBSERVERTCP_TLM_DBG(__l, __f, ...)                                             \
     do {                                                                                \
-        if (CPUBASE_DEBUG_LEVEL >= __l) {                                               \
+        if (GDBSERVERTCP_DEBUG_LEVEL >= __l) {                                          \
             SYS_DBG("gdbservertcp", __f, __VA_ARGS__);                                  \
         }                                                                               \
     } while (false)
@@ -225,7 +225,7 @@ private:
         char *q;
         q = buf;
         for(i = 0; i < len; i++) {
-            c = mem[i];
+            c = (unsigned char)mem[i];
             *q++ = tohex(c >> 4);
             *q++ = tohex(c & 0xf);
         }
@@ -371,9 +371,8 @@ private:
         uint32_t *registers;
         uint32_t addr, len;
 
-    #ifdef DEBUG_GDB
-        printf("command='%s'\n", line_buf);
-    #endif
+        GDBSERVERTCP_TLM_DBG(1, "command: %s", this->line_buf);
+
         p = this->line_buf;
         ch = *p++;
         switch(ch) {
@@ -578,9 +577,7 @@ private:
         int len, csum, i;
         char *p;
 
-        #if GDBSERVERTCP_DEBUG_LEVEL
-        printf("reply='%s'\n", buf);
-        #endif
+        GDBSERVERTCP_TLM_DBG(1, "reply: %s", buf);
 
         for(;;) {
             p = last_packet;
