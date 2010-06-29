@@ -131,7 +131,7 @@ struct GdbServerTcp:GdbServerNone
      * should not be executed
      */
     virtual bool
-    after_ins_fetch(uint64_t pc)
+    before_exec_insn(uint64_t pc)
     {
         // if no client already accepted
         if (this->clientfd == -1)

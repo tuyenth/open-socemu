@@ -107,6 +107,12 @@ struct CpuBase: SimpleMaster
         }
     }
 
+    virtual uint64_t
+    get_pc()
+    {
+        return this->pc;
+    }
+
     /// Fetch the next instruction
     virtual void
     fetch_insn()
@@ -146,7 +152,7 @@ struct CpuBase: SimpleMaster
             }
 
             // check if the debugger wants to halt and if it wants to execute the current instruction
-            if (unlikely(!this->gdbserver.after_ins_fetch(this->pc)))
+            if (unlikely(!this->gdbserver.before_exec_insn(this->get_pc())))
                 continue;
 
             // execute the instruction fetched
@@ -255,7 +261,7 @@ struct CpuBase: SimpleMaster
         // 8 FPA registers (12 bytes each), FPS (4 bytes), not implemented
         memset (ptr, 0, (8 * 12) + 4);
         ptr += 8 * 12 + 4;
-        /* CPSR (4 bytes).  */
+        // CPSR (4 bytes)
         *(uint32_t *)ptr = 0x10;
         ptr += 4;
 
@@ -367,12 +373,12 @@ protected:
     /// GDB connection
     GDB gdbserver;
 
-    /// Program Counter
-    uint32_t pc;
-
     /// ELF file name and path
     std::string* elfpath;
 
+private:
+    /// Program Counter
+    uint32_t pc;
 };
 
 #endif /* CPUBASE_H_ */

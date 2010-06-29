@@ -71,7 +71,7 @@ struct GdbServerNone
      * should not be executed
      */
     virtual bool
-    after_ins_fetch(uint64_t pc)
+    before_exec_insn(uint64_t pc)
     {
         return true;
     }
