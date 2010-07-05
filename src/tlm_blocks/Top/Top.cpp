@@ -32,6 +32,13 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // check if the CPU requested is the cpubase
     if (*cpu_parameter == "CpuBase")
     {
+        cpubase = new CpuBase<GdbServerTcp>("cpu", parameters, *cpu_parameter);
+        cpubase->bind(*(bus->targ_socket[0]));
+        irq = new tlm_utils::simple_target_socket<Cpu>("false_irq");
+        fiq = new tlm_utils::simple_target_socket<Cpu>("false_fiq");
+    }
+    else if (*cpu_parameter == "Arm32")
+    {
         cpubase = new Arm32<GdbServerTcp>("cpu", parameters, *cpu_parameter);
         cpubase->bind(*(bus->targ_socket[0]));
         irq = new tlm_utils::simple_target_socket<Cpu>("false_irq");

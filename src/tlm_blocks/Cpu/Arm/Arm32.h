@@ -1,7 +1,7 @@
 #include "CpuBase.h"
 
 /// debug level
-#define ARM32_DEBUG_LEVEL 0
+#define ARM32_DEBUG_LEVEL 4
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
@@ -14,13 +14,17 @@
         }                                                                               \
     } while (false)
 
+#define UNSUPPORTED()                                                                   \
+    do {                                                                                \
+        this->exception |= EXCEPT_ILLEGAL_OP;                                           \
+        return;                                                                         \
+    } while (false)
 
 #define ARCH(__a)                                                                       \
     do {                                                                                \
         if (!this->has_##__a())                                                         \
         {                                                                               \
-            this->exception |= EXCEPT_ILLEGAL_OP;                                       \
-            return;                                                                     \
+            UNSUPPORTED();                                                              \
         }                                                                               \
     } while (false)
 
@@ -84,7 +88,7 @@ struct Arm32: CpuBase<GDB>
     fetch_insn()
     {
         // fetch the next instruction
-        this->insn = rd_l_aligned(this->get_pc());
+        this->insn = this->rd_l(this->get_pc());
     }
 
     /// Execute a single instruction
@@ -102,6 +106,49 @@ struct Arm32: CpuBase<GDB>
             // try to execute a thumb operation
             this->exec_arm();
         }
+    }
+
+    /** Read the CPU registers and fill the buffer
+     * @param[out] mem_buf Destination buffer for the registers content
+     * @return Number of bytes written in the buffer
+     * @warning There is no check for the buffer boundaries.  It is expected to be
+     * large enough to hold all the registers.
+     */
+    virtual int
+    gdb_rd_reg(uint8_t *mem_buf)
+    {
+        int i;
+        uint8_t *ptr;
+
+        ptr = mem_buf;
+
+        // 15 core integer registers (4 bytes each)
+        memcpy(ptr, this->regs, 4*15);
+        ptr += 4*15;
+
+        // R15 = Program Counter register
+        *(uint32_t *)ptr = (uint32_t)this->get_pc();
+        ptr += 4;
+
+        // 8 FPA registers (12 bytes each), FPS (4 bytes), not implemented
+        memset (ptr, 0, (8 * 12) + 4);
+        ptr += 8 * 12 + 4;
+        // CPSR (4 bytes)
+        *(uint32_t *)ptr = this->get_cpsr();
+        ptr += 4;
+
+        // return the size of the buffer filled
+        return ptr - mem_buf;
+    }
+
+    /** Write the CPU registers
+     * @param[in] mem_buf Buffer containing the registers content
+     * @param[in] size Size of the buffer
+     */
+    virtual void
+    gdb_wr_reg(uint8_t *mem_buf, int size)
+    {
+        std::cout << "ERROR: virtual function '" << __FUNCTION__ << "' undefined" << std::endl;
     }
 
 protected:
@@ -173,6 +220,14 @@ protected:
         REG_NUM = 17
     };
 
+    /** Indicates if the architecture IWMMXT is supported
+     * @return True if the feature is supported
+     */
+    virtual bool
+    has_IWMMXT()
+    {
+        return false;
+    }
 
     /** Indicates if the architecture 6 is supported
      * @return True if the feature is supported
@@ -180,7 +235,7 @@ protected:
     virtual bool
     has_6()
     {
-        return true;
+        return false;
     }
 
     /** Indicates if the architecture T2 is supported
@@ -189,7 +244,7 @@ protected:
     virtual bool
     has_T2()
     {
-        return true;
+        return false;
     }
 
     /** Indicates if the architecture M is supported
@@ -208,6 +263,33 @@ protected:
     has_6T2()
     {
         return this->has_T2();
+    }
+
+    /** Indicates if the architecture 6K is supported
+     * @return True if the feature is supported
+     */
+    virtual bool
+    has_6K()
+    {
+        return false;
+    }
+
+    /** Indicates if the architecture 7 is supported
+     * @return True if the feature is supported
+     */
+    virtual bool
+    has_7()
+    {
+        return false;
+    }
+
+    /** Indicates if the architecture NEON is supported
+     * @return True if the feature is supported
+     */
+    virtual bool
+    has_NEON()
+    {
+        return false;
     }
 
     /** Indicate if the current execution state is USER mode
@@ -425,23 +507,42 @@ protected:
         return false;
     }
 
+    /** RFE implementation
+     * @param[in] pc New program counter to set
+     * @param[in] cpsr New CPSR to set
+     */
+    virtual void
+    rfe(uint32_t pc, uint32_t cpsr)
+    {
+        // first, we set the cpsr because the PC reg may get overwritten by mode switch
+        this->set_cpsr(cpsr, 0xffffffff);
+        this->set_pc(pc);
+    }
+
+    /** Execute a branch and change state with immediate value
+     * @param[in] addr New address to load in the PC
+     */
+    virtual void
+    bx_im(uint32_t addr)
+    {
+        // update the thumb state
+        this->TF = addr & 1;
+        // load the new address
+        this->set_pc(addr & (~1));
+    }
+
     /// Called when there is a WFI instruction
     virtual void
-    exec_wfi()
+    wfi()
     {
 
     }
 
+    /** Execute a NOP/HINT instruction
+     * @param[in] val NOP/HINT flags
+     */
     virtual void
-    exec_uncond()
-    {
-        // to be implemented
-        this->exception |= EXCEPT_ILLEGAL_OP;
-
-    }
-
-    virtual void
-    exec_nop_hint(uint32_t val)
+    nop_hint(uint32_t val)
     {
         // currently, this is an error
         this->exception |= EXCEPT_ILLEGAL_OP;
@@ -449,7 +550,7 @@ protected:
         switch (val)
         {
         case 3: // wfi
-            this->exec_wfi();
+            this->wfi();
             break;
         case 1: // yield
         case 2: // wfe (wait for event)
@@ -466,27 +567,27 @@ protected:
     }
 
     virtual void
-    exec_arm_nop_hint()
+    arm_nop_hint()
     {
         // execute the hint instruction
-        exec_nop_hint(this->insn & 0xFF);
+        nop_hint(this->insn & 0xFF);
 
     }
 
     virtual void
-    exec_thumb_nop_hint()
+    thumb_nop_hint()
     {
         // execute the hint instruction
-        exec_nop_hint((this->insn >> 4) & 0xF);
+        nop_hint((this->insn >> 4) & 0xF);
 
-        // move to the next instruction
-        this->set_pc(this->get_pc() + 2);
     }
 
     virtual void
     exec_arm()
     {
-        uint32_t cond, rd, val, shift, tmp, i;
+        uint32_t cond, rd, rn, val, shift, tmp, tmp2, i, op1, addr;
+
+        ARM32_TLM_DBG(2, "exec_arm 0x%08X", this->insn);
 
         // by default, move to the next instruction
         this->set_pc(this->get_pc() + 4);
@@ -497,9 +598,202 @@ protected:
         // check if it is an unconditional instruction
         if (unlikely(cond == 0xf))
         {
-            // unconditional instructions
-            this->exec_uncond();
-            return;
+            // Unconditional instructions
+            if (((insn >> 25) & 7) == 1) {
+                // NEON Data processing
+                ARCH(NEON);
+
+                // not implemented yet
+                assert(0);
+                //if (disas_neon_data_insn(env, s, insn))
+                //    goto illegal_op;
+                return;
+            }
+            if ((insn & 0x0f100000) == 0x04000000) {
+                // NEON load/store
+                ARCH(NEON);
+
+                // not implemented yet
+                assert(0);
+                //if (disas_neon_ls_insn(env, s, insn))
+                //    goto illegal_op;
+                return;
+            }
+            if ((insn & 0x0d70f000) == 0x0550f000)
+            {
+                // PLD : preload not implemented
+                return;
+            }
+            else if ((insn & 0x0ffffdff) == 0x01010000) {
+                ARCH(6);
+                // setend
+                if (insn & (1 << 9)) {
+                    // BE8 mode not implemented
+                    assert(0);
+                }
+                return;
+            } else if ((insn & 0x0fffff00) == 0x057ff000) {
+                switch ((insn >> 4) & 0xf) {
+                case 1: // clrex
+                    ARCH(6K);
+
+                    // not implemented yet
+                    assert(0);
+                    return;
+                case 4: // dsb
+                case 5: // dmb
+                case 6: // isb
+                    ARCH(7);
+
+                    // not implemented yet
+                    assert(0);
+
+                    return;
+                default:
+                    UNSUPPORTED();
+                }
+            } else if ((insn & 0x0e5fffe0) == 0x084d0500) {
+                // srs
+                int32_t offset;
+                if (IS_USER())
+                    UNSUPPORTED();
+                ARCH(6);
+                op1 = (insn & 0x1f);
+                // check if the current mode was indicated
+                if (op1 == (this->MF)) {
+                    addr = this->regs[REG_SPSR];
+                } else {
+                    addr = this->banked_regs[op1-MODE_USR][REG_SPSR];
+                }
+                i = (insn >> 23) & 3;
+                switch (i) {
+                case 0: offset = -4; break; // DA
+                case 1: offset = 0; break; // IA
+                case 2: offset = -8; break; // DB
+                case 3: offset = 4; break; // IB
+                default: assert(0);
+                }
+                if (offset)
+                    addr += offset;
+                wr_l(addr, this->regs[REG_LR]);
+                addr += 4;
+                wr_l(addr, this->regs[REG_SPSR]);
+                if (insn & (1 << 21)) {
+                    // Base writeback
+                    switch (i) {
+                    case 0: offset = -8; break;
+                    case 1: offset = 4; break;
+                    case 2: offset = -4; break;
+                    case 3: offset = 0; break;
+                    default: assert(0);
+                    }
+                    if (offset)
+                        addr += offset;
+                    if (op1 == this->MF) {
+                        this->regs[REG_SPSR] = addr;
+                    } else {
+                        this->banked_regs[op1-MODE_USR][REG_SPSR] = addr;
+                    }
+                }
+                return;
+            } else if ((insn & 0x0e50ffe0) == 0x08100a00) {
+                // rfe
+                int32_t offset;
+                if (IS_USER())
+                    UNSUPPORTED();
+                ARCH(6);
+                rn = (insn >> 16) & 0xf;
+                addr = this->regs[rn];
+                i = (insn >> 23) & 3;
+                switch (i) {
+                case 0: offset = -4; break; // DA
+                case 1: offset = 0; break; // IA
+                case 2: offset = -8; break; // DB
+                case 3: offset = 4; break; // IB
+                default: assert(0);
+                }
+                if (offset)
+                    addr += offset;
+                // Load PC into tmp and CPSR into tmp2
+                tmp = this->rd_l(addr);
+                addr += 4;
+                tmp2 = this->rd_l(addr);
+                if (insn & (1 << 21)) {
+                    // Base writeback
+                    switch (i) {
+                    case 0: offset = -8; break;
+                    case 1: offset = 4; break;
+                    case 2: offset = -4; break;
+                    case 3: offset = 0; break;
+                    default: abort();
+                    }
+                    if (offset)
+                        addr += offset;
+                    this->regs[rn] = addr;
+                }
+
+                this->rfe(tmp, tmp2);
+                return;
+            } else if ((insn & 0x0e000000) == 0x0a000000) {
+                // branch link and change to thumb (blx <offset>)
+                int32_t offset;
+                val = this->get_pc();
+                // save the current pointer in the register
+                this->regs[REG_LR] = val;
+                // Sign-extend the 24-bit offset
+                offset = (((int32_t)insn) << 8) >> 8;
+                // offset * 4 + bit24 * 2 + (thumb bit)
+                val += (offset << 2) | ((insn >> 23) & 2) | 1;
+                // pipeline offset
+                val += 4;
+                this->bx_im(val);
+                return;
+            } else if ((insn & 0x0e000f00) == 0x0c000100) {
+                ARCH(IWMMXT);
+
+                // not implemented yet
+                assert(0);
+                // iWMMXt register transfer
+                //if (env->cp15.c15_cpar & (1 << 1))
+                //    if (!disas_iwmmxt_insn(env, s, insn))
+                //        return;
+            } else if ((insn & 0x0fe00000) == 0x0c400000) {
+                // MCRR/MCRR2
+                // Coprocessor double register transfer
+                // not implemented yet
+                assert(0);
+            } else if ((insn & 0x0f000010) == 0x0e000010) {
+                //
+                // Additional coprocessor register transfer
+                // not implemented yet
+                assert(0);
+            } else if ((insn & 0x0ff10020) == 0x01000000) {
+                uint32_t mask;
+                uint32_t val;
+                // cps (privileged)
+                if (IS_USER())
+                    return;
+                mask = val = 0;
+                if (insn & (1 << 19)) {
+                    if (insn & (1 << 8))
+                        mask |= CPSR_A;
+                    if (insn & (1 << 7))
+                        mask |= CPSR_I;
+                    if (insn & (1 << 6))
+                        mask |= CPSR_F;
+                    if (insn & (1 << 18))
+                        val |= mask;
+                }
+                if (insn & (1 << 17)) {
+                    mask |= CPSR_M;
+                    val |= (insn & 0x1f);
+                }
+                if (mask) {
+                    this->set_psr(mask, 0, val);
+                }
+                return;
+            }
+            UNSUPPORTED();
         }
 
         // if it is not AL condition code, check the executability of the operation
@@ -507,6 +801,7 @@ protected:
         {
             if (!test_cc(cond))
             {
+                ARM32_TLM_DBG(2, "conditional execution failed 0x%02lX", cond);
                 return;
             }
         }
@@ -538,7 +833,7 @@ protected:
                 }
                 if (((insn >> 16) & 0xf) == 0) {
                     // NOP
-                    this->exec_arm_nop_hint();
+                    this->arm_nop_hint();
                     return;
                 } else {
                     // MSR(immediate)
@@ -560,6 +855,8 @@ protected:
     virtual void
     exec_thumb()
     {
+        ARM32_TLM_DBG(2, "exec_thumb 0x%08X", this->insn);
+
         this->set_pc(this->get_pc()+2);
     }
 
@@ -591,5 +888,5 @@ protected:
     /// Current registers (includes the CPSR and the SPSR)
     uint32_t regs[REG_NUM];
     /// Banked registers
-    uint32_t banked_regs[4][REG_NUM];
+    uint32_t banked_regs[MODE_SYSTEM-MODE_USR+1][REG_NUM];
 };

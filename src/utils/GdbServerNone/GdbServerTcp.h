@@ -17,7 +17,7 @@
 #include "Parameters.h"
 
 /// debug level
-#define GDBSERVERTCP_DEBUG_LEVEL 0
+#define GDBSERVERTCP_DEBUG_LEVEL 4
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
@@ -133,6 +133,7 @@ struct GdbServerTcp:GdbServerNone
     virtual bool
     before_exec_insn(uint64_t pc)
     {
+        GDBSERVERTCP_TLM_DBG(2, "GDB (%d, %d)", this->clientfd, this->singlestep);
         // if no client already accepted
         if (this->clientfd == -1)
         {

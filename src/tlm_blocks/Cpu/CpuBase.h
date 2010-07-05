@@ -7,7 +7,7 @@
 #include "Parameters.h"
 
 /// debug level
-#define CPUBASE_DEBUG_LEVEL 0
+#define CPUBASE_DEBUG_LEVEL 4
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
@@ -142,18 +142,24 @@ struct CpuBase: SimpleMaster
 
         while (true)
         {
+            CPUBASE_TLM_DBG(2, "Fetch @0x%08llX", this->get_pc());
+
             // fetch the next instruction
             this->fetch_insn();
 
             // check if there is a pending exception
             if (unlikely(this->handle_exception()))
             {
+                CPUBASE_TLM_DBG(2, "Exception break @0x%08llX", this->get_pc());
                 continue;
             }
 
             // check if the debugger wants to halt and if it wants to execute the current instruction
             if (unlikely(!this->gdbserver.before_exec_insn(this->get_pc())))
+            {
+                CPUBASE_TLM_DBG(2, "GDB break @0x%08llX", this->get_pc());
                 continue;
+            }
 
             // execute the instruction fetched
             this->execute_insn();
@@ -198,7 +204,7 @@ struct CpuBase: SimpleMaster
      * @return The value read
      */
     virtual uint32_t
-    rd_l_aligned(uint64_t addr)
+    rd_l(uint64_t addr)
     {
         uint32_t data;
 
@@ -210,6 +216,18 @@ struct CpuBase: SimpleMaster
 
         CPUBASE_TLM_DBG(2, "rd L aligned addr=0x%08llX data=0x%08X", addr, data);
         return data;
+    }
+
+    /** Function to write a long into the system, going through the timing process
+     * @param[in] addr Address to write to
+     * @param[in] data Data to write
+     */
+    virtual void
+    wr_l(uint64_t addr, uint32_t data)
+    {
+        CPUBASE_TLM_DBG(2, "wr W addr=0x%08X data=0x%08X", addr, data);
+
+        TLM_B_WR_WORD(master_socket, master_b_pl, master_b_delay, addr, data);
     }
 
     /** Change the program counter location
@@ -255,7 +273,7 @@ struct CpuBase: SimpleMaster
         }
 
         // R15 = Program Counter register
-        *(uint32_t *)ptr = this->pc;
+        *(uint32_t *)ptr = (uint32_t)this->get_pc();
         ptr += 4;
 
         // 8 FPA registers (12 bytes each), FPS (4 bytes), not implemented
