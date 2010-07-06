@@ -394,6 +394,47 @@ protected:
     /// ELF file name and path
     std::string* elfpath;
 
+    /** Shift Right Arithmetic (extend sign bit)
+     * @param[in] val The value to shift
+     * @param[in] sh The number of bits to shift
+     * @return The value shifted
+     */
+    uint32_t
+    sra(uint32_t val, uint32_t sh)
+    {
+        return (uint32_t)((int32_t)val >> sh);
+    }
+
+    /** Sign extend 16 bit to 32 bit
+     * @param[in] val The value to extend the sign on
+     * @return The value with sign extended
+     */
+    uint32_t
+    sexth2l(uint32_t val)
+    {
+        return ((uint32_t)((int32_t)((int16_t)val)));
+    }
+
+    /** Sign extend 8 bit to 32 bit
+     * @param[in] val The value to extend the sign on
+     * @return The value with sign extended
+     */
+    uint32_t
+    sextb2l(uint32_t val)
+    {
+        return ((uint32_t)((int32_t)((int8_t)val)));
+    }
+
+    /** Sign extend 32 bit to 64 bit
+     * @param[in] val The value to extend the sign on
+     * @return The value with sign extended
+     */
+    uint64_t
+    sextl2q(uint32_t val)
+    {
+        return ((uint64_t)((int64_t)((int32_t)val)));
+    }
+
 private:
     /// Program Counter
     uint32_t pc;

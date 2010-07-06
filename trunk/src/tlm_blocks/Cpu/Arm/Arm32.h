@@ -152,6 +152,12 @@ struct Arm32: CpuBase<GDB>
     }
 
 protected:
+    /// Generic values
+    enum
+    {
+        SIGNBIT = 0x80000000
+    };
+
     /// Supported exceptions
     enum exceptions
     {
@@ -161,6 +167,7 @@ protected:
         EXCEPT_INTERRUPT = 1<<1
     };
 
+    /// Flags in the Program Status Registers
     enum cpsr_flags
     {
         CPSR_M = 0x1F,
@@ -186,6 +193,7 @@ protected:
         CPSR_CACHED = CPSR_USER | CPSR_IT | CPSR_T | CPSR_M
     };
 
+    /// Supported modes
     enum arm_modes
     {
         MODE_USR = 0x10,
@@ -198,6 +206,7 @@ protected:
         MODE_SYSTEM = 0x1F
     };
 
+    /// Stored registers
     enum registers
     {
         REG_R0 = 0,
@@ -229,6 +238,33 @@ protected:
         return false;
     }
 
+    /** Indicates if the architecture 5T is supported
+     * @return True if the feature is supported
+     */
+    virtual bool
+    has_5T()
+    {
+        return false;
+    }
+
+    /** Indicates if the architecture 5TE is supported
+     * @return True if the feature is supported
+     */
+    virtual bool
+    has_5TE()
+    {
+        return false;
+    }
+
+    /** Indicates if the architecture 5TEJ is supported
+     * @return True if the feature is supported
+     */
+    virtual bool
+    has_5TEJ()
+    {
+        return false;
+    }
+
     /** Indicates if the architecture 6 is supported
      * @return True if the feature is supported
      */
@@ -236,33 +272,6 @@ protected:
     has_6()
     {
         return false;
-    }
-
-    /** Indicates if the architecture T2 is supported
-     * @return True if the feature is supported
-     */
-    virtual bool
-    has_T2()
-    {
-        return false;
-    }
-
-    /** Indicates if the architecture M is supported
-     * @return True if the feature is supported
-     */
-    virtual bool
-    has_M()
-    {
-        return false;
-    }
-
-    /** Hack for Qemu import (6T2 or Thumb2 are used indifferently)
-     * @return True if the feature is supported
-     */
-    bool
-    has_6T2()
-    {
-        return this->has_T2();
     }
 
     /** Indicates if the architecture 6K is supported
@@ -274,11 +283,29 @@ protected:
         return false;
     }
 
+    /** Indicates if the architecture 6T2 is supported (6T2 or Thumb2 are used indifferently)
+     * @return True if the feature is supported
+     */
+    bool
+    has_6T2()
+    {
+        return false;
+    }
+
     /** Indicates if the architecture 7 is supported
      * @return True if the feature is supported
      */
     virtual bool
     has_7()
+    {
+        return false;
+    }
+
+    /** Indicates if the M profile is supported
+     * @return True if the feature is supported
+     */
+    virtual bool
+    has_M()
     {
         return false;
     }
@@ -307,6 +334,20 @@ protected:
         {
             return (this->MF == MODE_USR);
         }
+    }
+
+    /** Perform an addition that also updates the Q flag
+     * @param[in] val1 Value to sum
+     * @param[in] val2 Value to sum
+     * @return The result of the addition
+     */
+    uint32_t
+    add_setq(uint32_t val1, uint32_t val2)
+    {
+        uint32_t res = val1 + val2;
+        if (((res ^ val1) & SIGNBIT) && !((val1 ^ val2) & SIGNBIT))
+            this->QF = 1;
+        return res;
     }
 
     /** Change the current mode
@@ -413,7 +454,7 @@ protected:
         mask &= ~CPSR_RESERVED;
         if (!this->has_6())
             mask &= ~(CPSR_E | CPSR_GE);
-        if (!this->has_T2())
+        if (!this->has_6T2())
             mask &= ~CPSR_IT;
         // mask out execution state bits
         if (!spsr)
@@ -497,12 +538,11 @@ protected:
     {
         if (spsr) {
             // SPSR access not supported in user mode
-            if (IS_USER())
+            if (unlikely(IS_USER()))
                 return true;
-
-            set_spsr(t0, mask);
+            this->set_spsr(t0, mask);
         } else {
-            set_cpsr(t0, mask);
+            this->set_cpsr(t0, mask);
         }
         return false;
     }
@@ -519,16 +559,53 @@ protected:
         this->set_pc(pc);
     }
 
-    /** Execute a branch and change state with immediate value
+    /** Execute a branch and change state
      * @param[in] addr New address to load in the PC
      */
     virtual void
-    bx_im(uint32_t addr)
+    bx(uint32_t addr)
     {
         // update the thumb state
         this->TF = addr & 1;
         // load the new address
         this->set_pc(addr & (~1));
+    }
+
+    /** Execute a Count Leading Zeros
+     * @param[in] val Value to count the leading zeros in
+     */
+    virtual uint32_t
+    clz(uint32_t val)
+    {
+        uint32_t result = 0;
+        if (val < (1 << 16))
+        {
+            result += 16;
+            val <<= 16;
+        }
+        if (val < (1 << 24))
+        {
+            result += 8;
+            val <<= 8;
+        }
+        if (val < (1 << 28))
+        {
+            result += 4;
+            val <<= 4;
+        }
+        if (val < (1 << 30))
+        {
+            result += 2;
+            val <<= 2;
+        }
+        if (val < (1 << 31))
+        {
+            result += 1;
+            val <<= 1;
+        }
+        if (val == 0)
+            result = 32;
+        return result;
     }
 
     /// Called when there is a WFI instruction
@@ -585,7 +662,8 @@ protected:
     virtual void
     exec_arm()
     {
-        uint32_t cond, rd, rn, val, shift, tmp, tmp2, i, op1, addr;
+        uint32_t cond, rd, rn, rm, rs, sh, val, shift, tmp, tmp2, i, op1, addr;
+        uint64_t tmp64;
 
         ARM32_TLM_DBG(2, "exec_arm 0x%08X", this->insn);
 
@@ -621,12 +699,13 @@ protected:
             }
             if ((insn & 0x0d70f000) == 0x0550f000)
             {
-                // PLD : preload not implemented
+                // insn PLD
+                // preload not implemented
                 return;
             }
             else if ((insn & 0x0ffffdff) == 0x01010000) {
                 ARCH(6);
-                // setend
+                // insn SETEND
                 if (insn & (1 << 9)) {
                     // BE8 mode not implemented
                     assert(0);
@@ -634,7 +713,8 @@ protected:
                 return;
             } else if ((insn & 0x0fffff00) == 0x057ff000) {
                 switch ((insn >> 4) & 0xf) {
-                case 1: // clrex
+                case 1:
+                    // insn CLREX
                     ARCH(6K);
 
                     // not implemented yet
@@ -653,7 +733,7 @@ protected:
                     UNSUPPORTED();
                 }
             } else if ((insn & 0x0e5fffe0) == 0x084d0500) {
-                // srs
+                // insn SRS
                 int32_t offset;
                 if (IS_USER())
                     UNSUPPORTED();
@@ -697,7 +777,7 @@ protected:
                 }
                 return;
             } else if ((insn & 0x0e50ffe0) == 0x08100a00) {
-                // rfe
+                // insn RFE
                 int32_t offset;
                 if (IS_USER())
                     UNSUPPORTED();
@@ -735,6 +815,7 @@ protected:
                 this->rfe(tmp, tmp2);
                 return;
             } else if ((insn & 0x0e000000) == 0x0a000000) {
+                // insn BLX <offset>
                 // branch link and change to thumb (blx <offset>)
                 int32_t offset;
                 val = this->get_pc();
@@ -746,7 +827,7 @@ protected:
                 val += (offset << 2) | ((insn >> 23) & 2) | 1;
                 // pipeline offset
                 val += 4;
-                this->bx_im(val);
+                this->bx(val);
                 return;
             } else if ((insn & 0x0e000f00) == 0x0c000100) {
                 ARCH(IWMMXT);
@@ -758,7 +839,7 @@ protected:
                 //    if (!disas_iwmmxt_insn(env, s, insn))
                 //        return;
             } else if ((insn & 0x0fe00000) == 0x0c400000) {
-                // MCRR/MCRR2
+                // insn MCRR/MCRR2
                 // Coprocessor double register transfer
                 // not implemented yet
                 assert(0);
@@ -768,6 +849,7 @@ protected:
                 // not implemented yet
                 assert(0);
             } else if ((insn & 0x0ff10020) == 0x01000000) {
+                // insn CPS
                 uint32_t mask;
                 uint32_t val;
                 // cps (privileged)
@@ -814,10 +896,10 @@ protected:
                 rd = (insn >> 12) & 0xf;
                 val = ((insn >> 4) & 0xf000) | (insn & 0xfff);
                 if ((insn & (1 << 22)) == 0) {
-                    /* MOVW */
+                    // insn MOVW
                     tmp = val;
                 } else {
-                    /* MOVT */
+                    // insn MOVT
                     tmp = this->regs[rd];
                     tmp &= 0xFFFF;
                     tmp |= val << 16;
@@ -836,7 +918,7 @@ protected:
                     this->arm_nop_hint();
                     return;
                 } else {
-                    // MSR(immediate)
+                    // insn MSR <immediate>
                     val = insn & 0xff;
                     shift = ((insn >> 8) & 0xf) * 2;
                     if (shift)
@@ -848,6 +930,203 @@ protected:
                     }
                     return;
                 }
+            }
+        }
+        else if ((insn & 0x0f900000) == 0x01000000
+                       && (insn & 0x00000090) != 0x00000090) {
+            // miscellaneous instructions
+            op1 = (insn >> 21) & 3;
+            sh = (insn >> 4) & 0xf;
+            rm = insn & 0xf;
+            switch (sh) {
+            case 0x0:
+                if (op1 & 1) {
+                    // insn MSR <register>
+                    tmp = this->regs[rm];
+                    // check if SPSR access is set
+                    i = ((op1 & 2) != 0);
+                    if (this->set_psr(this->msr_mask((insn >> 16) & 0xf, i), i, tmp))
+                    {
+                        this->exception |= EXCEPT_ILLEGAL_OP;
+                    }
+                    return;
+                } else {
+                    // insn MRS <register>
+                    rd = (insn >> 12) & 0xf;
+                    // check if SPSR access is set
+                    if (op1 & 2) {
+                        if (unlikely(IS_USER()))
+                        {
+                            this->exception |= EXCEPT_ILLEGAL_OP;
+                            return;
+                        }
+                        tmp = this->regs[REG_SPSR];
+                    } else {
+                        tmp = this->get_cpsr();
+                    }
+                    this->regs[rd] = tmp;
+                }
+                break;
+            case 0x1:
+                if (op1 == 1) {
+                    // insn BX <register>
+                    tmp = this->regs[rm];
+                    this->bx(tmp);
+                } else if (op1 == 3) {
+                    // insn CLZ
+                    rd = (insn >> 12) & 0xf;
+                    tmp = this->regs[rm];
+                    tmp = this->clz(tmp);
+                    this->regs[rd] = tmp;
+                } else {
+                    this->exception |= EXCEPT_ILLEGAL_OP;
+                    return;
+                }
+                break;
+            case 0x2:
+                if (op1 == 1) {
+                    // insn BXJ <register>
+                    ARCH(5TEJ);
+                    // Trivial implementation equivalent to bx
+                    tmp = this->regs[rm];
+                    this->bx(tmp);
+                } else {
+                    this->exception |= EXCEPT_ILLEGAL_OP;
+                    return;
+                }
+                break;
+            case 0x3:
+                if (unlikely(op1 != 1))
+                {
+                    this->exception |= EXCEPT_ILLEGAL_OP;
+                    return;
+                }
+                // insn BLX <register>
+                tmp = this->regs[rm];
+                tmp2 = this->get_pc();
+                this->regs[REG_LR] = tmp2;
+                this->bx(tmp);
+                break;
+            case 0x5:
+                // insn QADD, QDADD, QSUB and QDSUB
+                rd = (insn >> 12) & 0xf;
+                rn = (insn >> 16) & 0xf;
+                tmp = this->regs[rm];
+                tmp2 = this->regs[rn];
+                // check if the register value must be doubled
+                if (op1 & 2)
+                {
+                    // check if the sign bit is set
+                    if ((int32_t)tmp2 > 0x40000000)
+                    {
+                        // TODO: this was copied from QEMU but not sure about reason
+                        tmp2 = ~0x80000000;
+                        this->QF = 1;
+                    }
+                    else if ((int32_t)tmp2 < (int32_t)0xC0000000)
+                    {
+                        // TODO: this was copied from QEMU but not sure about reason
+                        tmp2 = 0x80000000;
+                        this->QF = 1;
+                    }
+                    else
+                        tmp2 = tmp2 * 2;
+                }
+                if (op1 & 1)
+                {
+                    uint32_t res = tmp - tmp2;
+                    if (((res ^ tmp) & SIGNBIT) && ((tmp ^ tmp2) & SIGNBIT)) {
+                        this->QF = 1;
+                        res = ~(((int32_t)tmp >> 31) ^ SIGNBIT);
+                    }
+                    tmp = res;
+                }
+                else
+                {
+                    uint32_t res = tmp + tmp2;
+                    if (((res ^ tmp) & SIGNBIT) && !((tmp ^ tmp2) & SIGNBIT)) {
+                        this->QF = 1;
+                        res = ~(((int32_t)tmp >> 31) ^ SIGNBIT);
+                    }
+                    tmp = res;
+                }
+                this->regs[rd] = tmp;
+                break;
+            case 7:
+                // insn BKPT
+                // not implemented for the time being
+                assert(0);
+                break;
+            case 0x8: // SMULBB(op1=3), SMLABB(op1=0), SMLALBB(op1=2), SMLAWB(op1=1)
+            case 0xa: // SMULTB(op1=3), SMLATB(op1=0), SMLALTB(op1=2), SMULWB(op1=1)
+            case 0xc: // SMULBT(op1=3), SMLABT(op1=0), SMLALBT(op1=2), SMLAWT(op1=1)
+            case 0xe: // SMULTT(op1=3), SMLATT(op1=0), SMLALTT(op1=2), SMULWT(op1=1)
+                rs = (insn >> 8) & 0xf;
+                rn = (insn >> 12) & 0xf;
+                rd = (insn >> 16) & 0xf;
+                if (op1 == 1) {
+                    // insn SM(LA|UL)W(B|T)
+                    // (32 * 16) >> 16
+                    tmp = this->regs[rm];
+                    tmp2 = this->regs[rs];
+                    // (B|T)
+                    if (sh & 4)
+                        // arithmetic shift right (extend sign bit)
+                        tmp2 = this->sra(tmp2, 16);
+                    else
+                        // extend sign bit to the upper 16 bits
+                        tmp2 = this->sexth2l(tmp2);
+
+                    // perform multiplication on 64 bit and shift
+                    tmp = (uint32_t)(((int64_t)((int32_t)tmp*(int32_t)tmp2)) >> 16);
+                    // (LA|UL)
+                    if ((sh & 2) == 0) {
+                        tmp2 = this->regs[rn];
+                        tmp = this->add_setq(tmp, tmp2);
+                    }
+                    this->regs[rd] = tmp;
+                } else {
+                    // 16 * 16
+                    tmp = this->regs[rm];
+                    tmp2 = this->regs[rs];
+
+                    // (B|T) for N (here rm)
+                    if (sh & 2)
+                        // arithmetic shift right (extend sign bit)
+                        tmp = this->sra(tmp, 16);
+                    else
+                        // extend sign bit to the upper 16 bits
+                        tmp = this->sexth2l(tmp);
+
+                    // (B|T) for M (here rs)
+                    if (sh & 4)
+                        // arithmetic shift right (extend sign bit)
+                        tmp2 = this->sra(tmp2, 16);
+                    else
+                        // extend sign bit to the upper 16 bits
+                        tmp2 = this->sexth2l(tmp2);
+
+                    // perform multiplication
+                    tmp = (uint32_t)((int32_t)tmp * (int32_t)tmp2);
+                    if (op1 == 2) {
+                        // SMLAL**
+                        tmp64 = this->sextl2q(tmp);
+                        tmp64 += (this->regs[rd] << 32) | this->regs[rn];
+                        this->regs[rn] = (uint32_t)tmp64;
+                        this->regs[rd] = (uint32_t)(tmp64>>32);
+                    } else {
+                        if (op1 == 0) {
+                            // SMLA**
+                            tmp2 = this->regs[rn];
+                            tmp = this->add_setq(tmp, tmp2);
+                        }
+                        this->regs[rd] = tmp;
+                    }
+                }
+                break;
+            default:
+                this->exception |= EXCEPT_ILLEGAL_OP;
+                return;
             }
         }
     }
