@@ -247,8 +247,8 @@ struct CpuBase: SimpleMaster
     static void
     gdb_set_pc_cb(void *obj, uint64_t pc)
     {
-        struct CpuBase* myself = (struct CpuBase*)obj;
-        return myself->gdb_set_pc(pc);
+        struct CpuBase* self = (struct CpuBase*)obj;
+        return self->gdb_set_pc(pc);
     }
 
     /** Read the CPU registers and fill the buffer
@@ -298,8 +298,8 @@ struct CpuBase: SimpleMaster
     static int
     gdb_rd_reg_cb(void *obj, uint8_t *mem_buf)
     {
-        struct CpuBase* myself = (struct CpuBase*)obj;
-        return myself->gdb_rd_reg(mem_buf);
+        struct CpuBase* self = (struct CpuBase*)obj;
+        return self->gdb_rd_reg(mem_buf);
     }
 
     /** Write the CPU registers
@@ -321,8 +321,8 @@ struct CpuBase: SimpleMaster
     static void
     gdb_wr_reg_cb(void *obj, uint8_t *mem_buf, int size)
     {
-        struct CpuBase* myself = (struct CpuBase*)obj;
-        return myself->gdb_wr_reg(mem_buf, size);
+        struct CpuBase* self = (struct CpuBase*)obj;
+        return self->gdb_wr_reg(mem_buf, size);
     }
 
     /** Make a debug read access into the system
@@ -352,8 +352,8 @@ struct CpuBase: SimpleMaster
     static int
     gdb_rd_mem_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len)
     {
-        struct CpuBase* myself = (struct CpuBase*)obj;
-        return myself->gdb_rd_mem(addr, dataptr, len);
+        struct CpuBase* self = (struct CpuBase*)obj;
+        return self->gdb_rd_mem(addr, dataptr, len);
     }
 
     /** Make a debug write access into the system
@@ -383,8 +383,8 @@ struct CpuBase: SimpleMaster
     static int
     gdb_wr_mem_cb(void *obj, uint64_t addr, uint8_t* dataptr, uint32_t len)
     {
-        struct CpuBase* myself = (struct CpuBase*)obj;
-        return myself->gdb_wr_mem(addr, dataptr, len);
+        struct CpuBase* self = (struct CpuBase*)obj;
+        return self->gdb_wr_mem(addr, dataptr, len);
     }
 
 protected:
