@@ -1,0 +1,14 @@
+#summary How to write a python macro for !OpenOffice 3.
+
+= Introduction =
+
+Directions to write a Python macro for !OpenOffice 3 with an example.
+
+This example is based on a Windows machine, it could be different on a Linux machine specifically for the paths.
+
+
+= Details =
+
+ * It is not possible to edit/debug a Python macro within !OpenOffice, it has to be edited with an external editor and can only be executed in !OpenOffice.  Debugging can be a little bit difficult
+ * For the development, the script is created in `C:\Documents and Settings\<username>\Application Data\OpenOffice.org\3\user\Scripts\python`, let's say `SportTracks.py`
+ * In the Calc document, go to `Tools->Macros->Macros->Python...`, under `My macros` there should be the `SportTracks/SportTracks.py`
