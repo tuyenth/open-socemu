@@ -19,6 +19,7 @@ The example macro does the following:
  * For the development, the script is created in `C:\Documents and Settings\<username>\Application Data\OpenOffice.org\3\user\Scripts\python`, let's say `SportTracks.py`
  * In the Calc document, go to `Tools->Macros->Macros->Python...`, under `My macros` there should be the `SportTracks/SportTracks.py`
  * The code of the macro is the following:
+
 {{{
 import uno
 from com.sun.star.ui.dialogs.TemplateDescription import FILESAVE_SIMPLE
@@ -179,3 +180,16 @@ def SportTracks( ):
 
 g_exportedScripts = SportTracks,
 }}}
+
+ * Open the document file with a ZIP utility:
+  * Create `Scripts/python` in the ZIP archive
+  * Copy the `SportTracks.py` file in the `Scripts/python` directory inside the archive
+  * Edit the `META-INF/manifest.xml` document in the archive and add the following lines before the tag `</manifest:manifest>`:
+
+{{{
+ <manifest:file-entry manifest:media-type="" manifest:full-path="Scripts/python/SportTracks.py"/>
+ <manifest:file-entry manifest:media-type="application/binary" manifest:full-path="Scripts/python/"/>
+ <manifest:file-entry manifest:media-type="application/binary" manifest:full-path="Scripts/"/>
+}}}
+
+  * Do not forget to enable the local macros execution in Options setting
