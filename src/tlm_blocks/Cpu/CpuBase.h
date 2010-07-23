@@ -7,7 +7,7 @@
 #include "Parameters.h"
 
 /// debug level
-#define CPUBASE_DEBUG_LEVEL 4
+#define CPUBASE_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
@@ -29,6 +29,18 @@
 template<typename GDB>
 struct CpuBase: SimpleMaster
 {
+    typedef void (CpuBase::*INSNHDLR)(void* params[]);
+
+    /// Structure containing the instruction compiled handler
+    struct InsnHandler
+    {
+        /// Pointer to the method of the class that executes the instruction
+        INSNHDLR fn;
+        /// Parameters to the method
+        void* params[16];
+    };
+
+
     /** CpuBase constructor
      * @param[in] name Name of the module
      * @param[in] parameters Command line parameters
@@ -119,12 +131,21 @@ struct CpuBase: SimpleMaster
     {
     }
 
-    /// Execute a single instruction
-    virtual void
-    execute_insn()
+    /// Fake instruction
+    void
+    fake_hdlr(void* params[])
     {
         // increment the PC
         this->pc += 4;
+    }
+
+    /** Decode an instruction
+     * @param hdlr Instruction handler to fill for execution
+     */
+    virtual void
+    decode_insn(struct InsnHandler* hdlr)
+    {
+        hdlr->fn = &CpuBase::fake_hdlr;
     }
 
     /// Main module thread, runs the CPU startup and instruction loop
@@ -142,6 +163,8 @@ struct CpuBase: SimpleMaster
 
         while (true)
         {
+            struct InsnHandler* insnhdlr;
+
             CPUBASE_TLM_DBG(2, "Fetch @0x%08llX", this->get_pc());
 
             // fetch the next instruction
@@ -161,8 +184,35 @@ struct CpuBase: SimpleMaster
                 continue;
             }
 
-            // execute the instruction fetched
-            this->execute_insn();
+            // check if the handler is already present in cache
+            insnhdlr = this->insncache[this->get_pc()];
+
+            if (insnhdlr == NULL)
+            {
+                // allocate a new instruction handler to be filled
+                insnhdlr = new InsnHandler;
+
+                insnhdlr->fn = NULL;
+
+                // decode the instruction fetched
+                this->decode_insn(insnhdlr);
+
+                // if the instruction was not executed during decoding
+                if (insnhdlr->fn != NULL)
+                {
+                    // add the handler to the cache
+                    this->insncache[this->get_pc()] = insnhdlr;
+                    // execute the instruction
+                    (this->*insnhdlr->fn)(insnhdlr->params);
+                }
+                else
+                    free(insnhdlr);
+            }
+            else
+            {
+                // execute the instruction
+                (this->*insnhdlr->fn)(insnhdlr->params);
+            }
         }
     }
 
@@ -436,8 +486,11 @@ protected:
     }
 
 private:
-    /// Program Counter
+    /// Program Counter, derived classes may implement a different mechanism
     uint32_t pc;
+
+    /// Instructions cache: associative array address to instruction handlers
+    std::map<uint64_t, struct InsnHandler*> insncache;
 };
 
 #endif /* CPUBASE_H_ */

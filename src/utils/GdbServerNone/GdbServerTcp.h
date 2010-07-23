@@ -17,7 +17,7 @@
 #include "Parameters.h"
 
 /// debug level
-#define GDBSERVERTCP_DEBUG_LEVEL 4
+#define GDBSERVERTCP_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
