@@ -1,7 +1,7 @@
 #include "CpuBase.h"
 
 /// debug level
-#define ARM32_DEBUG_LEVEL 4
+#define ARM32_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
@@ -91,20 +91,22 @@ struct Arm32: CpuBase<GDB>
         this->insn = this->rd_l(this->get_pc());
     }
 
-    /// Execute a single instruction
+    /** Decode an instruction
+     * @param hdlr Instruction handler to fill for execution
+     */
     virtual void
-    execute_insn()
+    decode_insn(struct InsnHandler* hdlr)
     {
         // check the current execution mode
         if (this->TF)
         {
             // try to execute a thumb operation
-            this->exec_thumb();
+            this->decode_thumb(hdlr);
         }
         else
         {
             // try to execute a thumb operation
-            this->exec_arm();
+            this->decode_arm(hdlr);
         }
     }
 
@@ -659,13 +661,16 @@ protected:
 
     }
 
+    /** Decode an ARM instruction
+     * @param hdlr Instruction handler to fill for execution
+     */
     virtual void
-    exec_arm()
+    decode_arm(struct InsnHandler* hdlr)
     {
         uint32_t cond, rd, rn, rm, rs, sh, val, shift, tmp, tmp2, i, op1, addr;
         uint64_t tmp64;
 
-        ARM32_TLM_DBG(2, "exec_arm 0x%08X", this->insn);
+        ARM32_TLM_DBG(2, "%s 0x%08X", __func__, this->insn);
 
         // by default, move to the next instruction
         this->set_pc(this->get_pc() + 4);
@@ -1131,10 +1136,13 @@ protected:
         }
     }
 
+    /** Decode a THUMB instruction
+     * @param hdlr Instruction handler to fill for execution
+     */
     virtual void
-    exec_thumb()
+    decode_thumb(struct InsnHandler* hdlr)
     {
-        ARM32_TLM_DBG(2, "exec_thumb 0x%08X", this->insn);
+        ARM32_TLM_DBG(2, "%s 0x%08X", __func__, this->insn);
 
         this->set_pc(this->get_pc()+2);
     }
