@@ -3,6 +3,7 @@
 /// debug level
 #define ARM32_DEBUG_LEVEL 0
 
+
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
 /// @param __f format of the debug string
@@ -16,7 +17,7 @@
 
 #define UNSUPPORTED()                                                                   \
     do {                                                                                \
-        this->exception |= EXCEPT_ILLEGAL_OP;                                           \
+        hdlr->fn = HDLR_FN(Arm32::illegalop);                                           \
         return;                                                                         \
     } while (false)
 
@@ -32,7 +33,10 @@
 template<typename GDB>
 struct Arm32: CpuBase<GDB>
 {
-    /** Arm32 constructor
+    /// Define the INSNHDLR type
+    typedef void (CpuBase<GDB>::*INSNHDLR)(void* params[]);
+
+   /** Arm32 constructor
      * @param[in] name Name of the module
      * @param[in] parameters Command line parameters
      * @param[in, out] config Parameters of the current block (and sub-blocks)
@@ -119,7 +123,6 @@ struct Arm32: CpuBase<GDB>
     virtual int
     gdb_rd_reg(uint8_t *mem_buf)
     {
-        int i;
         uint8_t *ptr;
 
         ptr = mem_buf;
@@ -549,18 +552,6 @@ protected:
         return false;
     }
 
-    /** RFE implementation
-     * @param[in] pc New program counter to set
-     * @param[in] cpsr New CPSR to set
-     */
-    virtual void
-    rfe(uint32_t pc, uint32_t cpsr)
-    {
-        // first, we set the cpsr because the PC reg may get overwritten by mode switch
-        this->set_cpsr(cpsr, 0xffffffff);
-        this->set_pc(pc);
-    }
-
     /** Execute a branch and change state
      * @param[in] addr New address to load in the PC
      */
@@ -661,6 +652,126 @@ protected:
 
     }
 
+    /** Illegal operand handler instruction handler
+     * @param[in] params Parsed parameters
+     */
+    void
+    illegalop(void* params[])
+    {
+        this->exception |= EXCEPT_ILLEGAL_OP;
+    }
+
+    /** PLD instruction handler
+     * @param[in] params Parsed parameters
+     */
+    void
+    pld(void* params[])
+    {
+        // nothing to do
+    }
+
+    /** SETEND instruction handler
+     * @param[in] params Parsed parameters
+     */
+    void
+    setend(void* params[])
+    {
+        // params[0] = endianstate
+        // check if the big endian mode is requested
+        if (params[0]) {
+            // BE8 mode not implemented
+            assert(0);
+        }
+    }
+
+    /** SRS instruction handler
+     * @param[in] params Parsed parameters
+     */
+    void
+    srs(void* params[])
+    {
+        uint32_t addr, mode;
+        int32_t offset;
+        // params[0] = mode
+        // params[1] = offset
+        // params[2] = writeback
+        // params[3] = wb_offset (only if writeback is set)
+
+        // not supported in USR mode
+        if (IS_USER()) {
+            this->exception |= EXCEPT_ILLEGAL_OP;
+            return;
+        }
+
+        mode = (uint32_t) params[0];
+        offset = (int32_t) params[1];
+        // check if the current mode was indicated
+        if (mode == (this->MF)) {
+            addr = this->regs[REG_SPSR];
+        } else {
+            addr = this->banked_regs[mode-MODE_USR][REG_SPSR];
+        }
+        if (offset)
+            addr += offset;
+
+        // write the LR register on the stack
+        wr_l(addr, this->regs[REG_LR]);
+        addr += 4;
+        // write the SPSR register on the stack
+        wr_l(addr, this->regs[REG_SPSR]);
+        if (params[2] != NULL) {
+            // Base writeback
+            offset = (int32_t) params[3];
+            if (offset)
+                addr += offset;
+            if (mode == this->MF) {
+                this->regs[REG_SPSR] = addr;
+            } else {
+                this->banked_regs[mode-MODE_USR][REG_SPSR] = addr;
+            }
+        }
+    }
+
+    /** RFE instruction handler
+     * @param[in] params Parsed parameters
+     */
+    void
+    rfe(void* params[])
+    {
+        uint32_t rn, addr, tmp, tmp2;
+        int32_t offset;
+        // params[0] = Rn
+        // params[1] = offset
+        // params[2] = writeback
+        // params[3] = wb_offset (only if writeback is set)
+
+        // not supported in USR mode
+        if (IS_USER()) {
+            this->exception |= EXCEPT_ILLEGAL_OP;
+            return;
+        }
+        rn = (uint32_t)params[0];
+        addr = this->regs[rn];
+        offset = (int32_t)params[1];
+        if (offset)
+            addr += offset;
+        // Load PC into tmp and CPSR into tmp2
+        tmp = this->rd_l(addr);
+        addr += 4;
+        tmp2 = this->rd_l(addr);
+        if (params[2] != NULL) {
+            offset = (int32_t)params[3];
+            // Base writeback
+            this->regs[rn] = addr;
+            if (offset)
+                addr += offset;
+            this->regs[rn] = addr;
+        }
+        // first, we set the cpsr because the PC reg may get overwritten by mode switch
+        this->set_cpsr(tmp2, 0xffffffff);
+        this->set_pc(tmp);
+    }
+
     /** Decode an ARM instruction
      * @param hdlr Instruction handler to fill for execution
      */
@@ -702,19 +813,17 @@ protected:
                 //    goto illegal_op;
                 return;
             }
-            if ((insn & 0x0d70f000) == 0x0550f000)
-            {
+            if ((insn & 0x0d70f000) == 0x0550f000) {
                 // insn PLD
-                // preload not implemented
+                hdlr->fn = HDLR_FN(Arm32::pld);
                 return;
             }
             else if ((insn & 0x0ffffdff) == 0x01010000) {
-                ARCH(6);
                 // insn SETEND
-                if (insn & (1 << 9)) {
-                    // BE8 mode not implemented
-                    assert(0);
-                }
+                // params[0] = endianstate
+                ARCH(6);
+                hdlr->fn = HDLR_FN(Arm32::setend);
+                hdlr->params[0] = HDLR_PARAM(insn & (1 << 9));
                 return;
             } else if ((insn & 0x0fffff00) == 0x057ff000) {
                 switch ((insn >> 4) & 0xf) {
@@ -739,17 +848,14 @@ protected:
                 }
             } else if ((insn & 0x0e5fffe0) == 0x084d0500) {
                 // insn SRS
+                // params[0] = mode
+                // params[1] = offset
+                // params[2] = writeback
+                // params[3] = wb_offset (only if writeback is set)
                 int32_t offset;
-                if (IS_USER())
-                    UNSUPPORTED();
                 ARCH(6);
-                op1 = (insn & 0x1f);
-                // check if the current mode was indicated
-                if (op1 == (this->MF)) {
-                    addr = this->regs[REG_SPSR];
-                } else {
-                    addr = this->banked_regs[op1-MODE_USR][REG_SPSR];
-                }
+                hdlr->fn = HDLR_FN(Arm32::srs);
+                hdlr->params[0] = HDLR_PARAM(insn & 0x1f);
                 i = (insn >> 23) & 3;
                 switch (i) {
                 case 0: offset = -4; break; // DA
@@ -758,11 +864,8 @@ protected:
                 case 3: offset = 4; break; // IB
                 default: assert(0);
                 }
-                if (offset)
-                    addr += offset;
-                wr_l(addr, this->regs[REG_LR]);
-                addr += 4;
-                wr_l(addr, this->regs[REG_SPSR]);
+                hdlr->params[1] = HDLR_PARAM(offset);
+                hdlr->params[2] = HDLR_PARAM(insn & (1 << 21));
                 if (insn & (1 << 21)) {
                     // Base writeback
                     switch (i) {
@@ -772,23 +875,19 @@ protected:
                     case 3: offset = 0; break;
                     default: assert(0);
                     }
-                    if (offset)
-                        addr += offset;
-                    if (op1 == this->MF) {
-                        this->regs[REG_SPSR] = addr;
-                    } else {
-                        this->banked_regs[op1-MODE_USR][REG_SPSR] = addr;
-                    }
+                    hdlr->params[3] = HDLR_PARAM(offset);
                 }
                 return;
             } else if ((insn & 0x0e50ffe0) == 0x08100a00) {
                 // insn RFE
+                // params[0] = Rn
+                // params[1] = offset
+                // params[2] = writeback
+                // params[3] = wb_offset (only if writeback is set)
                 int32_t offset;
-                if (IS_USER())
-                    UNSUPPORTED();
                 ARCH(6);
-                rn = (insn >> 16) & 0xf;
-                addr = this->regs[rn];
+                hdlr->fn = HDLR_FN(Arm32::rfe);
+                hdlr->params[0] = HDLR_PARAM((insn >> 16) & 0xf);
                 i = (insn >> 23) & 3;
                 switch (i) {
                 case 0: offset = -4; break; // DA
@@ -797,12 +896,8 @@ protected:
                 case 3: offset = 4; break; // IB
                 default: assert(0);
                 }
-                if (offset)
-                    addr += offset;
-                // Load PC into tmp and CPSR into tmp2
-                tmp = this->rd_l(addr);
-                addr += 4;
-                tmp2 = this->rd_l(addr);
+                hdlr->params[1] = HDLR_PARAM(offset);
+                hdlr->params[2] = HDLR_PARAM(insn & (1 << 21));
                 if (insn & (1 << 21)) {
                     // Base writeback
                     switch (i) {
@@ -812,12 +907,8 @@ protected:
                     case 3: offset = 0; break;
                     default: abort();
                     }
-                    if (offset)
-                        addr += offset;
-                    this->regs[rn] = addr;
+                    hdlr->params[3] = HDLR_PARAM(offset);
                 }
-
-                this->rfe(tmp, tmp2);
                 return;
             } else if ((insn & 0x0e000000) == 0x0a000000) {
                 // insn BLX <offset>
