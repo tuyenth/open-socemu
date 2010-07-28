@@ -40,6 +40,9 @@ struct CpuBase: SimpleMaster
         void* params[16];
     };
 
+    #define HDLR_PARAM(x) (void*)(x)
+    #define HDLR_FN(x) (INSNHDLR)(&x)
+
 
     /** CpuBase constructor
      * @param[in] name Name of the module

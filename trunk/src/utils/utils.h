@@ -324,13 +324,17 @@ do {                                                                        \
     TLM_DBG_EXEC_COPY_NORETURN(__t, __p, __m);                              \
     return __s
 
-/// Macro to read an unsigned 16 bit value at a given address
-/// @param[in] __a 16 bit object to read
-#define U16(__a) (*((uint16_t*)(&(__a))))
-
-/// Macro to read an unsigned 32 bit value at a given address
+/// Macro to read an unsigned 32 bit value at the address of an other object
 /// @param[in] __a 32 bit object to read
-#define U32(__a) (*((uint32_t*)(&(__a))))
+#define U32(__o) (*((uint32_t*)(&(__o))))
+
+/// Macro to read a signed 32 bit value at the address of an other object
+/// @param[in] __a 32 bit object to read
+#define S32(__o) (*((int32_t*)(&(__o))))
+
+/// Macro to read an unsigned 16 bit value at the address of an other object
+/// @param[in] __a 16 bit object to read
+#define U16(__o) (*((uint16_t*)(&(__o))))
 
 extern int rand_ps();
 
