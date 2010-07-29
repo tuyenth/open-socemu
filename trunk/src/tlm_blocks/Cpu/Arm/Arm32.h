@@ -552,18 +552,6 @@ protected:
         return false;
     }
 
-    /** Execute a branch and change state
-     * @param[in] addr New address to load in the PC
-     */
-    virtual void
-    bx(uint32_t addr)
-    {
-        // update the thumb state
-        this->TF = addr & 1;
-        // load the new address
-        this->set_pc(addr & (~1));
-    }
-
     /** Execute a Count Leading Zeros
      * @param[in] val Value to count the leading zeros in
      */
@@ -661,6 +649,15 @@ protected:
         this->exception |= EXCEPT_ILLEGAL_OP;
     }
 
+    /** NOP instruction handler
+     * @param[in] params Parsed parameters
+     */
+    void
+    nop(void* params[])
+    {
+        // nothing to do
+    }
+
     /** PLD instruction handler
      * @param[in] params Parsed parameters
      */
@@ -690,21 +687,19 @@ protected:
     void
     srs(void* params[])
     {
-        uint32_t addr, mode;
-        int32_t offset;
         // params[0] = mode
         // params[1] = offset
         // params[2] = writeback
         // params[3] = wb_offset (only if writeback is set)
+        uint32_t mode = (uint32_t)params[0];
+        int32_t offset = (int32_t)params[1];
+        uint32_t addr;
 
         // not supported in USR mode
         if (IS_USER()) {
             this->exception |= EXCEPT_ILLEGAL_OP;
             return;
         }
-
-        mode = (uint32_t) params[0];
-        offset = (int32_t) params[1];
         // check if the current mode was indicated
         if (mode == (this->MF)) {
             addr = this->regs[REG_SPSR];
@@ -713,7 +708,6 @@ protected:
         }
         if (offset)
             addr += offset;
-
         // write the LR register on the stack
         wr_l(addr, this->regs[REG_LR]);
         addr += 4;
@@ -738,24 +732,22 @@ protected:
     void
     rfe(void* params[])
     {
-        uint32_t rn, addr, tmp, tmp2;
-        int32_t offset;
         // params[0] = Rn
         // params[1] = offset
         // params[2] = writeback
         // params[3] = wb_offset (only if writeback is set)
-
+        uint32_t rn = (uint32_t)params[0];
+        int32_t offset = (int32_t)params[1];
+        uint32_t addr = this->regs[rn];
+        uint32_t tmp, tmp2;
         // not supported in USR mode
         if (IS_USER()) {
             this->exception |= EXCEPT_ILLEGAL_OP;
             return;
         }
-        rn = (uint32_t)params[0];
-        addr = this->regs[rn];
-        offset = (int32_t)params[1];
         if (offset)
             addr += offset;
-        // Load PC into tmp and CPSR into tmp2
+        // load PC into tmp and CPSR into tmp2
         tmp = this->rd_l(addr);
         addr += 4;
         tmp2 = this->rd_l(addr);
@@ -770,6 +762,56 @@ protected:
         // first, we set the cpsr because the PC reg may get overwritten by mode switch
         this->set_cpsr(tmp2, 0xffffffff);
         this->set_pc(tmp);
+    }
+
+    /** BX instruction handler
+     * @param[in] params Parsed parameters
+     */
+    void
+    bx(void* params[])
+    {
+        // params[0] = absolute address (if bit0 set, change to Thumb)
+        uint32_t addr = (uint32_t)params[0];
+        // update the thumb state
+        this->TF = addr & 1;
+        // load the new address
+        this->set_pc(addr & (~1));
+    }
+
+    /** BLX instruction handler
+     * @param[in] params Parsed parameters
+     */
+    void
+    blx(void* params[])
+    {
+        // params[0] = sign extended offset (4 aligned)
+        // params[1] = bit1 (2 aligned, hbit)
+        // params[2] = bit0 (1 aligned, thumbbit)
+        int32_t offset = (int32_t)params[0];
+        uint32_t hbit = (uint32_t)params[1];
+        uint32_t thumbbit = (uint32_t)params[2];
+        uint32_t addr = this->get_pc();
+        // save the current pointer in the register
+        this->regs[REG_LR] = addr;
+        // offset + (h bit) + (thumb bit)
+        addr += offset | hbit | thumbbit;
+        this->bx((void**)&addr);
+    }
+
+    /** CPS instruction handler
+     * @param[in] params Parsed parameters
+     */
+    void
+    cps(void* params[])
+    {
+        // params[0] = CPSR mask
+        // params[1] = CPSR value
+        uint32_t mask = (uint32_t)params[0];
+        uint32_t val = (uint32_t)params[1];
+        // cps (privileged)
+        if (IS_USER())
+            return;
+        this->set_psr(mask, 0, val);
     }
 
     /** Decode an ARM instruction
@@ -796,7 +838,6 @@ protected:
             if (((insn >> 25) & 7) == 1) {
                 // NEON Data processing
                 ARCH(NEON);
-
                 // not implemented yet
                 assert(0);
                 //if (disas_neon_data_insn(env, s, insn))
@@ -806,7 +847,6 @@ protected:
             if ((insn & 0x0f100000) == 0x04000000) {
                 // NEON load/store
                 ARCH(NEON);
-
                 // not implemented yet
                 assert(0);
                 //if (disas_neon_ls_insn(env, s, insn))
@@ -830,7 +870,6 @@ protected:
                 case 1:
                     // insn CLREX
                     ARCH(6K);
-
                     // not implemented yet
                     assert(0);
                     return;
@@ -838,10 +877,8 @@ protected:
                 case 5: // dmb
                 case 6: // isb
                     ARCH(7);
-
                     // not implemented yet
                     assert(0);
-
                     return;
                 default:
                     UNSUPPORTED();
@@ -912,22 +949,21 @@ protected:
                 return;
             } else if ((insn & 0x0e000000) == 0x0a000000) {
                 // insn BLX <offset>
-                // branch link and change to thumb (blx <offset>)
+                // params[0] = sign extended offset (4 aligned)
+                // params[1] = bit1 (2 aligned, hbit)
+                // params[2] = bit0 (1 aligned, thumbbit)
                 int32_t offset;
-                val = this->get_pc();
-                // save the current pointer in the register
-                this->regs[REG_LR] = val;
-                // Sign-extend the 24-bit offset
-                offset = (((int32_t)insn) << 8) >> 8;
-                // offset * 4 + bit24 * 2 + (thumb bit)
-                val += (offset << 2) | ((insn >> 23) & 2) | 1;
+                hdlr->fn = HDLR_FN(Arm32::blx);
+                offset = (((int32_t)insn) << 8) >> 6;
                 // pipeline offset
-                val += 4;
-                this->bx(val);
+                offset += 4;
+                hdlr->params[0] = HDLR_PARAM(offset);
+                hdlr->params[1] = HDLR_PARAM((insn >> 23) & 2);
+                // from ARM switch to thumb)
+                hdlr->params[2] = HDLR_PARAM(1);
                 return;
             } else if ((insn & 0x0e000f00) == 0x0c000100) {
                 ARCH(IWMMXT);
-
                 // not implemented yet
                 assert(0);
                 // iWMMXt register transfer
@@ -946,11 +982,10 @@ protected:
                 assert(0);
             } else if ((insn & 0x0ff10020) == 0x01000000) {
                 // insn CPS
+                // params[0] = CPSR mask
+                // params[1] = CPSR value
                 uint32_t mask;
                 uint32_t val;
-                // cps (privileged)
-                if (IS_USER())
-                    return;
                 mask = val = 0;
                 if (insn & (1 << 19)) {
                     if (insn & (1 << 8))
@@ -960,14 +995,20 @@ protected:
                     if (insn & (1 << 6))
                         mask |= CPSR_F;
                     if (insn & (1 << 18))
-                        val |= mask;
+                        val = mask;
                 }
                 if (insn & (1 << 17)) {
                     mask |= CPSR_M;
                     val |= (insn & 0x1f);
                 }
-                if (mask) {
-                    this->set_psr(mask, 0, val);
+                // if there is no mask, just return
+                if (likely(mask == 0)) {
+                    hdlr->fn = HDLR_FN(Arm32::cps);
+                    hdlr->params[0] = HDLR_PARAM(mask);
+                    hdlr->params[1] = HDLR_PARAM(val);
+                }
+                else {
+                    hdlr->fn = HDLR_FN(Arm32::nop);
                 }
                 return;
             }
@@ -1067,7 +1108,7 @@ protected:
                 if (op1 == 1) {
                     // insn BX <register>
                     tmp = this->regs[rm];
-                    this->bx(tmp);
+                    this->bx((void**)&tmp);
                 } else if (op1 == 3) {
                     // insn CLZ
                     rd = (insn >> 12) & 0xf;
@@ -1083,9 +1124,9 @@ protected:
                 if (op1 == 1) {
                     // insn BXJ <register>
                     ARCH(5TEJ);
-                    // Trivial implementation equivalent to bx
+                    // trivial implementation equivalent to bx
                     tmp = this->regs[rm];
-                    this->bx(tmp);
+                    this->bx((void**)&tmp);
                 } else {
                     this->exception |= EXCEPT_ILLEGAL_OP;
                     return;
@@ -1101,7 +1142,7 @@ protected:
                 tmp = this->regs[rm];
                 tmp2 = this->get_pc();
                 this->regs[REG_LR] = tmp2;
-                this->bx(tmp);
+                this->bx((void**)&tmp);
                 break;
             case 0x5:
                 // insn QADD, QDADD, QSUB and QDSUB
