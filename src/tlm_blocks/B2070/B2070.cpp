@@ -6,9 +6,12 @@
 #define SRAM_BASE_ADDR (0x00080000)
 #define SRAM_SIZE (104*1024)
 
+#define FLASH_BASE_ADDR (0xFC000000)
+#define FLASH_SIZE (512*1024)
+
 B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
-    uint32_t *romdata, *sramdata;
+    uint32_t *romdata, *sramdata, *flashdata;
     Parameter *cpu_parameter;
     MSP *cpu_config;
 
@@ -22,7 +25,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     cpu_config = cpu_parameter->get_config();
 
     // create the address decoder instance
-    this->addrdec = new AddrDec<2> ("addrdec");
+    this->addrdec = new AddrDec<3> ("addrdec");
 
     // CPU:
     //   - create instance
@@ -50,6 +53,19 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     this->sram = new Memory("sram", sramdata, SRAM_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
     if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
+    {
+        TLM_ERR("SRAM address range wrong %d", 0);
+        return;
+    }
+
+    // FLASH:
+    //   - create instance
+    // allocate the memory needed
+    flashdata = (uint32_t*)malloc(FLASH_SIZE);
+    //   - create the memory instance
+    this->flash = new Memory("flash", flashdata, FLASH_SIZE);
+    //   - bind interface (sram is hooked to the address decoder)
+    if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR, FLASH_BASE_ADDR+FLASH_SIZE))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;

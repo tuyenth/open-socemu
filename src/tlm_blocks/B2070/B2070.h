@@ -19,13 +19,15 @@
 struct B2070 : sc_core::sc_module
 {
     /// Address decoder instance pointer
-    AddrDec<2>* addrdec;
+    AddrDec<3>* addrdec;
     /// CPU instance pointer
     Cpu* cpu;
     /// ROM instance pointer
     Memory* rom;
     /// SRAM instance pointer
     Memory* sram;
+    /// FLASH instance pointer
+    Memory* flash;
 
     /** Constructor of the top level module
      * @param[in] name Name of the module
