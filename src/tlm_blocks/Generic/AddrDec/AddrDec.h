@@ -182,7 +182,7 @@ struct AddrDec : SimpleSlave
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @return The number of bytes read or written
      */
-    virtual unsigned int bus_s_transport_dbg(tlm::tlm_generic_payload& trans)
+    virtual unsigned int slave_dbg_transport(tlm::tlm_generic_payload& trans)
     {
         sc_dt::uint64 init_addr = trans.get_address();
         sc_dt::uint64 curr_addr = init_addr & m_mask;
