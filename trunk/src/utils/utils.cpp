@@ -2,7 +2,7 @@
 #include "utils.h"
 
 /// Generate a random delay (with power-law distribution) to aid testing and 
-/// stress the protocol.
+/// stress the protocol
 int rand_ps()
 {
     int n = rand() % 100;

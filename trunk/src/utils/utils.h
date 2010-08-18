@@ -125,7 +125,7 @@ do {                                                                        \
     assert(!(__t).is_response_error());                                     \
 } while(0)
 
-/// Macro to make a blocking write 4 byte access.
+/// Macro to make a blocking write 4 byte access
 /// @param[in] __s socket to use to perform access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __y time object to use to indicate delay
@@ -134,7 +134,7 @@ do {                                                                        \
 #define TLM_B_WR_WORD(__s, __t, __y, __a, __d)                              \
     TLM_B_TRANS(__s, __t, __y, tlm::TLM_WRITE_COMMAND, __a, __d, 4)
 
-/// Macro to make a blocking write 2 byte access.
+/// Macro to make a blocking write 2 byte access
 /// @param[in] __s socket to use to perform access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __y time object to use to indicate delay
@@ -143,7 +143,7 @@ do {                                                                        \
 #define TLM_B_WR_HALFWORD(__s, __t, __y, __a, __d)                          \
     TLM_B_TRANS(__s, __t, __y, tlm::TLM_WRITE_COMMAND, __a, __d, 2)
 
-/// Macro to make a blocking write byte access.
+/// Macro to make a blocking write byte access
 /// @param[in] __s socket to use to perform access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __y time object to use to indicate delay
@@ -152,7 +152,7 @@ do {                                                                        \
 #define TLM_B_WR_BYTE(__s, __t, __y, __a, __d)                              \
     TLM_B_TRANS(__s, __t, __y, tlm::TLM_WRITE_COMMAND, __a, __d, 1)
 
-/// Macro to make a blocking read 4 byte access.
+/// Macro to make a blocking read 4 byte access
 /// @param[in] __s socket to use to perform access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __y time object to use to indicate delay
@@ -163,7 +163,7 @@ do {                                                                        \
     if (UTILS_DEBUG_LEVEL > 0)                                              \
         TLM_DBG("read word @0x%08X = 0x%X", __a, __d)
 
-/// Macro to make a blocking read 2 byte access.
+/// Macro to make a blocking read 2 byte access
 /// @param[in] __s socket to use to perform access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __y time object to use to indicate delay
@@ -174,7 +174,7 @@ do {                                                                        \
     if (UTILS_DEBUG_LEVEL > 0)                                              \
         TLM_DBG("read half @0x%08X = 0x%X", __a, __d)
 
-/// Macro to make a blocking read byte access.
+/// Macro to make a blocking read byte access
 /// @param[in] __s socket to use to perform access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __y time object to use to indicate delay
@@ -241,7 +241,7 @@ do {                                                                        \
         }                                                                   \
     } while(false)
 
-/// Macro to set an interrupt.
+/// Macro to set an interrupt
 /// @param[in] __s socket for the interrupt access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __y time object to use to indicate delay
@@ -251,7 +251,7 @@ do {                                                                        \
     TLM_B_WR_WORD(__s, __t, __y, 0, __da);                                  \
 } while(0)
 
-/// Macro to clear an interrupt.
+/// Macro to clear an interrupt
 /// @param[in] __s socket for the interrupt access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __y time object to use to indicate delay
@@ -281,7 +281,7 @@ do {                                                                        \
     n_bytes =(__s)->transport_dbg(__t);                                     \
 } while(0)
 
-/// Macro to make a debug transport write 4 byte word access.
+/// Macro to make a debug transport write 4 byte word access
 /// @param[in] __s socket for the interrupt access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __a address of the transaction
@@ -290,7 +290,7 @@ do {                                                                        \
 #define TLM_DBG_WR(__s, __t, __a, __p, __l)                                 \
     TLM_DBG_TRANS(__s, __t, tlm::TLM_WRITE_COMMAND, __a, __p, __l)
 
-/// Macro to make a debug transport read 4 byte word access.
+/// Macro to make a debug transport read 4 byte word access
 /// @param[in] __s socket for the interrupt access
 /// @param[in] __t transaction object to use to perform access
 /// @param[in] __a address of the transaction

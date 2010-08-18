@@ -20,7 +20,7 @@
 // necessary for dummies
 #include "tlm_utils/simple_initiator_socket.h"
 
-/// At91sam9261 level platform module.
+/// At91sam9261 level platform module
 struct At91sam9261 : sc_core::sc_module
 {
     /// Address decoder

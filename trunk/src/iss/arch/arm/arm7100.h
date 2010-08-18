@@ -8,39 +8,39 @@ struct arm7100: public mmu
 public:
     arm7100(struct bus *bus, bool gdbserver = false, bool gdbstart = false, bool bigendian = false);
 
-    /// Read byte data.
+    /// Read byte data
     enum fault_t
     mmu_read_byte(uint32_t va, uint32_t* data);
 
-    /// Write byte data.
+    /// Write byte data
     enum fault_t
     mmu_write_byte(uint32_t va, uint32_t data);
 
-    /// Read halfword data .
+    /// Read halfword data 
     enum fault_t
     mmu_read_halfword(uint32_t va, uint32_t* data);
 
-    /// Write halfword data.
+    /// Write halfword data
     enum fault_t
     mmu_write_halfword(uint32_t va, uint32_t data);
 
-    /// Read word data.
+    /// Read word data
     enum fault_t
     mmu_read_word(uint32_t va, uint32_t* data);
 
-    /// Write word data.
+    /// Write word data
     enum fault_t
     mmu_write_word(uint32_t va, uint32_t data);
 
-    /// Load instruction.
+    /// Load instruction
     enum fault_t
     mmu_load_instr(uint32_t va, uint32_t * instr);
 
-    /// MCR.
+    /// MCR
     int
     mmu_mcr(uint32_t instr, uint32_t val);
 
-    /// MRC.
+    /// MRC
     int
     mmu_mrc(uint32_t instr, uint32_t* val);
 

@@ -14,10 +14,10 @@ unsigned ARMul_MultTable[32] =
     10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 16
 };
 
-/// Immediate values conversion from instruction [11..0] bits.
+/// Immediate values conversion from instruction [11..0] bits
 uint32_t ARMul_ImmedTable[4096];
 
-/// Number of bits in a byte table.
+/// Number of bits in a byte table
 char ARMul_BitList[256];
 
 arm::arm(bool gdbserver, bool gdbstart, bool bigendian)
@@ -129,7 +129,7 @@ arm::init_state(void)
 
 }
 
-/// Implementation of virtual function.
+/// Implementation of virtual function
 void
 arm::gdb_single_step(int yesno)
 {
@@ -143,7 +143,7 @@ arm::gdb_single_step(int yesno)
     }
 }
 
-/// Implementation of virtual function.
+/// Implementation of virtual function
 void
 arm::gdb_set_pc(uint64_t pc)
 {
@@ -158,7 +158,7 @@ arm::gdb_set_pc(uint64_t pc)
     }
 }
 
-/// Implementation of virtual function.
+/// Implementation of virtual function
 int
 arm::gdb_read_registers(uint8_t *mem_buf)
 {
@@ -190,7 +190,7 @@ arm::gdb_read_registers(uint8_t *mem_buf)
     return ptr - mem_buf;
 }
 
-/// Implementation of virtual function.
+/// Implementation of virtual function
 void
 arm::gdb_write_registers(uint8_t *mem_buf, int size)
 {
@@ -219,7 +219,7 @@ arm::gdb_write_registers(uint8_t *mem_buf, int size)
 
 }
 
-/// Implementation of virtual function.
+/// Implementation of virtual function
 int
 arm::gdb_breakpoint_insert(uint64_t addr)
 {
@@ -246,7 +246,7 @@ arm::gdb_breakpoint_insert(uint64_t addr)
     return -1;
 }
 
-/// Implementation of virtual function.
+/// Implementation of virtual function
 void
 arm::gdb_breakpoint_remove(uint64_t addr)
 {

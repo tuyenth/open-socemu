@@ -153,9 +153,9 @@ extern uint32_t isize;
     }                                               \
     while (0)
 
-/// The next instruction fetch will be a normal cycle.
+/// The next instruction fetch will be a normal cycle
 #define NORMALCYCLE m_NextInstr = SEQ
-/// The next instruction fetch will be an N cycle because bus was used.
+/// The next instruction fetch will be an N cycle because bus was used
 #define BUSUSEDN    m_NextInstr |= NONSEQ
 /// The next instruction fetch will be sequential and pc incremented
 #define BUSUSEDINCPCS                                           \
@@ -195,7 +195,7 @@ extern uint32_t isize;
 /// The next instruction fetch will re-fill the pipeline
 #define FLUSHPIPE m_NextInstr |= PRIMEPIPE
 
-/* Cycle based emulation.  */
+/* Cycle based emulation  */
 #define OUTPUTCP(i,a,b)
 #define NCYCLE
 #define SCYCLE
@@ -203,7 +203,7 @@ extern uint32_t isize;
 #define CCYCLE
 #define NEXTCYCLE(c)
 
-/* Macros to extract parts of instructions.  */
+/* Macros to extract parts of instructions  */
 #define DESTReg (BITS (12, 15))
 #define LHSReg  (BITS (16, 19))
 #define RHSReg  (BITS ( 0,  3))
@@ -293,11 +293,11 @@ extern uint32_t isize;
 #define POSBRANCH ((instr & 0x7fffff) << 2)
 #define NEGBRANCH ((0xff000000 |(instr & 0xffffff)) << 2)
 
-/// Number of I cycles for a mult.
+/// Number of I cycles for a mult
 extern unsigned ARMul_MultTable[];
-/// Immediate DP LHS values.
+/// Immediate DP LHS values
 extern uint32_t ARMul_ImmedTable[];
-/// Number of bits in a byte table.
+/// Number of bits in a byte table
 extern char ARMul_BitList[];
 
 /* Macros to scrutinize instructions.  */

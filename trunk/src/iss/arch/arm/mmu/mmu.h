@@ -6,12 +6,12 @@
 
 #include "arm.h"
 
-/// Word shift index.
+/// Word shift index
 #define WORD_SHIFT (2)
-/// Word size.
+/// Word size
 #define WORD_SIZE (1<<WORD_SHIFT)
 
-/// The MMU is accessible with MCR and MRC operations to copro 15.
+/// The MMU is accessible with MCR and MRC operations to copro 15
 #define MMU_COPRO (15)
 
 
@@ -49,7 +49,7 @@
 #define MMU_WBEnabled (MMU_CTL & CONTROL_WRITE_BUFFER)
 #define MMU_WBDisabled (!(MMU_WBEnabled))
 
-/// virt_addr exchange according to CP15.R13(process id virtual mapping)
+/// virt_addr exchange according to CP15-R13(process id virtual mapping)
 #define MMU_FCSE_MASK (0xfe000000)
 /** generate the Modified Virtual Address (includes the FCSE ID):
  * - check if the address is within 0 to 32 MB range
@@ -58,41 +58,41 @@
 #define mmu_va_to_mva(va)                                               \
     ((va)&MMU_FCSE_MASK)?(va):((va) | fcse_id)
 
-/// Macro to check if the permission has C (cacheable) flag.
+/// Macro to check if the permission has C (cacheable) flag
 #define tlb_c_flag(tlb)                                                 \
     ((tlb)->perms & 0x8)
 
-/// Macro to check if the permission has B (writeBack) flag.
+/// Macro to check if the permission has B (writeBack) flag
 #define tlb_b_flag(tlb)                                                 \
     ((tlb)->perms & 0x4)
 
-/// Macro to translate virtual address to physical address.
+/// Macro to translate virtual address to physical address
 #define tlb_va_to_pa(tlb, va)                                           \
     ((tlb->phys_addr & (tlb_masks[tlb->mapping])) | (va & ~(tlb_masks[tlb->mapping])))
 
-/// Cache bit flag.
+/// Cache bit flag
 #define TAG_VALID_FLAG       (0x00000001)
-/// Cache bit flag.
+/// Cache bit flag
 #define TAG_FIRST_HALF_DIRTY (0x00000002)
-/// Cache bit flag.
+/// Cache bit flag
 #define TAG_LAST_HALF_DIRTY  (0x00000004)
 
-/// Virtual address to cache set index.
+/// Virtual address to cache set index
 #define va_cache_set(va, cache_t)                                       \
     (((va) / (cache_t)->width) & ((cache_t)->set - 1))
-/// Virtual address to cache line aligned.
+/// Virtual address to cache line aligned
 #define va_cache_align(va, cache_t)                                     \
         ((va) & ~((cache_t)->width - 1))
-/// Virtual address to cache line word index.
+/// Virtual address to cache line word index
 #define va_cache_index(va, cache_t)                                     \
         (((va) & ((cache_t)->width - 1)) >> WORD_SHIFT)
 
-/// Set/index format value to cache set value.
+/// Set/index format value to cache set value
 #define index_cache_set(index, cache_t)                                 \
     (((index) / (cache_t)->width) & ((cache_t)->set - 1))
 
 
-/// MMU object, derivates from ARM object.
+/// MMU object, derivates from ARM object
 struct mmu: public arm
 {
     /// Structure containing the bus interface for access
@@ -135,34 +135,34 @@ public:
         m_bus = *bus;
     }
 
-    /// Cache supported write modes.
+    /// Cache supported write modes
     enum write_mode
     {
-        /// Write back mode (write accesses are cached).
+        /// Write back mode (write accesses are cached)
         CACHE_WRITE_BACK,
-        /// Write through mode (write accesses are not cached).
+        /// Write through mode (write accesses are not cached)
         CACHE_WRITE_THROUGH
     };
 
-    /// Cache configuration descriptor.
+    /// Cache configuration descriptor
     struct cache_desc
     {
-        /// Number of bytes in a cache line.
+        /// Number of bytes in a cache line
         int width;
-        /// Way of set association.
+        /// Way of set association
         int way;
-        /// Number of sets.
+        /// Number of sets
         int set;
-        /// Write mode.
+        /// Write mode
         enum write_mode w_mode;
     };
 
-    /// Write buffers configuration.
+    /// Write buffers configuration
     struct wb_desc
     {
-        /// Number of write buffers.
+        /// Number of write buffers
         int num;
-        /// Size in bytes of the write buffers.
+        /// Size in bytes of the write buffers
         int nb;
     };
 
@@ -194,7 +194,7 @@ public:
 
 
 protected:
-    /// Register numbers in the MMU coprocessor.
+    /// Register numbers in the MMU coprocessor
     enum mmu_regnum_t
     {
         MMU_ID = 0,
@@ -225,19 +225,19 @@ protected:
 
     };
 
-    /// Define ARM data width.
+    /// Define ARM data width
     enum arm_data_type
     {
-        /// 8 bits access.
+        /// 8 bits access
         ARM_BYTE_TYPE,
-        /// 16 bits access.
+        /// 16 bits access
         ARM_HALFWORD_TYPE,
-        /// 32 bits access.
+        /// 32 bits access
         ARM_WORD_TYPE
     };
 
 
-    /// Page mapping type.
+    /// Page mapping type
     enum tlb_mapping
     {
         TLB_INVALID = 0,
@@ -249,32 +249,32 @@ protected:
         TLB_MAPPING_MAX
     };
 
-    /// TLB page masks, indexed by tlb_mapping.
+    /// TLB page masks, indexed by tlb_mapping
     static const uint32_t tlb_masks[TLB_MAPPING_MAX];
 
-    /// Translation Lookaside Buffer descriptor.
+    /// Translation Lookaside Buffer descriptor
     struct tlb_entry
     {
-        /// Base virtual address.
+        /// Base virtual address
         uint32_t virt_addr;
-        /// Base physical address.
+        /// Base physical address
         uint32_t phys_addr;
-        /// Page permissions.
+        /// Page permissions
         uint32_t perms;
-        /// Domain.
+        /// Domain
         uint32_t domain;
-        /// Mapping type.
+        /// Mapping type
         enum tlb_mapping mapping;
     };
 
-    /// Translation Lookaside Buffer list.
+    /// Translation Lookaside Buffer list
     struct tlb
     {
-        /// Number of entries.
+        /// Number of entries
         int num;
-        /// Current TLB cycle.
+        /// Current TLB cycle
         int cycle;
-        /// Array of TLBs.
+        /// Array of TLBs
         struct tlb_entry* entries;
     };
 
@@ -340,31 +340,31 @@ protected:
 
 
 
-    /// Write buffer.
+    /// Write buffer
     struct wb_entry
     {
-        /// Physical address of the write buffer.
+        /// Physical address of the write buffer
         uint32_t pa;
-        /// Pointer to the local data container (CPU cache memory).
+        /// Pointer to the local data container (CPU cache memory)
         uint8_t *data;
-        /// Number of bytes in the write buffer.
+        /// Number of bytes in the write buffer
         int nb;
     };
 
-    /// Write buffer list.
+    /// Write buffer list
     struct wb
     {
-        /// Number of entries.
+        /// Number of entries
         int num;
-        /// Number of bytes in each write buffer.
+        /// Number of bytes in each write buffer
         int nb;
-        /// Index of the next write buffer to use.
+        /// Index of the next write buffer to use
         int first;
-        /// Index of the oldest write buffer added.
+        /// Index of the oldest write buffer added
         int last;
-        /// Number of used buffers.
+        /// Number of used buffers
         int used;
-        /// Pointer to the write buffers array.
+        /// Pointer to the write buffers array
         struct wb_entry* entries;
     } wb;
 
@@ -404,38 +404,38 @@ protected:
     mmu_wb_drain_all(struct wb* wb);
 
 
-    /// Read buffer types.
+    /// Read buffer types
     enum rb_type_t
     {
-        /// Invalid type.
+        /// Invalid type
         RB_INVALID = 0,
-        /// Single word type.
+        /// Single word type
         RB_1,
-        /// Quad word type.
+        /// Quad word type
         RB_4,
-        /// Octo word type.
+        /// Octo word type
         RB_8
     };
 
-    /// Read buffer descriptor.
+    /// Read buffer descriptor
     struct rb_entry
     {
-        /// Storage (maximum number of words in read block = 8).
+        /// Storage (maximum number of words in read block = 8)
         uint32_t data[8];
-        /// Virtual address of the first word.
+        /// Virtual address of the first word
         uint32_t va;
-        /// Type of the read buffer.
+        /// Type of the read buffer
         int type;
-        /// Potential fault.
+        /// Potential fault
         enum fault_t fault;
     };
 
-    /// Read buffer list.
+    /// Read buffer list
     struct rb
     {
-        /// Number of read buffers.
+        /// Number of read buffers
         int num;
-        /// Read buffers array.
+        /// Read buffers array
         struct rb_entry* entries;
     };
 
@@ -484,7 +484,7 @@ protected:
     void
     mmu_rb_load(struct rb* rb, struct tlb* tlb, int i_rb, int type, uint32_t va);
 
-    /// Cache line descriptor.
+    /// Cache line descriptor
     struct cache_line
     {
         /** Cache line tag:
@@ -494,33 +494,33 @@ protected:
          *   - bit[0]     : cache valid flag
          */
         uint32_t tag;
-        /// Physical address.
+        /// Physical address
         uint32_t pa;
-        /// Cached data buffer.
+        /// Cached data buffer
         uint32_t* data;
     };
 
-    /// Cache lines set descriptor.
+    /// Cache lines set descriptor
     struct cache_set
     {
-        /// Array of cache lines.
+        /// Array of cache lines
         struct cache_line* lines;
-        /// Current cache set cycle.
+        /// Current cache set cycle
         int cycle;
     };
 
-    /// Full cache descriptor.
+    /// Full cache descriptor
     struct cache
     {
-        /// Number of bytes in a cache line.
+        /// Number of bytes in a cache line
         int width;
-        /// Way of set association.
+        /// Way of set association
         int way;
-        /// Number of sets.
+        /// Number of sets
         int set;
-        /// Write mode.
+        /// Write mode
         enum write_mode w_mode;
-        /// Cache sets array.
+        /// Cache sets array
         struct cache_set* sets;
     };
 

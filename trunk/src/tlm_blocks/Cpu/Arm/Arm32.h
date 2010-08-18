@@ -29,6 +29,18 @@
         }                                                                               \
     } while (false)
 
+#define INSNHDLR_ARM(__f)                                                               \
+    void __f ## _arm(void* params[]) {                                                  \
+        this->set_pc(this->get_pc() + 4);                                               \
+        this->__f(params);                                                              \
+    }
+
+#define INSNHDLR_THUMB(__f)                                                             \
+    void __f ## _thumb(void* params[]) {                                                \
+        this->set_pc(this->get_pc() + 2);                                               \
+        this->__f(params);                                                              \
+    }
+
 
 template<typename GDB>
 struct Arm32: CpuBase<GDB>
@@ -657,6 +669,8 @@ protected:
     {
         // nothing to do
     }
+    INSNHDLR_ARM(nop);
+    INSNHDLR_THUMB(nop);
 
     /** PLD instruction handler
      * @param[in] params Parsed parameters
@@ -666,6 +680,8 @@ protected:
     {
         // nothing to do
     }
+    INSNHDLR_ARM(pld);
+    INSNHDLR_THUMB(pld);
 
     /** SETEND instruction handler
      * @param[in] params Parsed parameters
@@ -680,6 +696,8 @@ protected:
             assert(0);
         }
     }
+    INSNHDLR_ARM(setend);
+    INSNHDLR_THUMB(setend);
 
     /** SRS instruction handler
      * @param[in] params Parsed parameters
@@ -725,6 +743,8 @@ protected:
             }
         }
     }
+    INSNHDLR_ARM(srs);
+    INSNHDLR_THUMB(srs);
 
     /** RFE instruction handler
      * @param[in] params Parsed parameters
@@ -763,6 +783,8 @@ protected:
         this->set_cpsr(tmp2, 0xffffffff);
         this->set_pc(tmp);
     }
+    INSNHDLR_ARM(rfe);
+    INSNHDLR_THUMB(rfe);
 
     /** BX instruction handler
      * @param[in] params Parsed parameters
@@ -777,6 +799,8 @@ protected:
         // load the new address
         this->set_pc(addr & (~1));
     }
+    INSNHDLR_ARM(bx);
+    INSNHDLR_THUMB(bx);
 
     /** BLX instruction handler
      * @param[in] params Parsed parameters
@@ -797,6 +821,8 @@ protected:
         addr += offset | hbit | thumbbit;
         this->bx((void**)&addr);
     }
+    INSNHDLR_ARM(blx);
+    INSNHDLR_THUMB(blx);
 
     /** CPS instruction handler
      * @param[in] params Parsed parameters
@@ -813,6 +839,8 @@ protected:
             return;
         this->set_psr(mask, 0, val);
     }
+    INSNHDLR_ARM(cps);
+    INSNHDLR_THUMB(cps);
 
     /** Decode an ARM instruction
      * @param hdlr Instruction handler to fill for execution
@@ -855,14 +883,14 @@ protected:
             }
             if ((insn & 0x0d70f000) == 0x0550f000) {
                 // insn PLD
-                hdlr->fn = HDLR_FN(Arm32::pld);
+                hdlr->fn = HDLR_FN(Arm32::pld_arm);
                 return;
             }
             else if ((insn & 0x0ffffdff) == 0x01010000) {
                 // insn SETEND
                 // params[0] = endianstate
                 ARCH(6);
-                hdlr->fn = HDLR_FN(Arm32::setend);
+                hdlr->fn = HDLR_FN(Arm32::setend_arm);
                 hdlr->params[0] = HDLR_PARAM(insn & (1 << 9));
                 return;
             } else if ((insn & 0x0fffff00) == 0x057ff000) {
@@ -891,7 +919,7 @@ protected:
                 // params[3] = wb_offset (only if writeback is set)
                 int32_t offset;
                 ARCH(6);
-                hdlr->fn = HDLR_FN(Arm32::srs);
+                hdlr->fn = HDLR_FN(Arm32::srs_arm);
                 hdlr->params[0] = HDLR_PARAM(insn & 0x1f);
                 i = (insn >> 23) & 3;
                 switch (i) {
@@ -923,7 +951,7 @@ protected:
                 // params[3] = wb_offset (only if writeback is set)
                 int32_t offset;
                 ARCH(6);
-                hdlr->fn = HDLR_FN(Arm32::rfe);
+                hdlr->fn = HDLR_FN(Arm32::rfe_arm);
                 hdlr->params[0] = HDLR_PARAM((insn >> 16) & 0xf);
                 i = (insn >> 23) & 3;
                 switch (i) {
@@ -953,7 +981,7 @@ protected:
                 // params[1] = bit1 (2 aligned, hbit)
                 // params[2] = bit0 (1 aligned, thumbbit)
                 int32_t offset;
-                hdlr->fn = HDLR_FN(Arm32::blx);
+                hdlr->fn = HDLR_FN(Arm32::blx_arm);
                 offset = (((int32_t)insn) << 8) >> 6;
                 // pipeline offset
                 offset += 4;
@@ -1001,14 +1029,14 @@ protected:
                     mask |= CPSR_M;
                     val |= (insn & 0x1f);
                 }
-                // if there is no mask, just return
-                if (likely(mask == 0)) {
-                    hdlr->fn = HDLR_FN(Arm32::cps);
+                // if there is no mask, just NOP
+                if (likely(mask != 0)) {
+                    hdlr->fn = HDLR_FN(Arm32::cps_arm);
                     hdlr->params[0] = HDLR_PARAM(mask);
                     hdlr->params[1] = HDLR_PARAM(val);
                 }
                 else {
-                    hdlr->fn = HDLR_FN(Arm32::nop);
+                    hdlr->fn = HDLR_FN(Arm32::nop_arm);
                 }
                 return;
             }

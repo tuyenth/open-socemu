@@ -34,7 +34,7 @@ struct Mpa : sc_core::sc_module
     // Not necessary if this module does not have a thread
     // SC_HAS_PROCESS(Mpa);
 
-    /// Mpa constructor.
+    /// Mpa constructor
     Mpa(sc_core::sc_module_name name): bus_m_socket("bus_m_socket")
         , m_one_pending(false)
         , m_free(true)
@@ -157,15 +157,15 @@ struct Mpa : sc_core::sc_module
         bus_m_socket.bind(*slave);
     }
 
-    /// Array of structures containing the pending requests description.
+    /// Array of structures containing the pending requests description
     struct {
-        /// Indicate that initiator is pending.
+        /// Indicate that initiator is pending
         bool is_pending;
-        /// Event used to schedule pending request.
+        /// Event used to schedule pending request
         sc_core::sc_event event;
     } m_pending[N_MASTERS];
 
-    /// Indicate that initiator is pending.
+    /// Indicate that initiator is pending
     bool m_one_pending;
 
     // Indicate that bus is free for a new request.
