@@ -4,7 +4,7 @@
 /// debug level
 #define UART_DEBUG_LEVEL 0
 
-/// Macro to print debug messages.
+/// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
 /// @param __f format of the debug string
 /// @param ... variable arguments

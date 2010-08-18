@@ -24,7 +24,7 @@
 // necessary for dummies
 #include "tlm_utils/simple_initiator_socket.h"
 
-/// Mc13224v level plateform module.
+/// Mc13224v level plateform module
 struct Mc13224v : sc_core::sc_module
 {
     /// Address decoder

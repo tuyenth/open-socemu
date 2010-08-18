@@ -306,21 +306,21 @@ struct Bus : sc_core::sc_module
     }
 
 
-    /// Array of structures containing the address ranges of the targets.
+    /// Array of structures containing the address ranges of the targets
     struct {
         sc_dt::uint64 base;
         sc_dt::uint64 mask;
     } m_targ_range[N_TARGETS];
 
-    /// Array of structures containing the pending requests description.
+    /// Array of structures containing the pending requests description
     struct {
-        /// Indicate that initiator is pending.
+        /// Indicate that initiator is pending
         bool is_pending;
-        /// Event used to schedule pending request.
+        /// Event used to schedule pending request
         sc_core::sc_event event;
     } m_pending[N_INITIATORS];
 
-    /// Indicate that initiator is pending.
+    /// Indicate that initiator is pending
     bool m_one_pending;
 
     // Indicate that bus is free for a new request.

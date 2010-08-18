@@ -12,28 +12,24 @@
 #include "tlm_utils/simple_target_socket.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
-// **************************************************************************************
-// IntCtrl module able to handle two pipelined transactions
-// **************************************************************************************
-
 struct IntCtrl : sc_core::sc_module
 {
-    /// Standard bus socket to read the registers.
+    /// Standard bus socket to read the registers
     tlm_utils::simple_target_socket<IntCtrl> reg_socket;
 
-    /// Interrupt socket (only one interrupt source).
+    /// Interrupt socket (only one interrupt source)
     tlm_utils::simple_target_socket<IntCtrl> int_socket;
 
-    /// IRQ socket to set/clear in IRQ signal.
+    /// IRQ socket to set/clear in IRQ signal
     tlm_utils::simple_initiator_socket<IntCtrl> irq_socket;
 
-    /// IRQ socket to set/clear in FIQ signal.
+    /// IRQ socket to set/clear in FIQ signal
     tlm_utils::simple_initiator_socket<IntCtrl> fiq_socket;
 
     // Not necessary if this module does not have a thread
 //    SC_HAS_PROCESS(IntCtrl);
 
-    /// Constructor.
+    /// Constructor
     IntCtrl(sc_core::sc_module_name name);
 
     // TLM-2 blocking transport method
@@ -42,14 +38,14 @@ struct IntCtrl : sc_core::sc_module
     // TLM-2 blocking transport method
     virtual void reg_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
 
-    /// TLM-2 non-blocking transport method.
+    /// TLM-2 non-blocking transport method
     virtual tlm::tlm_sync_enum reg_nb_transport_fw( tlm::tlm_generic_payload& trans,
             tlm::tlm_phase& phase, sc_core::sc_time& delay );
 
-    /// TLM-2 debug transport method.
+    /// TLM-2 debug transport method
     virtual unsigned int reg_transport_dbg(tlm::tlm_generic_payload& trans);
 
-    /// Registers definition.
+    /// Registers definition
     enum
     {
         REG_INTCTRL_IRQEN_SET  = 0,
@@ -61,10 +57,10 @@ struct IntCtrl : sc_core::sc_module
         REG_SIZE               = 256
     };
 
-    /// Registers content.
+    /// Registers content
     uint32_t m_registers[REG_SIZE];
 
-    /// Indicate if busy for sanity check.
+    /// Indicate if busy for sanity check
     bool m_free;
 
     /// Generic payload transaction to use for interrupt requests

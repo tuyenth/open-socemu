@@ -13,10 +13,10 @@
 
 #include "ElfReader.h"
 
-/// Define this for debug purpose.
+/// Define this for debug purpose
 //#define ELFREADER_DEBUG is_defined
 
-/// Debug output if needed.
+/// Debug output if needed
 #ifdef ELFREADER_DEBUG
 # define elfreader_dbg printf
 #else

@@ -7,7 +7,7 @@
 
 #include "mmu.h"
 
-/// Defines the number of bytes for various read buffer types.
+/// Defines the number of bytes for various read buffer types
 static const uint32_t rb_masks[] =
 {
     /// RB_INVALID

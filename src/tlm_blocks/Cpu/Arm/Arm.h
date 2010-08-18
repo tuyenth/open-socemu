@@ -66,11 +66,11 @@ struct Arm : CpuBase
     void
     thread_process();
 
-    /// IRQ blocking socket call handler.
+    /// IRQ blocking socket call handler
     virtual void
     irq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 
-    /// FIQ blocking socket call handler.
+    /// FIQ blocking socket call handler
     virtual void
     fiq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 

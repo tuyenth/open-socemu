@@ -15,14 +15,14 @@
 
 struct arm: public gdbserver
 {
-    /// ARM constructor.
+    /// ARM constructor
     /** Function that performs the complete initialization of the ARM.
      * @param[in] gdbserver Specifies if the GDB remote connection must be supported.
      * @param[in] bigendian Big or little endian mode.
      */
     arm(bool gdbserver = false, bool gdbstart = false, bool bigendian = false);
 
-    /// Run the ARM.
+    /// Run the ARM
     void
     run(void);
 
@@ -62,7 +62,7 @@ struct arm: public gdbserver
         m_NfiqSig = true;
     }
 
-    /// Count the number of instructions executed.
+    /// Count the number of instructions executed
     uint64_t m_NumInstrs;
 
 protected:
@@ -84,14 +84,14 @@ protected:
         SUBPAGE_PERMISSION_FAULT = 0xF
     };
 
-    /// Values for Emulate.
+    /// Values for Emulate
     enum arm_emulate_type
     {
-        /// Stop.
+        /// Stop
         STOP,
-        /// Single step.
+        /// Single step
         ONCE,
-        /// Continuous run.
+        /// Continuous run
         RUN
     };
 
@@ -100,7 +100,7 @@ protected:
     {
         /// Next instruction is sequential to previous bus access
         SEQ             = 0,
-        /// Next instruction is not sequential to previous bus access.
+        /// Next instruction is not sequential to previous bus access
         NONSEQ          = 1,
         /// Next instruction REG[15] was already incremented but sequential
         PCINCEDSEQ      = 2,
@@ -110,63 +110,63 @@ protected:
         PRIMEPIPE       = 4
     };
 
-    /// Emulation cycle type.
+    /// Emulation cycle type
     enum arm_emulate_type m_Emulate;
-    /// Current register bank.
+    /// Current register bank
     uint32_t m_Reg[16];
-    /// All register banks.
+    /// All register banks
     uint32_t m_RegBank[7][16];
-    /// Current PSR.
+    /// Current PSR
     uint32_t m_Cpsr;
-    /// Saved PSR per execution mode.
+    /// Saved PSR per execution mode
     uint32_t m_Spsr[7];
 
-    /// Flags's copy of the CPSR for speed.
+    /// Flags's copy of the CPSR for speed
     uint32_t m_NFlag, m_ZFlag, m_CFlag, m_VFlag, m_IFFlags;
     uint32_t m_SFlag;
-    /// Thumb state.
+    /// Thumb state
     uint32_t m_TFlag;
-    /// Current register bank.
+    /// Current register bank
     uint32_t m_Bank;
-    /// Current execution mode.
+    /// Current execution mode
     uint32_t m_Mode;
 
-    /// Current pipeline state.
+    /// Current pipeline state
     uint32_t m_Instr, m_PC;
-    /// Saved pipeline state.
+    /// Saved pipeline state
     uint32_t m_Loaded, m_Decoded;
-    /// Internal CPU counters.
+    /// Internal CPU counters
     uint32_t m_NumScycles, m_NumNcycles, m_PreviousIcycles, m_NumIcycles, m_NumCcycles;
-    /// Next instruction step type.
+    /// Next instruction step type
     uint8_t m_NextInstr;
 
-    /// Reset signal.
+    /// Reset signal
     bool m_NresetSig;
-    /// FIQ signal.
+    /// FIQ signal
     bool m_NfiqSig;
-    /// IRQ signal.
+    /// IRQ signal
     bool m_NirqSig;
-    /// Abort signal.
+    /// Abort signal
     bool m_AbortSig;
-    /// Sticky flag for aborts.
+    /// Sticky flag for aborts
     uint32_t m_Aborted;
-    /// Extra information for base write-back in abort model.
+    /// Extra information for base write-back in abort model
     uint32_t m_Base;
 
-    /// Indicate if CPU is big or little endian.
+    /// Indicate if CPU is big or little endian
     bool m_IsBigEndian;
-    /// Indicate if CPU supports v4 instruction set.
+    /// Indicate if CPU supports v4 instruction set
     bool m_IsV4;
-    /// Indicate if CPU supports v5 instruction set.
+    /// Indicate if CPU supports v5 instruction set
     bool m_IsV5;
-    /// Indicate if CPU supports v5exp (elsegundo) instruction set.
+    /// Indicate if CPU supports v5exp (elsegundo) instruction set
     bool m_IsV5e;
     /** Indicates if CPU supports base updated abort model (old protocol) or
      * base restored abort model (new protocol).
      */
     bool m_IsBaseUpdatedAbort;
 
-    /// Device ID returned from internal register.
+    /// Device ID returned from internal register
     uint32_t m_DeviceId;
 
     /** Debugger related variables.
@@ -336,22 +336,22 @@ protected:
     }
     /// @}
 
-    /// Implementation of gdbserver virtual function.
+    /// Implementation of gdbserver virtual function
     void gdb_single_step(int yesno);
 
-    /// Implementation of gdbserver virtual function.
+    /// Implementation of gdbserver virtual function
     void gdb_set_pc(uint64_t pc);
 
-    /// Implementation of gdbserver virtual function.
+    /// Implementation of gdbserver virtual function
     int gdb_read_registers(uint8_t *mem_buf);
 
-    /// Implementation of gdbserver virtual function.
+    /// Implementation of gdbserver virtual function
     void gdb_write_registers(uint8_t *mem_buf, int size);
 
-    /// Implementation of gdbserver virtual function.
+    /// Implementation of gdbserver virtual function
     int gdb_breakpoint_insert(uint64_t addr);
 
-    /// Implementation of gdbserver virtual function.
+    /// Implementation of gdbserver virtual function
     void gdb_breakpoint_remove(uint64_t addr);
 
 
@@ -398,14 +398,14 @@ private:
         t_mul
     };
 
-    /// Initializes helper arrays.
+    /// Initializes helper arrays
     void
     init_helpers();
-    /// Initializes ARM state.
+    /// Initializes ARM state
     void
     init_state();
 
-    /// Emulate one instruction cycle.
+    /// Emulate one instruction cycle
     void
     emulate();
 
@@ -693,25 +693,25 @@ private:
         m_AbortSig = false;
     }
 
-    /// Specifies if the a remote gdb is connected.
+    /// Specifies if the a remote gdb is connected
     bool m_gdbconnected;
 
 };
 
-/// ARM min comparison macro.
+/// ARM min comparison macro
 #define arm_min(x,y) (((x) < (y)) ? (x) : (y))
-/// ARM max comparison macro.
+/// ARM max comparison macro
 #define arm_max(x,y) (((x) > (y)) ? (x) : (y))
 
 /***************************************************************************\
 *                   Macros to extract instruction fields                    *
 \***************************************************************************/
 
-/// Bit n of instruction.
+/// Bit n of instruction
 #define BIT(n) ((uint32_t)(instr>>(n))&1)
-/// Bits m to n of instruction.
+/// Bits m to n of instruction
 #define BITS(m,n) ((uint32_t)(instr<<(31-(n))) >> ((31-(n))+(m)))
-/// Bits 31 to n of instruction.
+/// Bits 31 to n of instruction
 #define TOPBITS(n) (instr >> (n))
 
 /***************************************************************************\
