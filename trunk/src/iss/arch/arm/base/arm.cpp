@@ -1,5 +1,5 @@
 /** @file arm.h
- * @brief arm class implementation.
+ * @brief arm class implementation
  *
  * @sa http://infocenter.arm.com/
  */

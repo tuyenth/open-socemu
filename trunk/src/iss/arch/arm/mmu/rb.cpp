@@ -1,5 +1,5 @@
 /** @file rb.cpp
- * @brief Read Buffers interface implementation.
+ * @brief Read Buffers interface implementation
  *
  * @sa http://infocenter.arm.com/
  */

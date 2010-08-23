@@ -39,7 +39,7 @@ struct Top : sc_core::sc_module
     /// Memory instances array
     Memory* memory[TOP_NUM_MEMORIES];
 
-    /** Constructor of the top level module.
+    /** Constructor of the top level module
      * @param[in] name Name of the module
      * @param[in] parameters Command line parameters
      * @param[in] config Parameters of the current block (and sub-blocks)

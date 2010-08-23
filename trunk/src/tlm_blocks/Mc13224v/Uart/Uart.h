@@ -30,7 +30,7 @@ struct Uart : sc_core::sc_module
     // Not necessary if this module does not have a thread
     SC_HAS_PROCESS(Uart);
 
-    /** Constructor.
+    /** Constructor
      * @param instance Number of the instance (since block can be multiple)
      * @param name Name of the instance
      */

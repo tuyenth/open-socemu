@@ -134,8 +134,8 @@ public:
      * found in the ELF file.  The segments information can be retrieved after this 
      * function call.
      * @warning If the user omits to call this function, no segments can be retrieved but
-     * this mistake is handled and can not lead to a crash.
-     * @param[in] file Name of the ELF file to parse.
+     * this mistake is handled and can not lead to a crash
+     * @param[in] file Name of the ELF file to parse
      * @see ElfReader::GetNextSegment()
      */
     void Open(const char* file);
@@ -143,7 +143,7 @@ public:
     /** Retrieve the next segment in the ELF file
      * @warning If the Open method has not been called or was not able to complete
      * successfully, this function always returns NULL.
-     * @return Pointer to a Segment class instance or NULL if there are no more instances.
+     * @return Pointer to a Segment class instance or NULL if there are no more instances
      * @see ElfReader::Open()
      */
     Segment* GetNextSegment();
