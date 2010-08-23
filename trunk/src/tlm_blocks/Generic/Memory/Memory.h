@@ -15,6 +15,15 @@ struct Memory : SimpleSlave
     : SimpleSlave(name, data, size)
     {
     }
+
+    /** Memory class constructor
+     * @param name Name of the module
+     * @param[in] size Size of the memory module in bytes
+     */
+    Memory(sc_core::sc_module_name name, uint32_t size)
+    : SimpleSlave(name, (uint32_t*)malloc(size), size)
+    {
+    }
 };
 
 #endif /*MEMORY_H_*/

@@ -11,7 +11,6 @@
 
 B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
-    uint32_t *romdata, *sramdata, *flashdata;
     Parameter *cpu_parameter;
     MSP *cpu_config;
 
@@ -34,43 +33,34 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     this->cpu->bind(*this->addrdec);
 
     // ROM:
-    //   - allocate the memory needed
-    romdata = (uint32_t*)malloc(ROM_SIZE);
     //   - create the memory instance
-    this->rom = new Memory("rom", romdata, ROM_SIZE);
+    this->rom = new Memory("rom", ROM_SIZE);
     //   - bind interface (rom is hooked to the address decoder)
-    if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR, ROM_BASE_ADDR+ROM_SIZE))
+    if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR, ROM_BASE_ADDR+this->rom->get_size()))
     {
         TLM_ERR("ROM address range wrong %d", 0);
         return;
     }
 
     // SRAM:
-    //   - create instance
-    // allocate the memory needed
-    sramdata = (uint32_t*)malloc(SRAM_SIZE);
     //   - create the memory instance
-    this->sram = new Memory("sram", sramdata, SRAM_SIZE);
+    this->sram = new Memory("sram", SRAM_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
-    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
+    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, SRAM_BASE_ADDR+this->sram->get_size()))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;
     }
 
     // FLASH:
-    //   - create instance
-    // allocate the memory needed
-    flashdata = (uint32_t*)malloc(FLASH_SIZE);
     //   - create the memory instance
-    this->flash = new Memory("flash", flashdata, FLASH_SIZE);
+    this->flash = new Memory("flash", FLASH_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
-    if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR, FLASH_BASE_ADDR+FLASH_SIZE))
+    if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR, FLASH_BASE_ADDR+this->flash->get_size()))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;
     }
-
 
     // hook the ARM input interrupts to dummies if not yet connected
     if (this->cpu->fiq_s_socket.get_base_port().get_interface() == NULL)

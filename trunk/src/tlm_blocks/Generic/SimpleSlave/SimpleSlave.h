@@ -58,6 +58,17 @@ struct SimpleSlave : sc_core::sc_module
         set_delay(100);
     }
 
+    /** Wait for the configured time
+     *
+     */
+    void
+    delay(void)
+    {
+        // internal delay
+        sc_core::wait(this->m_delay, sc_core::SC_NS);
+
+    }
+
     /** Get the internal delay of the module in nanoseconds
      * @return Number of nanoseconds
      */
