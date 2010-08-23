@@ -10,120 +10,64 @@ uint32_t* reg_aic;
 // using this namespace to simplify streaming
 using namespace std;
 
-Aic::Aic(sc_core::sc_module_name name)
-: reg_s_socket("reg_s_socket")
-, irq_m_socket("irq_m_socket")
-, fiq_m_socket("fiq_m_socket")
-, m_free(true)
+/**
+ * Register read function
+ * @param[in] offset Offset of the register to read
+ * @return The value read
+ */
+uint32_t
+Aic::reg_rd(uint32_t offset)
 {
-    // force the default values of the FIQ transaction
-    fiq_pl.set_streaming_width(4);
-    fiq_pl.set_byte_enable_ptr(0);
-    fiq_pl.set_dmi_allowed(false);
-    // force the default values of the IRQ transaction
-    irq_pl.set_streaming_width(4);
-    irq_pl.set_byte_enable_ptr(0);
-    irq_pl.set_dmi_allowed(false);
-    // initialize the register access
-    reg_aic = &(m_registers[0]);
-
-    // clear all the registers
-    memset(m_registers, 0, sizeof(m_registers));
-
-    // Register callbacks for incoming interface method calls
-    reg_s_socket.register_b_transport(this, &Aic::reg_s_b_transport);
-    reg_s_socket.register_nb_transport_fw(this, &Aic::reg_s_nb_transport_fw);
-    reg_s_socket.register_transport_dbg(this, &Aic::reg_s_transport_dbg);
-
-    for (uint8_t i = 0; i < 32; i++)
-    {
-        char txt[20];
-        sprintf(txt, "int_s_socket_%d", i);
-        int_s_socket[i] = new tlm_utils::simple_target_socket_tagged<Aic>(txt);
-        // only blocking method is supported
-        int_s_socket[i]->register_b_transport(this, &Aic::int_s_b_transport, i);
-    }
-}
-
-void Aic::reg_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
-{
-    TLM_WORD_SANITY(trans);
-
     // retrieve the required parameters
-    sc_dt::uint64 index = trans.get_address()/4;
-    uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
+    uint32_t index = offset/4;
 
     // sanity check
     assert(index < REG_AIC_COUNT);
-    assert(m_free);
 
-    // mark as busy
-    m_free = false;
+    return m_reg[index];
+}
 
-    // internal delay
-    wait(100, sc_core::SC_NS);
+/**
+ * Register write function
+ * @param[in] offset Offset of the register to read
+ */
+void
+Aic::reg_wr(uint32_t offset, uint32_t value)
+{
+    // retrieve the required parameters
+    uint32_t index = offset/4;
 
-    if (trans.get_command() == tlm::TLM_READ_COMMAND)
+    // sanity check
+    assert(index < REG_AIC_COUNT);
+
+    switch (index)
     {
-        *ptr = m_registers[index];
-    }
-    else
-    {
-        switch (index)
-        {
-        case AIC_IECR_INDEX:
-            // when writing to this register
-            aic_imr_set(aic_imr_get() | (*ptr));
-            break;
-        case AIC_IDCR_INDEX:
-            aic_imr_set(aic_imr_get() & (~(*ptr)));
-            break;
-        case AIC_IMR_INDEX:
-            // read only register
-            break;
-        case AIC_FFER_INDEX:
-            aic_ffsr_set(aic_ffsr_get() | (*ptr));
-            break;
-        case AIC_FFDR_INDEX:
-            aic_ffsr_set(aic_ffsr_get() & (~(*ptr)));
-            break;
-        case AIC_FFSR_INDEX:
-            // read only register
-            break;
-        default:
-            m_registers[index] = *ptr;
-            break;
-        }
+    case AIC_IECR_INDEX:
+        // when writing to this register
+        aic_imr_set(aic_imr_get() | value);
+        break;
+    case AIC_IDCR_INDEX:
+        aic_imr_set(aic_imr_get() & (~value));
+        break;
+    case AIC_IMR_INDEX:
+        // read only register
+        break;
+    case AIC_FFER_INDEX:
+        aic_ffsr_set(aic_ffsr_get() | value);
+        break;
+    case AIC_FFDR_INDEX:
+        aic_ffsr_set(aic_ffsr_get() & (~value));
+        break;
+    case AIC_FFSR_INDEX:
+        // read only register
+        break;
+    default:
+        m_reg[index] = value;
+        break;
     }
 
     // check if interrupt configuration has changed
     check_int();
-
-
-    // there was no error in the processing
-    trans.set_response_status( tlm::TLM_OK_RESPONSE );
-
-    // mark as free
-    m_free = true;
-
-    return;
-}
-
-tlm::tlm_sync_enum Aic::reg_s_nb_transport_fw( tlm::tlm_generic_payload& trans,
-        tlm::tlm_phase& phase, sc_core::sc_time& delay )
-{
-    SC_REPORT_FATAL("TLM-2", "Non blocking not yet implemented");
-    return tlm::TLM_COMPLETED;
-}
-
-
-unsigned int Aic::reg_s_transport_dbg(tlm::tlm_generic_payload& trans)
-{
-    // sanity check
-    TLM_TRANS_SANITY(trans);
-
-    // execute the debug command
-    TLM_DBG_EXEC(trans, m_registers, sizeof(m_registers));
 }
 
 void Aic::int_s_b_transport( int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
@@ -206,7 +150,7 @@ void Aic::check_int()
             // IRQ pending
             aic_cisr_set(aic_cisr_get() | NIRQ_BIT);
             // FIQ vector
-            aic_ivr_set(m_registers[AIC_SVR_INDEX+i]);
+            aic_ivr_set(m_reg[AIC_SVR_INDEX+i]);
 
             break;
         }

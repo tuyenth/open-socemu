@@ -56,7 +56,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
     //   - create instance
     this->aic = new Aic("aic");
     //   - set range
-    if (this->addrdec->bind(this->aic->reg_s_socket, REG_AIC_BASE_ADDR, REG_AIC_BASE_ADDR+(REG_AIC_COUNT*4)))
+    if (this->addrdec->bind(*this->aic, REG_AIC_BASE_ADDR, REG_AIC_BASE_ADDR+this->aic->get_size()))
     {
         TLM_ERR("AIC address range wrong %d", 0);
         return;
