@@ -53,6 +53,27 @@ struct SimpleSlave : sc_core::sc_module
 
         // set the data container
         set_data(data, size);
+
+        // set the default delay value
+        set_delay(100);
+    }
+
+    /** Get the internal delay of the module in nanoseconds
+     * @return Number of nanoseconds
+     */
+    double
+    get_delay(void)
+    {
+        return this->m_delay;
+    }
+
+    /** Set the internal delay of the module in nanoseconds
+     * @param[in] delay Number of nanoseconds
+     */
+    void
+    set_delay(double delay)
+    {
+        this->m_delay = delay;
     }
 
     /** Set the data container of the module
@@ -66,6 +87,27 @@ struct SimpleSlave : sc_core::sc_module
         this->m_size = size;
     }
 
+    /** Get the memory mapped content of the module
+     * @return The pointer to the device memory mapped content, can be NULL
+     */
+    virtual uint32_t*
+    get_data()
+    {
+        return this->m_data;
+    }
+
+    /** Get the size
+     * @return The size of the device memory mapped content, can be NULL
+     */
+    virtual uint32_t
+    get_size()
+    {
+        return this->m_size;
+    }
+
+    /** Operator & to return the reference to the slave socket
+     * @return The reference to the slave socket
+     */
     operator tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types> & ()
     {
         return this->slave_socket;
@@ -113,9 +155,6 @@ struct SimpleSlave : sc_core::sc_module
             SC_REPORT_FATAL("TLM-2", "Access goes beyond word boundary");
         }
 
-        assert(length <= (4 - (addr & 3)));
-        assert((length == 1) || (length == 2) || (length == 4));
-
         // convert the length into a mask
         switch (length)
         {
@@ -145,7 +184,7 @@ struct SimpleSlave : sc_core::sc_module
         #endif
 
         // internal delay
-        wait(100, sc_core::SC_NS);
+        wait(this->m_delay, sc_core::SC_NS);
 
         if (trans.get_command() == tlm::TLM_READ_COMMAND)
         {
@@ -222,6 +261,9 @@ protected:
 
     /// Size of the data of the device
     uint32_t m_size;
+
+    /// Internal delay for each operation
+    double m_delay;
 
     // Indicate that device is free for a new request, used for validation
     #if SIMPLESLAVE_DEBUG
