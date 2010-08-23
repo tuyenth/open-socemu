@@ -1,5 +1,5 @@
 /** @file gdbserver.h
- * @brief GDB server class definition.
+ * @brief GDB server class definition
  *
  * This file contains the GDB server class definition.
  */

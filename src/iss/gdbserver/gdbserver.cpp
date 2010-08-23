@@ -1,5 +1,5 @@
 /** @file gdbserver.cpp
- * @brief GDB server class implementation.
+ * @brief GDB server class implementation
  *
  * This file contains the GDB server class implementation.
  *

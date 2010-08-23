@@ -1,5 +1,5 @@
 /** @file tlb.cpp
- * @brief Translation Lookaside Buffer interface implementation.
+ * @brief Translation Lookaside Buffer interface implementation
  *
  * @sa http://infocenter.arm.com/
  */

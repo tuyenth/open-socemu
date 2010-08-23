@@ -1,5 +1,5 @@
 /** @file wb.cpp
- * @brief Write Blocks interface implementation.
+ * @brief Write Blocks interface implementation
  *
  * @sa http://infocenter.arm.com/
  */

@@ -1,5 +1,5 @@
 /** @file ElfReader.cpp
- * @brief Implementation of the API to read ELF files segments.
+ * @brief Implementation of the API to read ELF files segments
  */
 
 #include <iostream>

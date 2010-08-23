@@ -1,5 +1,5 @@
 /** @file cache.c
- * @brief Cache interface API implementation.
+ * @brief Cache interface API implementation
  *
  * @sa http://infocenter.arm.com/
  */

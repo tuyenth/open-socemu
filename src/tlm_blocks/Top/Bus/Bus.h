@@ -72,11 +72,11 @@ struct Bus : sc_core::sc_module
 //        SC_THREAD(thread_process);
     }
 
-    /// Set a target's address range
-    /** @param id Identifier of the target.
-     * @param base Decoding base address.
-     * @param mask Decoding mask address.
-     * @return true if there was an error, false otherwise.
+    /** Set a target's address range
+     * @param id Identifier of the target
+     * @param base Decoding base address
+     * @param mask Decoding mask address
+     * @return true if there was an error, false otherwise
      */
     bool set_range(uint8_t id, sc_dt::uint64 base, sc_dt::uint64 mask)
     {
@@ -278,12 +278,12 @@ struct Bus : sc_core::sc_module
     }
 
 
-    /** Fixed address decoding.
+    /** Fixed address decoding
      * Check to which target range the input address belongs and mask the address in order
      * to forward to the target only the offset address being accessed.
-     * @param address Input address.
-     * @param masked_address Masked address within the target range.
-     * @return The target index or beyond maximum index if not correct.
+     * @param address Input address
+     * @param masked_address Masked address within the target range
+     * @return The target index or beyond maximum index if not correct
      */
     inline uint8_t decode_address( sc_dt::uint64 address, sc_dt::uint64& masked_address )
     {

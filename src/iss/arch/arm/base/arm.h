@@ -1,5 +1,5 @@
 /** @file arm.h
- * @brief arm class definition.
+ * @brief arm class definition
  *
  * @sa http://infocenter.arm.com/
  */
@@ -16,9 +16,9 @@
 struct arm: public gdbserver
 {
     /// ARM constructor
-    /** Function that performs the complete initialization of the ARM.
-     * @param[in] gdbserver Specifies if the GDB remote connection must be supported.
-     * @param[in] bigendian Big or little endian mode.
+    /** Function that performs the complete initialization of the ARM
+     * @param[in] gdbserver Specifies if the GDB remote connection must be supported
+     * @param[in] bigendian Big or little endian mode
      */
     arm(bool gdbserver = false, bool gdbstart = false, bool bigendian = false);
 
@@ -169,7 +169,7 @@ protected:
     /// Device ID returned from internal register
     uint32_t m_DeviceId;
 
-    /** Debugger related variables.
+    /** Debugger related variables
      * @{
      */
     bool m_PCChanged;
@@ -177,10 +177,9 @@ protected:
     uint8_t m_NumBreakPts;
     /// @}
 
-    /** Scheduler related virtual function.  Indicates to the scheduler the number of core
-     * cycles that were spent for the execution stage of the current instruction.
-     *
-     * param[in] cycles Number of cycles needed to execute the last instruction.
+    /** Scheduler related virtual function, indicates to the scheduler the number of core
+     * cycles that were spent for the execution stage of the current instruction
+     * param[in] cycles Number of cycles needed to execute the last instruction
      */
     virtual void
     arm_exec_cycles(int cycles)
@@ -195,11 +194,10 @@ protected:
      * simple pass-through to the bus.
      * @{
      */
-    /** Request a byte read.
-     *
-     * @param[in] va Virtual address of the byte.
-     * @param[in, out] data Data variable to fill.
-     * @return Eventually the fault.
+    /** Request a byte read
+     * @param[in] va Virtual address of the byte
+     * @param[in, out] data Data variable to fill
+     * @return Eventually the fault
      */
     virtual enum fault_t
     mmu_read_byte(uint32_t va, uint32_t* data)
@@ -208,11 +206,10 @@ protected:
         return SECTION_PERMISSION_FAULT;
     }
 
-    /** Request a half word read.
-     *
-     * @param[in] va Virtual address of the half word.
-     * @param[in, out] data Data variable to fill.
-     * @return Eventually the fault.
+    /** Request a half word read
+     * @param[in] va Virtual address of the half word
+     * @param[in, out] data Data variable to fill
+     * @return Eventually the fault
      */
     virtual enum fault_t
     mmu_read_halfword(uint32_t va, uint32_t* data)
@@ -221,11 +218,10 @@ protected:
         return SECTION_PERMISSION_FAULT;
     }
 
-    /** Request a word read.
-     *
-     * @param[in] va Virtual address of the word.
-     * @param[in, out] data Data variable to fill.
-     * @return Eventually the fault.
+    /** Request a word read
+     * @param[in] va Virtual address of the word
+     * @param[in, out] data Data variable to fill
+     * @return Eventually the fault
      */
     virtual enum fault_t
     mmu_read_word(uint32_t va, uint32_t* data)
@@ -234,11 +230,10 @@ protected:
         return SECTION_PERMISSION_FAULT;
     }
 
-    /** Request a byte write.
-     *
-     * @param[in] va Virtual address of the byte.
-     * @param[in] data Data to write.
-     * @return Eventually the fault.
+    /** Request a byte write
+     * @param[in] va Virtual address of the byte
+     * @param[in] data Data to write
+     * @return Eventually the fault
      */
     virtual enum fault_t
     mmu_write_byte(uint32_t va, uint32_t data)
@@ -247,11 +242,10 @@ protected:
         return SECTION_PERMISSION_FAULT;
     }
 
-    /** Request a half word write.
-     *
-     * @param[in] va Virtual address of the half word.
-     * @param[in] data Data to write.
-     * @return Eventually the fault.
+    /** Request a half word write
+     * @param[in] va Virtual address of the half word
+     * @param[in] data Data to write
+     * @return Eventually the fault
      */
     virtual enum fault_t
     mmu_write_halfword(uint32_t va, uint32_t data)
@@ -260,11 +254,10 @@ protected:
         return SECTION_PERMISSION_FAULT;
     }
 
-    /** Request a word write.
-     *
-     * @param[in] va Virtual address of the word.
-     * @param[in] data Data to write.
-     * @return Eventually the fault.
+    /** Request a word write
+     * @param[in] va Virtual address of the word
+     * @param[in] data Data to write
+     * @return Eventually the fault
      */
     virtual enum fault_t
     mmu_write_word(uint32_t va, uint32_t data)
@@ -273,11 +266,10 @@ protected:
         return SECTION_PERMISSION_FAULT;
     }
 
-    /** Request an instruction load.
-     *
-     * @param[in] va Virtual address of the instruction.
-     * @param[in, out] instr Instruction variable to fill.
-     * @return Eventually the fault.
+    /** Request an instruction load
+     * @param[in] va Virtual address of the instruction
+     * @param[in, out] instr Instruction variable to fill
+     * @return Eventually the fault
      */
     virtual enum fault_t
     mmu_load_instr(uint32_t va, uint32_t* instr)
@@ -286,11 +278,10 @@ protected:
         return SECTION_PERMISSION_FAULT;
     }
 
-    /** Request a coprocessor read.
-     *
-     * @param[in] instr Instruction content.
-     * @param[in, out] value Data variable to fill.
-     * @return 0 when successful, otherwise error.
+    /** Request a coprocessor read
+     * @param[in] instr Instruction content
+     * @param[in, out] value Data variable to fill
+     * @return 0 when successful, otherwise error
      */
     virtual int
     mmu_mrc(uint32_t instr, uint32_t* data)
@@ -299,11 +290,10 @@ protected:
         return 0;
     }
 
-    /** Request an coprocessor write.
-     *
-     * @param[in] instr Instruction content.
-     * @param[in] data Data to write.
-     * @return 0 when successful, otherwise error.
+    /** Request an coprocessor write
+     * @param[in] instr Instruction content
+     * @param[in] data Data to write
+     * @return 0 when successful, otherwise error
      */
     virtual int
     mmu_mcr(uint32_t instr, uint32_t data)
@@ -312,9 +302,8 @@ protected:
         return SECTION_PERMISSION_FAULT;
     }
 
-    /** Request the vector base address.
-     *
-     * @return The vector base address.
+    /** Request the vector base address
+     * @return The vector base address
      */
     virtual uint32_t
     mmu_vector_base(void)
@@ -323,10 +312,9 @@ protected:
         return 0;
     }
 
-    /** Request to set the fault.
-     *
-     * @param fault Fault to set.
-     * @param address Address at which the fault occured.
+    /** Request to set the fault
+     * @param fault Fault to set
+     * @param address Address at which the fault occurred
      */
     virtual void
     mmu_set_fault(enum fault_t fault, uint32_t address)
@@ -355,40 +343,40 @@ protected:
     void gdb_breakpoint_remove(uint64_t addr);
 
 
-    /** Retrieve a register value.
-     * @param[in] mode ARM mode to use to retrieve the register value.
-     * @param[in] reg Index of the register.
-     * @return The register value.
+    /** Retrieve a register value
+     * @param[in] mode ARM mode to use to retrieve the register value
+     * @param[in] reg Index of the register
+     * @return The register value
      */
     uint32_t
     ARMul_GetReg(uint8_t mode, uint8_t reg);
 
-    /** Set a register value.
-     * @param[in] mode ARM mode to use to set the register value.
-     * @param[in] reg Index of the register.
-     * @param[in] value Value to set in the register.
+    /** Set a register value
+     * @param[in] mode ARM mode to use to set the register value
+     * @param[in] reg Index of the register
+     * @param[in] value Value to set in the register
      */
     void
     ARMul_SetReg(uint8_t mode, uint8_t reg, uint32_t value);
-    /** This routine returns the value of the CPSR.  */
+    /** This routine returns the value of the CPSR */
     uint32_t
     ARMul_GetCPSR();
-    /** This routine sets the value of the CPSR.  */
+    /** This routine sets the value of the CPSR */
     void
     ARMul_SetCPSR(uint32_t value);
-    /** Get an SPSR from the specified mode.  */
+    /** Get an SPSR from the specified mode */
     uint32_t
     ARMul_GetSPSR(uint32_t mode);
-    /** This routine does a write to an SPSR.  */
+    /** This routine does a write to an SPSR */
     void
     ARMul_SetSPSR(uint32_t mode, uint32_t value);
 
 private:
     enum tdstate
     {
-        t_undefined,    /* Undefined Thumb instruction.  */
-        t_decoded,      /* Instruction decoded to ARM equivalent.  */
-        t_branch        /* Thumb branch (already processed).  */
+        t_undefined,    /* Undefined Thumb instruction */
+        t_decoded,      /* Instruction decoded to ARM equivalent */
+        t_branch        /* Thumb branch (already processed) */
     };
     enum totype
     {
@@ -413,25 +401,25 @@ private:
     ARMul_AddOverflow(uint32_t a, uint32_t b, uint32_t result);
     void
     ARMul_SubOverflow(uint32_t a, uint32_t b, uint32_t result);
-    /* Assigns the C flag after an addition of a and b to give result.  */
+    /* Assigns the C flag after an addition of a and b to give result */
     void
     ARMul_AddCarry(uint32_t a, uint32_t b, uint32_t result);
-    /* Assigns the C flag after an subtraction of a and b to give result.  */
+    /* Assigns the C flag after an subtraction of a and b to give result */
     void
     ARMul_SubCarry(uint32_t a, uint32_t b, uint32_t result);
 
-    /* Align a word access to a non word boundary.  */
+    /* Align a word access to a non word boundary */
     uint32_t
     ARMul_Align(uint32_t address, uint32_t data)
     {
-        // assumes the address is really unaligned, as a shift by 32 is undefined in C.
+        // assumes the address is really unaligned, as a shift by 32 is undefined in C
         // Get the word address
         address = (address & 3) << 3;
         // rotate right
         return ((data >> address) | (data << (32 - address)));
     }
 
-    /** Check if there is an interrupt pending and not masked by processor. */
+    /** Check if there is an interrupt pending and not masked by processor */
     bool IntPending();
     /** This function does the work of generating the addresses used in an
      * LDC instruction.  The code here is always post-indexed, it's up to the
@@ -445,56 +433,56 @@ private:
      * modification. It also handles the Busy-Waiting.  */
     void
     ARMul_STC(uint32_t instr, uint32_t address);
-    /** This function does the Busy-Waiting for an MCR instruction.  */
+    /** This function does the Busy-Waiting for an MCR instruction */
     void
     ARMul_MCR(uint32_t instr, uint32_t source);
-    /* This function does the Busy-Waiting for an MRC instruction.  */
+    /* This function does the Busy-Waiting for an MRC instruction */
     uint32_t
     ARMul_MRC(uint32_t instr);
-    /** This function does the Busy-Waiting for an CDP instruction.  */
+    /** This function does the Busy-Waiting for an CDP instruction */
     void
     ARMul_CDP(uint32_t instr);
 
     /** This routine evaluates most Data Processing register RHS's with the S
      * bit clear.  It is intended to be called from the macro DPRegRHS, which
      * filters the common case of an unshifted register with in line code.
-     * @param[in] instr Instruction.
-     * @return The register content.
+     * @param[in] instr Instruction
+     * @return The register content
      */
     uint32_t
     GetDPRegRHS(uint32_t instr);
 
     /** This routine evaluates most Logical Data Processing register RHS's
-     *  with the S bit set.  It is intended to be called from the macro
+     *  with the S bit set, it is intended to be called from the macro
      *  DPSRegRHS, which filters the common case of an unshifted register
-     *  with in line code.
-     * @param[in] instr Instruction.
-     * @return The register content.
+     *  with in line code
+     * @param[in] instr Instruction
+     * @return The register content
      */
     uint32_t
     GetDPSRegRHS(uint32_t instr);
 
-    /** This routine evaluates most Load and Store register RHS's.  It is
+    /** This routine evaluates most Load and Store register RHS's, it is
      *  intended to be called from the macro LSRegRHS, which filters the
-     *  common case of an unshifted register with in line code.
+     *  common case of an unshifted register with in line code
      */
     uint32_t
     GetLSRegRHS(uint32_t instr);
 
-    /** This routine evaluates the ARM7T halfword and signed transfer RHS's.  */
+    /** This routine evaluates the ARM7T halfword and signed transfer RHS's */
     uint32_t
     GetLS7RHS(uint32_t instr);
 
-    /** This routine handles writes to register 15 when the S bit is not set.  */
+    /** This routine handles writes to register 15 when the S bit is not set */
     void
     WriteR15(uint32_t src);
 
-    /** This routine handles writes to register 15 when the S bit is set.  */
+    /** This routine handles writes to register 15 when the S bit is set */
     void
     WriteSR15(uint32_t src);
 
     /** In machines capable of running in Thumb mode, BX, BLX, LDR and LDM
-       will switch to Thumb mode if the least significant bit is set.  */
+       will switch to Thumb mode if the least significant bit is set */
     void
     WriteR15Branch(uint32_t src);
 
@@ -505,34 +493,35 @@ private:
     ARMul_CPSRAltered();
 
     /** This routine does all the nasty bits involved in a write to the CPSR,
-     * including updating the register bank, given a MSR instruction.  */
+     * including updating the register bank, given a MSR instruction */
     void
     ARMul_FixCPSR(uint32_t instr, uint32_t rhs);
-    /** This routine does a write to the current SPSR, given an MSR instruction.  */
+    /** This routine does a write to the current SPSR, given an MSR instruction */
     void
     ARMul_FixSPSR(uint32_t instr, uint32_t rhs);
-    /** This function handles Undefined instructions, as CP isntruction.  */
+    /** This function handles Undefined instructions, as CP instruction */
     void
     ARMul_UndefInstr();
     /** This routine causes an Abort to occur, including selecting the correct
      * mode, register bank, and the saving of registers.  Call with the
      * appropriate vector's memory address (0,4,8 ....)
+     * @param[in] vector Exception vector
      */
     void
     ARMul_Abort(uint32_t vector);
 
-    /** Decode a 16bit Thumb instruction.  The instruction is in the low
+    /** Decode a 16bit Thumb instruction, the instruction is in the low
      * 16-bits of the tinstr field, with the following Thumb instruction
-     * held in the high 16-bits.  Passing in two Thumb instructions allows
-     * easier simulation of the special dual BL instruction.
+     * held in the high 16-bits, passing in two Thumb instructions allows
+     * easier simulation of the special dual BL instruction
      */
     enum tdstate
     ARMul_ThumbDecode(uint32_t pc,uint32_t tinstr,uint32_t* ainstr);
 
     /** This function does the work of loading the registers listed in an LDM
-     * instruction, when the S bit is clear.  The code here is always increment
+     * instruction, when the S bit is clear, the code here is always increment
      * after, it's up to the caller to get the input address correct and to
-     * handle base register modification.
+     * handle base register modification
      */
     void
     LoadMult(uint32_t instr, uint32_t address, uint32_t WBBase);
@@ -545,15 +534,15 @@ private:
     void
     LoadSMult(uint32_t instr, uint32_t address, uint32_t WBBase);
 
-    /** This function does the work of loading a word.  */
+    /** This function does the work of loading a word */
     bool
     LoadWord (uint32_t instr, uint32_t address);
 
-    /** This function does the work of loading a halfword.  */
+    /** This function does the work of loading a halfword */
     bool
     LoadHalfWord(uint32_t instr, uint32_t address, bool signextend);
 
-    /** This function does the work of loading a byte for a LDRB instruction.  */
+    /** This function does the work of loading a byte for a LDRB instruction */
     bool
     LoadByte(uint32_t instr, uint32_t address, bool signextend);
 
@@ -571,20 +560,20 @@ private:
      */
     void
     StoreSMult(uint32_t instr, uint32_t address, uint32_t WBBase);
-    /** This function does the work of storing a word from a STR instruction.  */
+    /** This function does the work of storing a word from a STR instruction */
     bool
     StoreWord(uint32_t instr, uint32_t address);
-    /** This function does the work of storing a byte for a STRH instruction.  */
+    /** This function does the work of storing a byte for a STRH instruction */
     bool
     StoreHalfWord(uint32_t instr, uint32_t address);
-    /** This function does the work of storing a byte for a STRB instruction.  */
+    /** This function does the work of storing a byte for a STRB instruction */
     bool
     StoreByte(uint32_t instr, uint32_t address);
 
-    /** This function does the work of loading two words for a LDRD instruction.  */
+    /** This function does the work of loading two words for a LDRD instruction */
     void
     Handle_Load_Double(uint32_t instr);
-    /** This function does the work of storing two words for a STRD instruction.  */
+    /** This function does the work of storing two words for a STRD instruction */
     void
     Handle_Store_Double(uint32_t instr);
 
@@ -627,13 +616,13 @@ private:
      */
     uint32_t
     ARMul_SwitchMode(uint32_t oldmode, uint32_t newmode);
-    /** Assigns the N and Z flags depending on the value of result.  */
+    /** Assigns the N and Z flags depending on the value of result */
     void
     ARMul_NegZero(uint32_t result);
-    /** Compute whether an addition of A and B, giving RESULT, overflowed.  */
+    /** Compute whether an addition of A and B, giving RESULT, overflowed */
     bool
     AddOverflow(uint32_t a, uint32_t b, uint32_t result);
-    /** Compute whether a subtraction of A and B, giving RESULT, overflowed.  */
+    /** Compute whether a subtraction of A and B, giving RESULT, overflowed */
     bool
     SubOverflow(uint32_t a, uint32_t b, uint32_t result);
 
@@ -672,7 +661,7 @@ private:
     uint32_t
     ARMul_SwapByte(uint32_t address, uint32_t data);
 
-    /** Indicate the number of I cycles (internal execution) that have elapsed.
+    /** Indicate the number of I cycles (internal execution) that have elapsed
      * param[in] number Number of I cycles to increment by.
      */
     void
@@ -683,7 +672,7 @@ private:
     }
 
 
-    /** Indicate the number of C cycles (co-processor access) that have elapsed.
+    /** Indicate the number of C cycles (co-processor access) that have elapsed
      * param[in] number Number of C cycles to increment by.
      */
     void

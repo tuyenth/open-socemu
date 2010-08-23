@@ -122,11 +122,11 @@ struct mmu: public arm
         void (*wfi)(void *obj);
     };
 public:
-    /** MMU Constructor.
+    /** MMU Constructor
      * @param[in, out] bus Bus callbacks
-     * @param[in] gdbserver Indicate if ISS shall run gdbserver, support gdb connections.
-     * @param[in] gdbstart Indicate if ISS shall wait for gdb connect at start.
-     * @param[in] bigendian Indicate if ISS is little or big endian.
+     * @param[in] gdbserver Indicate if ISS shall run gdbserver, support gdb connections
+     * @param[in] gdbstart Indicate if ISS shall wait for gdb connect at start
+     * @param[in] bigendian Indicate if ISS is little or big endian
      */
     mmu(struct bus *bus,
         bool gdbserver = false, bool gdbstart = false, bool bigendian = false)
@@ -166,8 +166,8 @@ public:
         int nb;
     };
 
-    /** Get the vector base address from the MMU coprocessor configuration.
-     * @return The vector base address.
+    /** Get the vector base address from the MMU coprocessor configuration
+     * @return The vector base address
      */
     uint32_t mmu_vector_base(void)
     {
@@ -181,9 +181,9 @@ public:
         }
     }
 
-    /** Set a fault status in the MMU coprocessor.
-     * @param[in] fault Fault status of the failed access.
-     * @param[in] address Address of the failed access.
+    /** Set a fault status in the MMU coprocessor
+     * @param[in] fault Fault status of the failed access
+     * @param[in] address Address of the failed access
      */
     void mmu_set_fault(uint32_t fault, uint32_t address)
     {
@@ -278,62 +278,62 @@ protected:
         struct tlb_entry* entries;
     };
 
-    /** Check if access is allowed.
-     * @param[in] ap AP bits from the TLB entry.
-     * @param[in] read Indicate if it is a read or write access.
-     * @return 0 if access is not allowed, other than 0 if allowed.
+    /** Check if access is allowed
+     * @param[in] ap AP bits from the TLB entry
+     * @param[in] read Indicate if it is a read or write access
+     * @return 0 if access is not allowed, other than 0 if allowed
      */
     bool
     check_perms(int ap, int read);
 
-    /** Checks access rights.
-     * @param[in] virt_addr Access virtual address.
-     * @param[in] tlb_entry Pointer to the TLB element of the access.
-     * @param[in] read Read access if 1.
-     * @return The fault type if there is one.
+    /** Checks access rights
+     * @param[in] virt_addr Access virtual address
+     * @param[in] tlb_entry Pointer to the TLB element of the access
+     * @param[in] read Read access if 1
+     * @return The fault type if there is one
      */
     fault_t
     check_access(uint32_t virt_addr, struct tlb_entry* tlb_entry, int read);
 
-    /** Retrieves the Translation Lookaside Buffer for a given virtual address.
-     * @param[in] virt_addr Access virtual address.
-     * @param[in, out] tlb TLB list pointer.
-     * @param[out] tlb_entry Pointer to a pointer to the TLB element of the access.
-     * @return The fault type if there is one.
+    /** Retrieves the Translation Lookaside Buffer for a given virtual address
+     * @param[in] virt_addr Access virtual address
+     * @param[in, out] tlb TLB list pointer
+     * @param[out] tlb_entry Pointer to a pointer to the TLB element of the access
+     * @return The fault type if there is one
      */
     fault_t
     translate(uint32_t virt_addr, struct tlb* tlb, struct tlb_entry** tlb_entry);
 
-    /** Initialize the TLB list and allocates the TLBs.
-     * @param[in, out] tlb TLB list pointer.
-     * @param[in] num Total number of TLBs in the list (will be allocated).
-     * @return 0 if OK, different than 0 otherwise.
+    /** Initialize the TLB list and allocates the TLBs
+     * @param[in, out] tlb TLB list pointer
+     * @param[in] num Total number of TLBs in the list (will be allocated)
+     * @return 0 if OK, different than 0 otherwise
      */
     int
     mmu_tlb_init(struct tlb* tlb, int num);
 
-    /** Free the TLB list array of TLBs.
-     * @param[in, out] tlb TLB list pointer.
+    /** Free the TLB list array of TLBs
+     * @param[in, out] tlb TLB list pointer
      */
     void
     mmu_tlb_exit(struct tlb* tlb);
 
-    /** Invalidate all the TLBs in the TLB list.
-     * @param[in, out] tlb TLB list pointer.
+    /** Invalidate all the TLBs in the TLB list
+     * @param[in, out] tlb TLB list pointer
      */
     void
     mmu_tlb_invalidate_all(struct tlb* tlb);
 
-    /** Invalidate the TLB for a given virtual address.
-     * @param[in, out] tlb TLB list pointer.
-     * @param[in] virt_addr Virtual address to invalidate.
+    /** Invalidate the TLB for a given virtual address
+     * @param[in, out] tlb TLB list pointer
+     * @param[in] virt_addr Virtual address to invalidate
      */
     void
     mmu_tlb_invalidate_entry(struct tlb* tlb, uint32_t virt_addr);
 
-    /** Search for a TLB matching a given virtual address.
-     * @param[in, out] tlb TLB list pointer.
-     * @param[in] virt_addr Virtual address to search for.
+    /** Search for a TLB matching a given virtual address
+     * @param[in, out] tlb TLB list pointer
+     * @param[in] virt_addr Virtual address to search for
      */
     struct tlb_entry*
     mmu_tlb_search(struct tlb* tlb, uint32_t virt_addr);
@@ -368,37 +368,37 @@ protected:
         struct wb_entry* entries;
     } wb;
 
-    /** @brief Allocates the write buffers in local memory (to simulate cache).
-     * @param[in, out] wb Pointer to the write buffer list.
-     * @param[in] num number of entries to allocate.
-     * @param[in] nb number of bytes in each entry.
-     * @return 0 if OK, different than 0 if error.
+    /** @brief Allocates the write buffers in local memory (to simulate cache)
+     * @param[in, out] wb Pointer to the write buffer list
+     * @param[in] num number of entries to allocate
+     * @param[in] nb number of bytes in each entry
+     * @return 0 if OK, different than 0 if error
      */
     int
     mmu_wb_init(struct wb* wb, int num, int nb);
 
 
-    /** @brief Frees the write buffers.
-     * @param[in, out] wb Pointer to the write buffer list.
+    /** @brief Frees the write buffers
+     * @param[in, out] wb Pointer to the write buffer list
      */
     void
     mmu_wb_exit(struct wb* wb);
 
 
-    /** Put bytes in a write buffer.
-     * @param[in, out] wb Pointer to the write buffer list.
-     * @param[in] pa physical address of the write.
-     * @param[in] data Pointer to the data to write.
-     * @param[in] n Number of bytes to write.
+    /** Put bytes in a write buffer
+     * @param[in, out] wb Pointer to the write buffer list
+     * @param[in] pa physical address of the write
+     * @param[in] data Pointer to the data to write
+     * @param[in] n Number of bytes to write
      *
-     * @warning Write buffer merge is not implemented, can be done later.
+     * @warning Write buffer merge is not implemented, can be done later
      */
     void
     mmu_wb_write_bytes(struct wb* wb, uint32_t pa, uint8_t* data, int n);
 
 
-    /** Flushes all write buffers.
-     * @param[in, out] wb Pointer to the write buffer list.
+    /** Flushes all write buffers
+     * @param[in, out] wb Pointer to the write buffer list
      */
     void
     mmu_wb_drain_all(struct wb* wb);
@@ -439,47 +439,47 @@ protected:
         struct rb_entry* entries;
     };
 
-    /** Initialize the read buffer list and allocate the read buffers.
-     * @param[in, out] rb Pointer to the read buffer list.
-     * @param[in] num Number of read buffers to allocate.
-     * @return 0 if OK, different than 0 if error.
+    /** Initialize the read buffer list and allocate the read buffers
+     * @param[in, out] rb Pointer to the read buffer list
+     * @param[in] num Number of read buffers to allocate
+     * @return 0 if OK, different than 0 if error
      */
     int
     mmu_rb_init(struct rb* rb, int num);
 
-    /** Frees the read buffer list.
-     * @param[in, out] rb Pointer to the read buffer list.
+    /** Frees the read buffer list
+     * @param[in, out] rb Pointer to the read buffer list
      */
     void
     mmu_rb_exit(struct rb* rb);
 
-    /** Search for a read block matching a virtual address.
-     * @param[in] rb Pointer to the read buffer list.
-     * @param[in] num Number of read buffers to allocate.
-     * @return The pointer to the read buffer descriptor or NULL if no match found.
+    /** Search for a read block matching a virtual address
+     * @param[in] rb Pointer to the read buffer list
+     * @param[in] num Number of read buffers to allocate
+     * @return The pointer to the read buffer descriptor or NULL if no match found
      */
     struct rb_entry*
     mmu_rb_search(struct rb* rb, uint32_t va);
 
-    /** Invalidate a read buffer.
-     * @param[in, out] rb Pointer to the read buffer list.
-     * @param[in] i Index of the read buffer to invalidate.
+    /** Invalidate a read buffer
+     * @param[in, out] rb Pointer to the read buffer list
+     * @param[in] i Index of the read buffer to invalidate
      */
     void
     mmu_rb_invalidate_entry(struct rb* rb, int i);
 
-    /** Invalidate all read buffers.
-     * @param[in, out] rb Pointer to the read buffer list.
+    /** Invalidate all read buffers
+     * @param[in, out] rb Pointer to the read buffer list
      */
     void
     mmu_rb_invalidate_all(struct rb* rb);
 
-    /** Invalidate all read buffers.
-     * @param[in, out] rb Pointer to the read buffer list.
-     * @param[in] tlb Pointer to the considered TLB list.
-     * @param[in] i_rb Index of the read buffer to read into.
-     * @param[in] type Type of the read buffer to read into.
-     * @param[in] va Virtual address to load.
+    /** Invalidate all read buffers
+     * @param[in, out] rb Pointer to the read buffer list
+     * @param[in] tlb Pointer to the considered TLB list
+     * @param[in] i_rb Index of the read buffer to read into
+     * @param[in] type Type of the read buffer to read into
+     * @param[in] va Virtual address to load
      */
     void
     mmu_rb_load(struct rb* rb, struct tlb* tlb, int i_rb, int type, uint32_t va);

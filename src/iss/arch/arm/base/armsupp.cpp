@@ -3,8 +3,8 @@
 #include "armemu.h"
 
 /** Return the register bank ID for a given mode
- * @param[in] mode Mode for which the bank is requested.
- * @return The bank ID.
+ * @param[in] mode Mode for which the bank is requested
+ * @return The bank ID
  */
 static uint8_t
 ModeToBank(uint8_t mode)
