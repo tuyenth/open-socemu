@@ -28,17 +28,9 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
 
     // SRAM:
     //   - create instance
-    {
-        uint32_t* data;
-
-        // allocate the memory needed
-        data = (uint32_t*)malloc(SRAM_SIZE);
-
-        // create the memory
-        this->sram = new Memory("sram", data, SRAM_SIZE);
-    }
+    this->sram = new Memory("sram", SRAM_SIZE);
     //   - set range
-    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, (SRAM_BASE_ADDR+SRAM_SIZE)))
+    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, (SRAM_BASE_ADDR+this->sram->get_size())))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;

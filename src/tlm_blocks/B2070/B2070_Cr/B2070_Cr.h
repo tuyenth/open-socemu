@@ -1,12 +1,12 @@
-#ifndef CR_H_
-#define CR_H_
+#ifndef B2070_CR_H_
+#define B2070_CR_H_
 
 #include "SimpleSlave.h"
 
-struct Cr : SimpleSlave
+struct B2070_Cr : SimpleSlave
 {
     /// Constructor
-    Cr(sc_core::sc_module_name name);
+    B2070_Cr(sc_core::sc_module_name name);
 
     /// Registers definition
     enum
@@ -40,4 +40,4 @@ protected:
 
 };
 
-#endif /*CR_H_*/
+#endif /*B2070_CR_H_*/

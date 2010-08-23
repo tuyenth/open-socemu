@@ -20,7 +20,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
 {
     Parameter *cpu_parameter, *romfile, *flashfile, *srampreloadedwithflash;
     MSP *cpu_config;
-    uint32_t *romdata, *sramdata, *flashdata;
+    uint32_t* flashdata;
 
     // sanity check
     if (config.count("cpu") != 1)
@@ -60,12 +60,9 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
 
     // ROM:
     //   - create instance
-    //       * allocate the memory needed
-    romdata = (uint32_t*)malloc(ROM_SIZE);
-    //       * create the memory
-    this->rom = new Memory("rom", romdata, ROM_SIZE);
+    this->rom = new Memory("rom", ROM_SIZE);
     //   - bind interface (ROM is hooked to the address decoder)
-    if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR, ROM_BASE_ADDR+ROM_SIZE))
+    if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR, ROM_BASE_ADDR+this->rom->get_size()))
     {
         TLM_ERR("ROM address range wrong %d", 0);
         return;
@@ -73,12 +70,9 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
 
     // SRAM:
     //   - create instance
-    //       * allocate the memory needed
-    sramdata = (uint32_t*)malloc(SRAM_SIZE);
-    //       * create the memory
-    this->sram = new Memory("sram", sramdata, SRAM_SIZE);
+    this->sram = new Memory("sram", SRAM_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
-    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, SRAM_BASE_ADDR+SRAM_SIZE))
+    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, SRAM_BASE_ADDR+this->sram->get_size()))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;
@@ -207,7 +201,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
         {
             TLM_ERR("ROM file (%s) could not be read\n", romfile->c_str());
         }
-        read(fd, romdata, ROM_SIZE);
+        read(fd, this->rom->get_data(), ROM_SIZE);
         close(fd);
 
         // open the FLASH file specified
@@ -223,7 +217,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
         // if the SRAM was preloaded with the FLASH content
         if (srampreloadedwithflash->get_bool())
         {
-            memcpy(sramdata, &(flashdata[8]), U32(flashdata[4]));
+            memcpy(this->sram->get_data(), &(flashdata[8]), U32(flashdata[4]));
 
             // initialize the CRM
             this->crm->m_reg[STATUS_INDEX] = 3;

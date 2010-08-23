@@ -1,17 +1,17 @@
-#include "Cr.h"
+#include "B2070_Cr.h"
 #include "utils.h"
 
 /// Used to select debugging (0 = OFF, 1 = ON)
-#define DEBUG_CR 0
+#define DEBUG_B2070_CR 0
 
 // using this namespace to simplify streaming
 using namespace std;
 
-Cr::Cr(sc_core::sc_module_name name) : SimpleSlave(name, m_reg, REG_CR_COUNT*4)
+B2070_Cr::B2070_Cr(sc_core::sc_module_name name) : SimpleSlave(name, m_reg, REG_CR_COUNT*4)
 {
 }
 
-void Cr::slave_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+void B2070_Cr::slave_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
 {
     TLM_WORD_SANITY(trans);
 
@@ -34,7 +34,7 @@ void Cr::slave_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& d
 }
 
 
-uint32_t Cr::reg_rd(uint32_t offset)
+uint32_t B2070_Cr::reg_rd(uint32_t offset)
 {
     uint32_t result;
     // retrieve the required parameters
@@ -44,7 +44,7 @@ uint32_t Cr::reg_rd(uint32_t offset)
     assert(index < REG_CR_COUNT);
 
     // internal delay
-    wait(100, sc_core::SC_NS);
+    this->delay();
 
     switch (index)
     {
@@ -57,7 +57,7 @@ uint32_t Cr::reg_rd(uint32_t offset)
     return result;
 }
 
-void Cr::reg_wr(uint32_t offset, uint32_t value)
+void B2070_Cr::reg_wr(uint32_t offset, uint32_t value)
 {
     // retrieve the required parameters
     uint32_t index = offset/4;
@@ -66,7 +66,7 @@ void Cr::reg_wr(uint32_t offset, uint32_t value)
     assert(index < REG_CR_COUNT);
 
     // internal delay
-    wait(100, sc_core::SC_NS);
+    this->delay();
 
     switch (index)
     {

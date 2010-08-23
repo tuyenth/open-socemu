@@ -57,12 +57,8 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     }
     for (i = 0; i < sizeof(Memories)/sizeof(Memories[0]); i++)
     {
-        uint32_t* data;
-
-        // allocate the memory
-        data = (uint32_t*)malloc(Memories[i].size);
         // create the MEMORY instance with specific size
-        memory[i] = new Memory("memory", data, Memories[i].size);
+        memory[i] = new Memory("memory", Memories[i].size);
         // bind the init port of the BUS to the MEMORY
         ( *(bus->init_socket[i]) ).bind(*memory[i]);
         // specify the MEMORY address range from the BUS perspective
