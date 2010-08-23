@@ -29,6 +29,16 @@ struct B2070_Cr : SimpleSlave
         // retrieve the required parameters
         uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
 
+        // sanity check
+        #if SIMPLESLAVE_DEBUG
+        assert(m_free);
+        #endif
+
+        // mark as busy
+        #if SIMPLESLAVE_DEBUG
+        m_free = false;
+        #endif
+
         if (trans.get_command() == tlm::TLM_READ_COMMAND)
         {
             *ptr = reg_rd(trans.get_address());
@@ -40,6 +50,11 @@ struct B2070_Cr : SimpleSlave
 
         // there was no error in the processing
         trans.set_response_status( tlm::TLM_OK_RESPONSE );
+
+        // mark as free
+        #if SIMPLESLAVE_DEBUG
+        m_free = true;
+        #endif
 
         return;
     }
