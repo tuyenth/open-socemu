@@ -7,7 +7,8 @@
 // using this namespace to simplify streaming
 using namespace std;
 
-uint32_t B2070_Cr::reg_rd(uint32_t offset)
+uint32_t
+B2070_Cr::reg_rd(uint32_t offset)
 {
     uint32_t result;
     // retrieve the required parameters
@@ -30,7 +31,8 @@ uint32_t B2070_Cr::reg_rd(uint32_t offset)
     return result;
 }
 
-void B2070_Cr::reg_wr(uint32_t offset, uint32_t value)
+void
+B2070_Cr::reg_wr(uint32_t offset, uint32_t value)
 {
     // retrieve the required parameters
     uint32_t index = offset/4;

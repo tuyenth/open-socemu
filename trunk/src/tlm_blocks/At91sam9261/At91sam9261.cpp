@@ -40,7 +40,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
     //   - create instance
     this->smc = new Smc("smc");
     //   - set range (registers map)
-    if (this->addrdec->bind(this->smc->reg_s_socket, REG_SMC_BASE_ADDR, REG_SMC_BASE_ADDR+(REG_SMC_COUNT*4)))
+    if (this->addrdec->bind(*this->smc, REG_SMC_BASE_ADDR, REG_SMC_BASE_ADDR+this->smc->get_size()))
     {
         TLM_ERR("SMC registers address range wrong %d", 0);
         return;

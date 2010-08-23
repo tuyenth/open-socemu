@@ -15,7 +15,7 @@ struct Aic : SimpleSlave
 {
     /// Constructor
     Aic(sc_core::sc_module_name name)
-        : SimpleSlave(name, m_reg, REG_AIC_COUNT*4)
+        : SimpleSlave(name, m_reg, sizeof(m_reg))
         , irq_m_socket("irq_m_socket")
         , fiq_m_socket("fiq_m_socket")
     {

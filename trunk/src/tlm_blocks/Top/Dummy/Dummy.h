@@ -24,9 +24,8 @@ struct Dummy : SimpleMasterSlave
      * @param[in] name Name of the module
      */
     Dummy(sc_core::sc_module_name name)
-    : SimpleMasterSlave(name, NULL, 0)
+    : SimpleMasterSlave(name, this->m_reg, sizeof(this->m_reg))
     {
-        this->set_data(this->m_registers, sizeof(this->m_registers));
     }
 
     /// Module thread
@@ -62,11 +61,11 @@ struct Dummy : SimpleMasterSlave
         #endif
 
         // internal delay
-        wait(100, sc_core::SC_NS);
+        this->delay();
 
         if (trans.get_command() == tlm::TLM_READ_COMMAND)
         {
-            *ptr = m_registers[index];
+            *ptr = m_reg[index];
         }
         else
         {
@@ -101,7 +100,7 @@ struct Dummy : SimpleMasterSlave
     };
 
     /// Registers content
-    uint32_t m_registers[REG_SIZE];
+    uint32_t m_reg[REG_SIZE];
 };
 
 #endif /*DUMMY_H_*/
