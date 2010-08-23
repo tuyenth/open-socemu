@@ -195,7 +195,7 @@ struct SimpleSlave : sc_core::sc_module
         #endif
 
         // internal delay
-        wait(this->m_delay, sc_core::SC_NS);
+        this->delay();
 
         if (trans.get_command() == tlm::TLM_READ_COMMAND)
         {
