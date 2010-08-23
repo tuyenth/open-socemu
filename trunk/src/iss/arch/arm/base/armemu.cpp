@@ -1288,7 +1288,6 @@ armulate_nottrapped:
 						/* ElSegundo SMULxy insn.  */
 						uint32_t op1 = m_Reg[BITS (0, 3)];
 						uint32_t op2 = m_Reg[BITS (8, 11)];
-						uint32_t Rn = m_Reg[BITS (12, 15)];
 
 						if (BIT (5))
 							op1 >>= 16;

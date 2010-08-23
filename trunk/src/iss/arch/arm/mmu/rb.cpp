@@ -93,7 +93,7 @@ void
 mmu::mmu_rb_load(struct rb* rb, struct tlb* tlb, int i_rb, int type, uint32_t va)
 {
     struct rb_entry* rb_entry;
-    int i;
+    uint32_t i;
     uint32_t max_start, min_end;
     fault_t fault;
     struct tlb_entry* tlb_entry;
