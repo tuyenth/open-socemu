@@ -6,7 +6,9 @@
 struct B2070_Cr : SimpleSlave
 {
     /// Constructor
-    B2070_Cr(sc_core::sc_module_name name);
+    B2070_Cr(sc_core::sc_module_name name) : SimpleSlave(name, m_reg, REG_CR_COUNT*4)
+    {
+    }
 
     /// Registers definition
     enum
@@ -20,7 +22,27 @@ struct B2070_Cr : SimpleSlave
     uint32_t m_reg[REG_CR_COUNT];
 
     /// Override the virtual function
-    void slave_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
+    void slave_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+    {
+        TLM_WORD_SANITY(trans);
+
+        // retrieve the required parameters
+        uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
+
+        if (trans.get_command() == tlm::TLM_READ_COMMAND)
+        {
+            *ptr = reg_rd(trans.get_address());
+        }
+        else
+        {
+            reg_wr(trans.get_address(), *ptr);
+        }
+
+        // there was no error in the processing
+        trans.set_response_status( tlm::TLM_OK_RESPONSE );
+
+        return;
+    }
 
 protected:
     /**
