@@ -64,7 +64,7 @@ arm7100::mmu_read(uint32_t va, uint32_t * data, enum mmu::arm_data_type datatype
         ((va & 1) && (datatype == ARM_HALFWORD_TYPE)))
     {
         // information even if not data abort
-        ARM_WARN("read alignment fault -> @0x%08lX, size 2**%d", va, datatype);
+        ARM_WARN("read alignment fault -> @0x%08X, size 2**%d", va, datatype);
     }
 
     // check if there is no MMU
@@ -139,13 +139,13 @@ arm7100::mmu_read(uint32_t va, uint32_t * data, enum mmu::arm_data_type datatype
     fault = translate(va, &this->tlb, &tlb);
     if (fault)
     {
-        ARM_WARN("read VA to TLB translation failed @0x%08lX", va);
+        ARM_WARN("read VA to TLB translation failed @0x%08X", va);
         return fault;
     }
     fault = check_access(va, tlb, 1);
     if (fault)
     {
-        ARM_WARN("read TLB check access failed @0x%08lX", va);
+        ARM_WARN("read TLB check access failed @0x%08X", va);
         return fault;
     }
     pa = (tlb->phys_addr & tlb_masks[tlb->mapping]) | (va & ~tlb_masks[tlb->mapping]);
@@ -245,7 +245,7 @@ arm7100::mmu_write(uint32_t va, uint32_t data, enum mmu::arm_data_type datatype)
         ((va & 1) && (datatype == ARM_HALFWORD_TYPE)))
     {
         // information even if not data abort
-        ARM_WARN("write alignment fault -> @0x%08lX, size 2**%d", va, datatype);
+        ARM_WARN("write alignment fault -> @0x%08X, size 2**%d", va, datatype);
     }
 
     // if MMU is not present
@@ -320,13 +320,13 @@ arm7100::mmu_write(uint32_t va, uint32_t data, enum mmu::arm_data_type datatype)
     fault = translate(va, &this->tlb, &tlb);
     if (fault)
     {
-        ARM_WARN("write VA to TLB translation failed @0x%08lX", va);
+        ARM_WARN("write VA to TLB translation failed @0x%08X", va);
         return fault;
     }
     fault = check_access(va, tlb, 0);
     if (fault)
     {
-        ARM_WARN("write TLB check access failed @0x%08lX", va);
+        ARM_WARN("write TLB check access failed @0x%08X", va);
         return fault;
     }
     pa = (tlb->phys_addr & tlb_masks[tlb->mapping]) |

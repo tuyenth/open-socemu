@@ -52,7 +52,7 @@ mmu::mmu_rb_exit(struct rb* rb)
 struct mmu::rb_entry*
 mmu::mmu_rb_search(struct rb* rb, uint32_t va)
 {
-    int i;
+    uint32_t i;
     struct rb_entry* rb_entry = rb->entries;
 
     // loop on all the read buffer entries
@@ -81,7 +81,7 @@ mmu::mmu_rb_invalidate_entry(struct rb* rb, int i)
 void
 mmu::mmu_rb_invalidate_all(struct rb* rb)
 {
-    int i;
+    uint32_t i;
 
     for (i = 0; i < rb->num; i++)
     {
