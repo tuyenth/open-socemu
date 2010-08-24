@@ -161,7 +161,7 @@ do {                                                                        \
 #define TLM_B_RD_WORD(__s, __t, __y, __a, __d)                              \
     TLM_B_TRANS(__s, __t, __y, tlm::TLM_READ_COMMAND, __a, __d, 4);         \
     if (UTILS_DEBUG_LEVEL > 0)                                              \
-        TLM_DBG("read word @0x%08X = 0x%X", __a, __d)
+        TLM_DBG("read word @0x%08X = 0x%X", (uint32_t)__a, (uint32_t)__d)
 
 /// Macro to make a blocking read 2 byte access
 /// @param[in] __s socket to use to perform access
@@ -172,7 +172,7 @@ do {                                                                        \
 #define TLM_B_RD_HALFWORD(__s, __t, __y, __a, __d)                          \
     TLM_B_TRANS(__s, __t, __y, tlm::TLM_READ_COMMAND, __a, __d, 2);         \
     if (UTILS_DEBUG_LEVEL > 0)                                              \
-        TLM_DBG("read half @0x%08X = 0x%X", __a, __d)
+        TLM_DBG("read half @0x%08X = 0x%X", (uint32_t)__a, (uint32_t)__d)
 
 /// Macro to make a blocking read byte access
 /// @param[in] __s socket to use to perform access
@@ -183,7 +183,7 @@ do {                                                                        \
 #define TLM_B_RD_BYTE(__s, __t, __y, __a, __d)                              \
     TLM_B_TRANS(__s, __t, __y, tlm::TLM_READ_COMMAND, __a, __d, 1);         \
     if (UTILS_DEBUG_LEVEL > 0)                                              \
-        TLM_DBG("read byte @0x%08X = 0x%X", __a, __d)
+        TLM_DBG("read byte @0x%08X = 0x%X", (uint32_t)__a, (uint32_t)__d)
 
 /// Macro to make an unknown size copy from APP buffer to EMB buffer
 /// @param[in] __s socket for the EMB access

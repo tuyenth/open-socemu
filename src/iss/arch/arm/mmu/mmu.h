@@ -348,7 +348,7 @@ protected:
         /// Pointer to the local data container (CPU cache memory)
         uint8_t *data;
         /// Number of bytes in the write buffer
-        int nb;
+        uint32_t nb;
     };
 
     /// Write buffer list
@@ -394,7 +394,7 @@ protected:
      * @warning Write buffer merge is not implemented, can be done later
      */
     void
-    mmu_wb_write_bytes(struct wb* wb, uint32_t pa, uint8_t* data, int n);
+    mmu_wb_write_bytes(struct wb* wb, uint32_t pa, uint8_t* data, uint32_t n);
 
 
     /** Flushes all write buffers

@@ -38,7 +38,7 @@ mmu::mmu_wb_init(struct wb* wb, int num, int nb)
 void
 mmu::mmu_wb_exit(struct wb* wb)
 {
-    int i;
+    uint32_t i;
     struct wb_entry *wb_entry;
 
     wb_entry = wb->entries;
@@ -50,9 +50,9 @@ mmu::mmu_wb_exit(struct wb* wb)
 };
 
 void
-mmu::mmu_wb_write_bytes(struct wb* wb, uint32_t pa, uint8_t* data, int n)
+mmu::mmu_wb_write_bytes(struct wb* wb, uint32_t pa, uint8_t* data, uint32_t n)
 {
-    int i;
+    uint32_t i;
     struct wb_entry *wb_entry;
 
     // loop as long as there are bytes to write
@@ -124,7 +124,7 @@ mmu::mmu_wb_drain_all(struct wb* wb)
 {
     uint32_t pa;
     struct wb_entry *wb_entry;
-    int i;
+    uint32_t i;
 
     // loop on all used entries
     while (wb->used)

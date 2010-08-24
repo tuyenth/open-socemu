@@ -34,7 +34,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 
     // ROM:
     //   - create the memory instance
-    this->rom = new Memory("rom", ROM_SIZE);
+    this->rom = new Rom("rom", ROM_SIZE);
     //   - bind interface (rom is hooked to the address decoder)
     if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR, ROM_BASE_ADDR+this->rom->get_size()))
     {
@@ -54,7 +54,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 
     // FLASH:
     //   - create the memory instance
-    this->flash = new Memory("flash", FLASH_SIZE);
+    this->flash = new Rom("flash", FLASH_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
     if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR, FLASH_BASE_ADDR+this->flash->get_size()))
     {

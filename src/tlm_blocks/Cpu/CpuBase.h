@@ -278,7 +278,7 @@ struct CpuBase: SimpleMaster
     virtual void
     wr_l(uint64_t addr, uint32_t data)
     {
-        CPUBASE_TLM_DBG(2, "wr W addr=0x%08X data=0x%08X", addr, data);
+        CPUBASE_TLM_DBG(2, "wr W addr=0x%08llX data=0x%08X", addr, data);
 
         TLM_B_WR_WORD(master_socket, master_b_pl, master_b_delay, addr, data);
     }

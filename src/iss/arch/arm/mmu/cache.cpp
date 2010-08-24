@@ -111,7 +111,7 @@ mmu::mmu_cache_alloc(struct cache* cache_t, uint32_t va, uint32_t pa)
 {
     struct cache_line *cache;
     struct cache_set *set;
-    int i;
+    uint32_t i;
 
     va = va_cache_align(va, cache_t);
     pa = va_cache_align(pa, cache_t);
@@ -236,7 +236,7 @@ mmu::mmu_cache_invalidate_by_index(struct cache* cache_t, uint32_t index)
 void
 mmu::mmu_cache_invalidate_all(struct cache* cache_t)
 {
-    int i, j;
+    uint32_t i, j;
     struct cache_set *set;
     struct cache_line *cache;
 
