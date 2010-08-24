@@ -355,15 +355,15 @@ protected:
     struct wb
     {
         /// Number of entries
-        int num;
+        uint32_t num;
         /// Number of bytes in each write buffer
-        int nb;
+        uint32_t nb;
         /// Index of the next write buffer to use
-        int first;
+        uint32_t first;
         /// Index of the oldest write buffer added
-        int last;
+        uint32_t last;
         /// Number of used buffers
-        int used;
+        uint32_t used;
         /// Pointer to the write buffers array
         struct wb_entry* entries;
     } wb;
@@ -434,7 +434,7 @@ protected:
     struct rb
     {
         /// Number of read buffers
-        int num;
+        uint32_t num;
         /// Read buffers array
         struct rb_entry* entries;
     };
@@ -506,18 +506,18 @@ protected:
         /// Array of cache lines
         struct cache_line* lines;
         /// Current cache set cycle
-        int cycle;
+        uint32_t cycle;
     };
 
     /// Full cache descriptor
     struct cache
     {
         /// Number of bytes in a cache line
-        int width;
+        uint32_t width;
         /// Way of set association
-        int way;
+        uint32_t way;
         /// Number of sets
-        int set;
+        uint32_t set;
         /// Write mode
         enum write_mode w_mode;
         /// Cache sets array
@@ -526,7 +526,7 @@ protected:
 
 
     int
-    mmu_cache_init(struct cache* cache_t, int width, int way, int set, enum write_mode w_mode);
+    mmu_cache_init(struct cache* cache_t, uint32_t width, uint32_t way, uint32_t set, enum write_mode w_mode);
 
     void
     mmu_cache_exit(struct cache* cache_t);

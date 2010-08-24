@@ -8,9 +8,9 @@
 #include "mmu.h"
 
 int
-mmu::mmu_cache_init(struct cache* cache_t, int width, int way, int set, enum write_mode w_mode)
+mmu::mmu_cache_init(struct cache* cache_t, uint32_t width, uint32_t way, uint32_t set, enum write_mode w_mode)
 {
-    int i, j;
+    uint32_t i, j;
     struct cache_set *sets;
     struct cache_line *lines;
 
@@ -48,7 +48,7 @@ mmu::mmu_cache_init(struct cache* cache_t, int width, int way, int set, enum wri
 void
 mmu::mmu_cache_exit(struct cache * cache_t)
 {
-    int i, j;
+    uint32_t i, j;
     struct cache_set *sets, *set;
     struct cache_line *lines, *line;
 
@@ -70,7 +70,7 @@ mmu::mmu_cache_exit(struct cache * cache_t)
 struct mmu::cache_line*
 mmu::mmu_cache_search(struct cache* cache_t, uint32_t va)
 {
-    int i;
+    uint32_t i;
     int set = va_cache_set(va, cache_t);
     uint32_t tag = va_cache_align(va, cache_t);
     struct cache_line *cache;

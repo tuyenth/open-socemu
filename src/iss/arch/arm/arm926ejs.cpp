@@ -89,7 +89,7 @@ arm926ejs::mmu_load_instr(uint32_t va, uint32_t* instr)
     // align check
     if (mva & (WORD_SIZE - 1))
     {
-        ARM_WARN("Unaligned instruction load @0x%08lX", mva);
+        ARM_WARN("Unaligned instruction load @0x%08X", mva);
         if (MMU_AlignCheck)
         {
             assert(false);
@@ -125,7 +125,7 @@ arm926ejs::mmu_load_instr(uint32_t va, uint32_t* instr)
         fault = translate(mva, ARM926EJS_MAIN_TLB(), &tlb);
         if (fault)
         {
-            ARM_WARN("instruction VA to TLB translation failed @0x%08lX", mva);
+            ARM_WARN("instruction VA to TLB translation failed @0x%08X", mva);
             return fault;
         }
 
@@ -133,7 +133,7 @@ arm926ejs::mmu_load_instr(uint32_t va, uint32_t* instr)
         fault = check_access(mva, tlb, 1);
         if (fault)
         {
-            ARM_WARN("instruction TLB check access failed @0x%08lX", mva);
+            ARM_WARN("instruction TLB check access failed @0x%08X", mva);
             return fault;
         }
 
@@ -208,7 +208,7 @@ arm926ejs::mmu_read(uint32_t va, uint32_t * data, enum arm_data_type datatype)
         ((mva & 1) && (datatype == ARM_HALFWORD_TYPE)))
     {
         // information even if not data abort
-        ARM_WARN("read alignment fault -> @0x%08lX, size 2**%d", mva, datatype);
+        ARM_WARN("read alignment fault -> @0x%08X, size 2**%d", mva, datatype);
         if (MMU_AlignCheck)
         {
             return ALIGNMENT_FAULT;
@@ -245,14 +245,14 @@ arm926ejs::mmu_read(uint32_t va, uint32_t * data, enum arm_data_type datatype)
     fault = translate(mva, ARM926EJS_MAIN_TLB(), &tlb);
     if (fault)
     {
-        ARM_WARN("read VA to TLB translation failed @0x%08lX", mva);
+        ARM_WARN("read VA to TLB translation failed @0x%08X", mva);
         return fault;
     }
     // check access permission
     fault = check_access(mva, tlb, 1);
     if (fault)
     {
-        ARM_WARN("read check access failed @0x%08lX", mva);
+        ARM_WARN("read check access failed @0x%08X", mva);
         return fault;
     }
     // search main cache
@@ -367,7 +367,7 @@ arm926ejs::mmu_write(uint32_t va, uint32_t data, enum arm_data_type datatype)
         ((mva & 1) && (datatype == ARM_HALFWORD_TYPE)))
     {
         // information even if not data abort
-        ARM_WARN("write alignment fault -> @0x%08lX, size 2**%d", mva, datatype);
+        ARM_WARN("write alignment fault -> @0x%08X, size 2**%d", mva, datatype);
         if (MMU_AlignCheck)
         {
             return ALIGNMENT_FAULT;
@@ -404,14 +404,14 @@ arm926ejs::mmu_write(uint32_t va, uint32_t data, enum arm_data_type datatype)
     fault = translate(mva, ARM926EJS_MAIN_TLB(), &tlb);
     if (fault)
     {
-        ARM_WARN("write VA to TLB translation failed @0x%08lX", mva);
+        ARM_WARN("write VA to TLB translation failed @0x%08X", mva);
         return fault;
     }
     // TLB check access
     fault = check_access(mva, tlb, 0);
     if (fault)
     {
-        ARM_WARN("write TLB check access failed @0x%08lX", mva);
+        ARM_WARN("write TLB check access failed @0x%08X", mva);
         return fault;
     }
 
