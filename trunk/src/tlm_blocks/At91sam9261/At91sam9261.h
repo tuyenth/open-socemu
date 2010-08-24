@@ -10,12 +10,13 @@
 // command line parameters
 #include "Parameters.h"
 
-// necessary for system definition
+// generic blocks
 #include "AddrDec.h"
 #include "Cpu.h"
-#include "Aic.h"
-#include "Smc.h"
 #include "Memory.h"
+// system specific blocks
+#include "Aic/Aic.h"
+#include "Smc/Smc.h"
 
 // necessary for dummies
 #include "tlm_utils/simple_initiator_socket.h"
@@ -33,9 +34,6 @@ struct At91sam9261 : sc_core::sc_module
     Smc* smc;
     /// Embedded SRAM
     Memory* sram;
-
-    // Not necessary if this module does not have a thread
-    //SC_HAS_PROCESS(At91sam9261);
 
     /** Constructor of the module
      * @param[in] name Name of the module

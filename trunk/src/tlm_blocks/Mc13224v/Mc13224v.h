@@ -10,21 +10,22 @@
 // command line parameters
 #include "Parameters.h"
 
-// necessary for system definition
+// generic blocks
 #include "AddrDec.h"
 #include "Cpu.h"
 #include "Memory.h"
-#include "Itc.h"
-#include "Crm.h"
-#include "Spif.h"
-#include "Spi.h"
-#include "Gpio.h"
-#include "Uart.h"
+// system specific blocks
+#include "Itc/Itc.h"
+#include "Crm/Crm.h"
+#include "Spif/Spif.h"
+#include "Spi/Spi.h"
+#include "Gpio/Gpio.h"
+#include "Uart/Uart.h"
 
 // necessary for dummies
 #include "tlm_utils/simple_initiator_socket.h"
 
-/// Mc13224v level plateform module
+/// Mc13224v level platform module
 struct Mc13224v : sc_core::sc_module
 {
     /// Address decoder

@@ -591,7 +591,7 @@ protected:
             result += 2;
             val <<= 2;
         }
-        if (val < (1 << 31))
+        if (val < (uint32_t)(1 << 31))
         {
             result += 1;
             val <<= 1;
@@ -848,7 +848,7 @@ protected:
     virtual void
     decode_arm(struct InsnHandler* hdlr)
     {
-        uint32_t cond, rd, rn, rm, rs, sh, val, shift, tmp, tmp2, i, op1, addr;
+        uint32_t cond, rd, rn, rm, rs, sh, val, shift, tmp, tmp2, i, op1;
         uint64_t tmp64;
 
         ARM32_TLM_DBG(2, "%s 0x%08X", __func__, this->insn);
@@ -1048,7 +1048,7 @@ protected:
         {
             if (!test_cc(cond))
             {
-                ARM32_TLM_DBG(2, "conditional execution failed 0x%02lX", cond);
+                ARM32_TLM_DBG(2, "conditional execution failed 0x%02X", cond);
                 return;
             }
         }
@@ -1276,7 +1276,7 @@ protected:
                     if (op1 == 2) {
                         // SMLAL**
                         tmp64 = this->sextl2q(tmp);
-                        tmp64 += (this->regs[rd] << 32) | this->regs[rn];
+                        tmp64 += ((uint64_t)this->regs[rd] << 32) | this->regs[rn];
                         this->regs[rn] = (uint32_t)tmp64;
                         this->regs[rd] = (uint32_t)(tmp64>>32);
                     } else {

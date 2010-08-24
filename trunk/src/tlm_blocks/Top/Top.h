@@ -10,12 +10,13 @@
 // command line parameters
 #include "Parameters.h"
 
-// necessary for system definition
-#include "Bus.h"
+// generic blocks
 #include "Cpu.h"
-#include "IntCtrl.h"
-#include "Dummy.h"
 #include "Memory.h"
+// system specific blocks
+#include "Bus/Bus.h"
+#include "IntCtrl/IntCtrl.h"
+#include "Dummy/Dummy.h"
 
 // necessary for dummy target
 #include "tlm_utils/simple_target_socket.h"
