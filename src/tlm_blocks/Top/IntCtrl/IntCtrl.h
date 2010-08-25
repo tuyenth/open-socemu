@@ -21,10 +21,10 @@ struct IntCtrl : Peripheral<REG_INTCTRL_COUNT>
 {
     /// Constructor
     IntCtrl(sc_core::sc_module_name name)
-        : Peripheral<REG_INTCTRL_COUNT>(name)
-        , int_socket("int_socket")
-        , irq_socket("irq_socket")
-        , fiq_socket("fiq_socket")
+    : Peripheral<REG_INTCTRL_COUNT>(name)
+    , int_socket("int_socket")
+    , irq_socket("irq_socket")
+    , fiq_socket("fiq_socket")
     {
         // force the default values of the FIQ transaction
         fiq_pl.set_streaming_width(4);

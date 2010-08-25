@@ -4,13 +4,18 @@
 // necessary define for processes in simple_target_socket
 #define SC_INCLUDE_DYNAMIC_PROCESSES
 
-#include "SimpleSlave.h"
+// obvious inclusion
+#include "systemc"
 
-// master socket
+// not so obvious inclusions
+#include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
 // for the helper macros
 #include "utils.h"
+
+// request the SimpleSlave
+#include "SimpleSlave.h"
 
 /// debug level
 #define SIMPLEMASTER_DEBUG_LEVEL 0
@@ -36,7 +41,7 @@ struct SimpleMaster : sc_core::sc_module
      * @param[in] name Name of the module
      */
     SimpleMaster(sc_core::sc_module_name name)
-        : master_socket("master_socket")
+    : master_socket("master_socket")
     {
         // force the default values of the BUS transaction
         master_b_pl.set_streaming_width(4);
@@ -112,6 +117,7 @@ protected:
      * @warn This can only be used for blocking accesses
      */
     tlm::tlm_generic_payload master_b_pl;
+
     /** Time object for delay to use for master blocking requests.  This is used
      * to speed up the simulation by not allocating dynamically a time object for
      * each blocking transaction.

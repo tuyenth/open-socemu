@@ -15,8 +15,8 @@ struct Smc : SimpleSlave
 {
     /// Constructor
     Smc(sc_core::sc_module_name name)
-        : SimpleSlave(name, m_reg, sizeof(m_reg))
-        , bus_s_socket("bus_s_socket")
+    : SimpleSlave(name, m_reg, sizeof(m_reg))
+    , bus_s_socket("bus_s_socket")
     {
         // initialized the register access
         reg_smc = &(m_reg[0]);

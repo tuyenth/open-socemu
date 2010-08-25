@@ -67,6 +67,9 @@ struct IntOr: SimpleMaster
         char txt[20];
         tlm_utils::simple_target_socket_tagged<IntOr>* int_s_socket;
 
+        // sanity check
+        assert(m_master_num < 32);
+
         // create the target socket dynamically
         sprintf(txt, "int_s_socket_%u", m_master_num);
         int_s_socket = new tlm_utils::simple_target_socket_tagged<IntOr>(txt);
@@ -79,6 +82,7 @@ struct IntOr: SimpleMaster
 
         // increment the number of masters
         m_master_num++;
+
     }
 
 protected:
