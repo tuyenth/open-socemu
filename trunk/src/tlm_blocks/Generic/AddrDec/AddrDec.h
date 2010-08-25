@@ -35,9 +35,9 @@ struct AddrDec : SimpleSlave
      *            window)
      */
     AddrDec(sc_core::sc_module_name name, sc_dt::uint64 mask = 0xFFFFFFFFFFFFFFFFLL)
-        : SimpleSlave(name)
-        , m_mask(mask)
-        , m_num_slaves(0)
+    : SimpleSlave(name)
+    , m_mask(mask)
+    , m_num_slaves(0)
     {
         for (uint8_t i = 0; i < N_TARGETS; i++)
         {

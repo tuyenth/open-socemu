@@ -40,10 +40,10 @@ struct SimpleSlave : sc_core::sc_module
      * @param[in] size Size in bytes of the device data
      */
     SimpleSlave(sc_core::sc_module_name name, uint32_t* data = NULL, uint32_t size = 0)
-        : slave_socket("slave_socket")
-        #if SIMPLESLAVE_DEBUG
-        , m_free(true)
-        #endif
+    : slave_socket("slave_socket")
+    #if SIMPLESLAVE_DEBUG
+    , m_free(true)
+    #endif
     {
         // register callback functions for incoming interface method calls
         slave_socket.register_b_transport(this, &SimpleSlave::slave_b_transport);

@@ -15,7 +15,7 @@ struct B2070_Cr : Peripheral<REG_CR_COUNT>
 {
     /// Constructor
     B2070_Cr(sc_core::sc_module_name name)
-        : Peripheral<REG_CR_COUNT>(name)
+    : Peripheral<REG_CR_COUNT>(name)
     {
     }
 

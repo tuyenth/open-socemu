@@ -11,11 +11,11 @@
 #include "tlm.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
-// to derive the SimpleSlave
-#include "SimpleSlave.h"
-
 // for the helper macros
 #include "utils.h"
+
+// main derived class
+#include "SimpleSlave.h"
 
 /// debug level
 #define SIMPLEMASTERSLAVE_DEBUG_LEVEL 0
@@ -46,8 +46,8 @@ struct SimpleMasterSlave : SimpleSlave
      * @param size Size in bytes of the device data
      */
     SimpleMasterSlave(sc_core::sc_module_name name, uint32_t* data, uint32_t size)
-        : SimpleSlave(name, data, size)
-        , master_socket("master_socket")
+    : SimpleSlave(name, data, size)
+    , master_socket("master_socket")
     {
         // force the default values of the BUS transaction
         master_b_pl.set_streaming_width(4);

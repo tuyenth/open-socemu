@@ -15,9 +15,9 @@ struct Aic : SimpleSlave
 {
     /// Constructor
     Aic(sc_core::sc_module_name name)
-        : SimpleSlave(name, m_reg, sizeof(m_reg))
-        , irq_m_socket("irq_m_socket")
-        , fiq_m_socket("fiq_m_socket")
+    : SimpleSlave(name, m_reg, sizeof(m_reg))
+    , irq_m_socket("irq_m_socket")
+    , fiq_m_socket("fiq_m_socket")
     {
         // force the default values of the FIQ transaction
         fiq_pl.set_streaming_width(4);

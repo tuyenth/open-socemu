@@ -34,7 +34,7 @@ struct Dummy : SimpleMasterSlave
         while (1)
         {
             // wait for an event
-            wait();
+            sc_core::wait();
         }
     }
 
