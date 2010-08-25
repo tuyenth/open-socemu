@@ -1,10 +1,10 @@
 #ifndef MEMORY_H_
 #define MEMORY_H_
 
-#include "SimpleSlave.h"
+#include "BusSlave.h"
 
 /// Generic Memory TLM module, deriving the simple slave
-struct Memory : SimpleSlave
+struct Memory : BusSlave
 {
     /** Memory class constructor
      * @param name Name of the module
@@ -12,7 +12,7 @@ struct Memory : SimpleSlave
      * @param[in] size Size of the memory module in bytes
      */
     Memory(sc_core::sc_module_name name, uint32_t* data, uint32_t size)
-    : SimpleSlave(name, data, size)
+    : BusSlave(name, data, size)
     {
     }
 
@@ -21,7 +21,7 @@ struct Memory : SimpleSlave
      * @param[in] size Size of the memory module in bytes
      */
     Memory(sc_core::sc_module_name name, uint32_t size)
-    : SimpleSlave(name, (uint32_t*)malloc(size), size)
+    : BusSlave(name, (uint32_t*)malloc(size), size)
     {
     }
 };

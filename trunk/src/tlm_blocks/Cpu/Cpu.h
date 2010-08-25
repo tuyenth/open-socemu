@@ -1,7 +1,7 @@
 #ifndef CPU_H_
 #define CPU_H_
 
-#include "SimpleMaster.h"
+#include "BusMaster.h"
 
 #include "tlm_utils/simple_target_socket.h"
 
@@ -25,7 +25,7 @@
         }                                                                               \
     } while (false)
 
-struct Cpu : SimpleMaster
+struct Cpu : BusMaster
 {
     /// Socket to receive IRQ set and clear commands
     tlm_utils::simple_target_socket<Cpu> irq_s_socket;

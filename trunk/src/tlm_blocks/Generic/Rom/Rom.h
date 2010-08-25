@@ -1,10 +1,10 @@
 #ifndef ROM_H_
 #define ROM_H_
 
-#include "SimpleSlave.h"
+#include "BusSlave.h"
 
 /// Generic Rom TLM module, deriving the simple slave
-struct Rom : SimpleSlave
+struct Rom : BusSlave
 {
     /** Rom class constructor
      * @param name Name of the module
@@ -12,7 +12,7 @@ struct Rom : SimpleSlave
      * @param[in] size Size of the memory module in bytes
      */
     Rom(sc_core::sc_module_name name, uint32_t* data, uint32_t size)
-    : SimpleSlave(name, data, size)
+    : BusSlave(name, data, size)
     {
     }
 
@@ -21,7 +21,7 @@ struct Rom : SimpleSlave
      * @param[in] size Size of the memory module in bytes
      */
     Rom(sc_core::sc_module_name name, uint32_t size)
-    : SimpleSlave(name, (uint32_t*)malloc(size), size)
+    : BusSlave(name, (uint32_t*)malloc(size), size)
     {
     }
 
@@ -31,7 +31,7 @@ struct Rom : SimpleSlave
     {
         if (likely(trans.get_command() == tlm::TLM_READ_COMMAND))
         {
-            SimpleSlave::slave_b_transport(trans, delay);
+            BusSlave::slave_b_transport(trans, delay);
         }
         else
         {

@@ -32,7 +32,7 @@ struct Top : sc_core::sc_module
     /// CPU instance
     Cpu* cpu;
     /// CPU with debugger instance
-    SimpleMaster* cpubase;
+    BusMaster* cpubase;
     /// Interrupt controller instance
     IntCtrl* intctrl;
     /// Dummy peripheral instance
