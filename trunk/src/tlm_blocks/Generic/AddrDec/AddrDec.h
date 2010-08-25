@@ -367,6 +367,15 @@ struct AddrDec : SimpleSlave
         return status;
     }
 
+    /** Bind a simple slave to the next available master socket
+     * @param[in, out] simpleslave SimpleSlave instance to bind
+     * @param[in] start Start address for which transactions are forwarded to this slave
+     * @return True if there was an error, False otherwise
+     */
+    bool bind(SimpleSlave& slave, sc_dt::uint64 start)
+    {
+        return this->bind(slave, start, start + slave.get_size());
+    }
 
     /// Array of structures containing the address ranges of the targets
     struct {

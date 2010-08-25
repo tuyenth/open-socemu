@@ -10,8 +10,7 @@ uint32_t* reg_aic;
 // using this namespace to simplify streaming
 using namespace std;
 
-/**
- * Register read function
+/** Register read function
  * @param[in] offset Offset of the register to read
  * @return The value read
  */
@@ -27,8 +26,7 @@ Aic::reg_rd(uint32_t offset)
     return m_reg[index];
 }
 
-/**
- * Register write function
+/** Register write function
  * @param[in] offset Offset of the register to read
  */
 void

@@ -109,16 +109,14 @@ struct Aic : SimpleSlave
     sc_core::sc_time irq_delay;
 
 protected:
-    /**
-     * Register read function
+    /** Register read function
      * @param[in] offset Offset of the register to read
      * @return The value read
      */
     uint32_t
     reg_rd(uint32_t offset);
 
-    /**
-     * Register write function
+    /** Register write function
      * @param[in] offset Offset of the register to read
      */
     void

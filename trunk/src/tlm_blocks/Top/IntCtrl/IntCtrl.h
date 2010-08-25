@@ -1,49 +1,9 @@
 #ifndef INTCTRL_H_
 #define INTCTRL_H_
 
-// necessary define for processes in simple_target_socket
-#define SC_INCLUDE_DYNAMIC_PROCESSES
+#include "Peripheral.h"
 
-// obvious inclusion
-#include "systemc"
-
-// not so obvious inclusions
-#include "tlm.h"
-#include "tlm_utils/simple_target_socket.h"
 #include "tlm_utils/simple_initiator_socket.h"
-
-struct IntCtrl : sc_core::sc_module
-{
-    /// Standard bus socket to read the registers
-    tlm_utils::simple_target_socket<IntCtrl> reg_socket;
-
-    /// Interrupt socket (only one interrupt source)
-    tlm_utils::simple_target_socket<IntCtrl> int_socket;
-
-    /// IRQ socket to set/clear in IRQ signal
-    tlm_utils::simple_initiator_socket<IntCtrl> irq_socket;
-
-    /// IRQ socket to set/clear in FIQ signal
-    tlm_utils::simple_initiator_socket<IntCtrl> fiq_socket;
-
-    // Not necessary if this module does not have a thread
-//    SC_HAS_PROCESS(IntCtrl);
-
-    /// Constructor
-    IntCtrl(sc_core::sc_module_name name);
-
-    // TLM-2 blocking transport method
-    virtual void int_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
-
-    // TLM-2 blocking transport method
-    virtual void reg_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
-
-    /// TLM-2 non-blocking transport method
-    virtual tlm::tlm_sync_enum reg_nb_transport_fw( tlm::tlm_generic_payload& trans,
-            tlm::tlm_phase& phase, sc_core::sc_time& delay );
-
-    /// TLM-2 debug transport method
-    virtual unsigned int reg_transport_dbg(tlm::tlm_generic_payload& trans);
 
     /// Registers definition
     enum
@@ -54,14 +14,42 @@ struct IntCtrl : sc_core::sc_module
         REG_INTCTRL_FIQST_RAW  = 3,
         REG_INTCTRL_WFI        = 4,
 
-        REG_SIZE               = 256
+        REG_INTCTRL_COUNT      = 256
     };
 
-    /// Registers content
-    uint32_t m_registers[REG_SIZE];
+struct IntCtrl : Peripheral<REG_INTCTRL_COUNT>
+{
+    /// Constructor
+    IntCtrl(sc_core::sc_module_name name)
+        : Peripheral<REG_INTCTRL_COUNT>(name)
+        , int_socket("int_socket")
+        , irq_socket("irq_socket")
+        , fiq_socket("fiq_socket")
+    {
+        // force the default values of the FIQ transaction
+        fiq_pl.set_streaming_width(4);
+        fiq_pl.set_byte_enable_ptr(0);
+        fiq_pl.set_dmi_allowed(false);
+        // force the default values of the IRQ transaction
+        irq_pl.set_streaming_width(4);
+        irq_pl.set_byte_enable_ptr(0);
+        irq_pl.set_dmi_allowed(false);
+        // Register callbacks for incoming interface method calls
+        int_socket.register_b_transport(this, &IntCtrl::int_b_transport);
+    }
 
-    /// Indicate if busy for sanity check
-    bool m_free;
+    // TLM-2 blocking transport method
+    void
+    int_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
+
+    /// Interrupt socket (only one interrupt source)
+    tlm_utils::simple_target_socket<IntCtrl> int_socket;
+
+    /// IRQ socket to set/clear in IRQ signal
+    tlm_utils::simple_initiator_socket<IntCtrl> irq_socket;
+
+    /// IRQ socket to set/clear in FIQ signal
+    tlm_utils::simple_initiator_socket<IntCtrl> fiq_socket;
 
     /// Generic payload transaction to use for interrupt requests
     tlm::tlm_generic_payload fiq_pl;
@@ -71,6 +59,20 @@ struct IntCtrl : sc_core::sc_module
     tlm::tlm_generic_payload irq_pl;
     /// Time object for delay to use for interrupt requests
     sc_core::sc_time irq_delay;
+
+protected:
+    /** Register read function
+     * @param[in] offset Offset of the register to read
+     * @return The value read
+     */
+    uint32_t
+    reg_rd(uint32_t offset);
+
+    /** Register write function
+     * @param[in] offset Offset of the register to read
+     */
+    void
+    reg_wr(uint32_t offset, uint32_t value);
 };
 
 #endif /*INTCTRL_H_*/

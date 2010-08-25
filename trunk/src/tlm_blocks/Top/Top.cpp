@@ -71,7 +71,7 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 
     intctrl = new IntCtrl("intctrl");
     // bind the init port of the BUS to the INTCTRL
-    (*(bus->init_socket[TOP_NUM_MEMORIES])).bind(intctrl->reg_socket);
+    (*(bus->init_socket[TOP_NUM_MEMORIES])).bind(*intctrl);
     intctrl->irq_socket.bind(*irq);
     intctrl->fiq_socket.bind(*fiq);
 

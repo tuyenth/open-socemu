@@ -1,5 +1,4 @@
-/**
- * @file mmu.cpp
+/** @file mmu.cpp
  *
  * MMU definition file.
  */

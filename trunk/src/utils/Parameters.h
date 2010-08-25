@@ -19,8 +19,7 @@ public:
         this->value = "";
         this->lowercase = "";
     }
-    /**
-     * Constructor of the parameter
+    /** Constructor of the parameter
      * @param[in] value Content of the parameter
      */
     Parameter(const std::string &value)
@@ -28,8 +27,7 @@ public:
         this->set_string(value);
     }
 
-    /**
-     * Set the non parsed value of the parameter content as a string
+    /** Set the non parsed value of the parameter content as a string
      * @param[in] str The new parameter value
      */
     void set_string(const std::string &value)
@@ -45,7 +43,7 @@ public:
         }
     }
 
-    /**
+    /** Get the parameter string value
      * @return The pointer to the string containing the parameter content
      */
     std::string *get_string()
@@ -53,7 +51,7 @@ public:
         return &this->value;
     }
 
-    /**
+    /** Get the parameter C string value
      * @return The C string pointer of the parameter content
      */
     const char *c_str()
@@ -61,7 +59,7 @@ public:
         return this->value.c_str();
     }
 
-    /**
+    /** Get the lowercase string value
      * @return A pointer to a lowercase copy of the parameter content
      */
     std::string *get_lowercase()
@@ -69,7 +67,7 @@ public:
         return &this->lowercase;
     }
 
-    /**
+    /** Get the boolean parameter value
      * @return The boolean value of the parameter content
      */
     bool get_bool()
@@ -87,7 +85,7 @@ public:
         return false;
     }
 
-    /**
+    /** Get the parameter integer value
      * @return The integer value of the parameter content, if not parsable, value returned is -1
      */
     int get_int()
@@ -101,7 +99,7 @@ public:
         return foo;
     }
 
-    /**
+    /** Get the pointer to the sub-parameters
      * @return The pointer to the sub-parameters of the current parameter
      */
     MSP *get_config()
@@ -109,8 +107,7 @@ public:
         return &this->config;
     }
 
-    /**
-     * Add a path in front of the parameter
+    /** Add a path in front of the parameter
      * @param[in] path String of the path to add in front of the parameter
      * @warning This is not an immediate prepend in front of the current parameter,
      * the values are checked for existing path delimiters
