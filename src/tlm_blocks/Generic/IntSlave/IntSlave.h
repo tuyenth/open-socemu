@@ -1,5 +1,5 @@
-#ifndef INTSINK_H_
-#define INTSINK_H_
+#ifndef INTSLAVE_H_
+#define INTSLAVE_H_
 
 // necessary define for processes in simple_target_socket
 #define SC_INCLUDE_DYNAMIC_PROCESSES
@@ -12,13 +12,13 @@
 #include "tlm_utils/simple_target_socket.h"
 
 template <typename MODULE>
-struct IntSink
+struct IntSlave
 {
     /** Constructor
      * @param[in] mod Pointer to the module that contains this object
      * @param[in] cb Pointer to the method of the object handling non blocking accesses
      */
-    IntSink(MODULE* mod,
+    IntSlave(MODULE* mod,
             void (MODULE::*cb)())
     : target("target")
     {
@@ -30,4 +30,4 @@ protected:
     tlm_utils::simple_target_socket<MODULE> target;
 };
 
-#endif /* INTSINK_H_ */
+#endif /* INTSLAVE_H_ */
