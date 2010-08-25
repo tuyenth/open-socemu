@@ -51,9 +51,9 @@
 <listOptionValue builtIn="false" value="../src/tlm_blocks/Cpu"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/Cpu/Arm"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Memory"/>
-<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/SimpleSlave"/>
-<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/SimpleMaster"/>
-<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/SimpleMasterSlave"/>
+<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusSlave"/>
+<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusMaster"/>
+<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusMasterSlave"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/AddrDec"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntOr"/>
 <listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Peripheral"/>
