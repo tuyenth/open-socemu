@@ -36,7 +36,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - create the memory instance
     this->rom = new Rom("rom", ROM_SIZE);
     //   - bind interface (rom is hooked to the address decoder)
-    if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR, ROM_BASE_ADDR+this->rom->get_size()))
+    if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR))
     {
         TLM_ERR("ROM address range wrong %d", 0);
         return;
@@ -46,7 +46,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - create the memory instance
     this->sram = new Memory("sram", SRAM_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
-    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, SRAM_BASE_ADDR+this->sram->get_size()))
+    if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;
@@ -56,7 +56,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - create the memory instance
     this->flash = new Rom("flash", FLASH_SIZE);
     //   - bind interface (sram is hooked to the address decoder)
-    if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR, FLASH_BASE_ADDR+this->flash->get_size()))
+    if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
         return;

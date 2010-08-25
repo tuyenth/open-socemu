@@ -50,8 +50,7 @@ struct Peripheral : SimpleSlave
     }
 
 protected:
-    /**
-     * Register read function
+    /** Register read function
      * @param[in] offset Offset of the register to read
      * @return The value read
      */
@@ -79,8 +78,7 @@ protected:
         return result;
     }
 
-    /**
-     * Register write function
+    /** Register write function
      * @param[in] offset Offset of the register to read
      */
     virtual void
