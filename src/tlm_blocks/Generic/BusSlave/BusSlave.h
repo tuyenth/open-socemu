@@ -1,5 +1,5 @@
-#ifndef SIMPLESLAVE_H_
-#define SIMPLESLAVE_H_
+#ifndef BUSSLAVE_H_
+#define BUSSLAVE_H_
 
 // necessary define for processes in simple_target_socket
 #define SC_INCLUDE_DYNAMIC_PROCESSES
@@ -18,38 +18,38 @@
 #include "utils.h"
 
 /// debug level
-#define SIMPLESLAVE_DEBUG_LEVEL 0
+#define BUSSLAVE_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
 /// @param __f format of the debug string
 /// @param ... variable arguments
-#define SIMPLESLAVE_TLM_DBG(__l, __f, ...)                                              \
+#define BUSSLAVE_TLM_DBG(__l, __f, ...)                                                 \
     do {                                                                                \
-        if (SIMPLESLAVE_DEBUG_LEVEL >= __l) {                                           \
+        if (BUSSLAVE_DEBUG_LEVEL >= __l) {                                              \
             TLM_DBG(__f, __VA_ARGS__);                                                  \
         }                                                                               \
     } while (false)
 
 /// Base class for a slave only device
-struct SimpleSlave : sc_core::sc_module
+struct BusSlave : sc_core::sc_module
 {
-    /** SimpleSlave class constructor
+    /** BusSlave class constructor
      * @param[in] name Name of the module
      * @param[in, out] data Pointer to the device data content
      * @param[in] size Size in bytes of the device data
      */
-    SimpleSlave(sc_core::sc_module_name name, uint32_t* data = NULL, uint32_t size = 0)
+    BusSlave(sc_core::sc_module_name name, uint32_t* data = NULL, uint32_t size = 0)
     : slave_socket("slave_socket")
-    #if SIMPLESLAVE_DEBUG
+    #if BUSSLAVE_DEBUG
     , m_free(true)
     #endif
     {
         // register callback functions for incoming interface method calls
-        slave_socket.register_b_transport(this, &SimpleSlave::slave_b_transport);
-        slave_socket.register_nb_transport_fw(this, &SimpleSlave::slave_nb_transport_fw);
-        slave_socket.register_get_direct_mem_ptr(this, &SimpleSlave::slave_get_direct_mem_ptr);
-        slave_socket.register_transport_dbg(this, &SimpleSlave::slave_dbg_transport);
+        slave_socket.register_b_transport(this, &BusSlave::slave_b_transport);
+        slave_socket.register_nb_transport_fw(this, &BusSlave::slave_nb_transport_fw);
+        slave_socket.register_get_direct_mem_ptr(this, &BusSlave::slave_get_direct_mem_ptr);
+        slave_socket.register_transport_dbg(this, &BusSlave::slave_dbg_transport);
 
         // set the data container
         set_data(data, size);
@@ -127,7 +127,7 @@ struct SimpleSlave : sc_core::sc_module
     /** Get the reference to the slave socket
      * @return The reference to the slave socket
      */
-    tlm_utils::simple_target_socket<SimpleSlave>&
+    tlm_utils::simple_target_socket<BusSlave>&
     socket()
     {
         return this->slave_socket;
@@ -141,7 +141,7 @@ struct SimpleSlave : sc_core::sc_module
     slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         // sanity check
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         TLM_TRANS_SANITY(trans);
         #endif
 
@@ -153,7 +153,7 @@ struct SimpleSlave : sc_core::sc_module
         uint32_t mask, shift;
 
         // sanity check
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         assert(length <= 4);
         assert(length > 0);
         assert(index < m_size/4);
@@ -185,12 +185,12 @@ struct SimpleSlave : sc_core::sc_module
         }
         shift = (addr & 3)*8;
 
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         cout << this->name() << ": b_transport received addr=0x"<< hex << trans.get_address() << " at " << sc_core::sc_time_stamp() << endl;
         #endif
 
         // mark as busy
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         m_free = false;
         #endif
 
@@ -215,7 +215,7 @@ struct SimpleSlave : sc_core::sc_module
         trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
         // mark as free
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         m_free = true;
         #endif
 
@@ -255,7 +255,7 @@ struct SimpleSlave : sc_core::sc_module
     slave_dbg_transport(tlm::tlm_generic_payload& trans)
     {
         // sanity check
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         TLM_TRANS_SANITY(trans);
         #endif
 
@@ -265,7 +265,7 @@ struct SimpleSlave : sc_core::sc_module
 
 protected:
     /// TLM-2 slave socket, defaults to 32-bits wide, base protocol
-    tlm_utils::simple_target_socket<SimpleSlave> slave_socket;
+    tlm_utils::simple_target_socket<BusSlave> slave_socket;
 
     /// Pointer to the content of the device (as words)
     uint32_t* m_data;
@@ -277,9 +277,9 @@ protected:
     double m_delay;
 
     // Indicate that device is free for a new request, used for validation
-    #if SIMPLESLAVE_DEBUG
+    #if BUSSLAVE_DEBUG
     bool m_free;
     #endif
 };
 
-#endif /*SIMPLESLAVE_H_*/
+#endif /*BUSSLAVE_H_*/

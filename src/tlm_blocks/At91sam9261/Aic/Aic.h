@@ -2,7 +2,7 @@
 #define AIC_H_
 
 // by default, this is a simple bus slave
-#include "SimpleSlave.h"
+#include "BusSlave.h"
 
 // includes also interrupt masters
 #include "tlm_utils/simple_initiator_socket.h"
@@ -11,11 +11,11 @@
 #include "reg_aic.h"
 
 /// Advanced Interrupt Controller block model
-struct Aic : SimpleSlave
+struct Aic : BusSlave
 {
     /// Constructor
     Aic(sc_core::sc_module_name name)
-    : SimpleSlave(name, m_reg, sizeof(m_reg))
+    : BusSlave(name, m_reg, sizeof(m_reg))
     , irq_m_socket("irq_m_socket")
     , fiq_m_socket("fiq_m_socket")
     {
@@ -61,12 +61,12 @@ struct Aic : SimpleSlave
         uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
 
         // sanity check
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         assert(m_free);
         #endif
 
         // mark as busy
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         m_free = false;
         #endif
 
@@ -83,7 +83,7 @@ struct Aic : SimpleSlave
         trans.set_response_status( tlm::TLM_OK_RESPONSE );
 
         // mark as free
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         m_free = true;
         #endif
 

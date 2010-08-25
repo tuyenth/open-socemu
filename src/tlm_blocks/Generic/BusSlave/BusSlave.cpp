@@ -1,4 +1,4 @@
-#include "SimpleMasterSlave.h"
+#include "BusSlave.h"
 
 // This file is empty because templated classes must be defined in header files (see
 // http://forums.techarena.in/guides-tutorials/1016232.htm).  But still, we are defining

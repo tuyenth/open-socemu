@@ -1,7 +1,7 @@
 #ifndef CPUBASE_H_
 #define CPUBASE_H_
 
-#include "SimpleMaster.h"
+#include "BusMaster.h"
 
 #include "ElfReader.h"
 #include "Parameters.h"
@@ -21,13 +21,13 @@
     } while (false)
 
 /** Base CPU class, all other CPU definition should derive from this one
- * This base class derives the SimpleMaster because a CPU is mainly a main connection to the
+ * This base class derives the BusMaster because a CPU is mainly a main connection to the
  * system bus.  But it also is a template of a GDB connection.  The GDB typename should
  * derive GdbServerNone to make sure it implements all the required methods.  If
  * GdbServerNone is used as is, then no gdb server is running.
  */
 template<typename GDB>
-struct CpuBase: SimpleMaster
+struct CpuBase: BusMaster
 {
     typedef void (CpuBase::*INSNHDLR)(void* params[]);
 
@@ -50,7 +50,7 @@ struct CpuBase: SimpleMaster
      * @param[in, out] config Parameters of the current block (and sub-blocks)
      */
     CpuBase(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
-    : SimpleMaster(name)
+    : BusMaster(name)
     , gdbserver(parameters, config)
     {
         Parameter* elffile;

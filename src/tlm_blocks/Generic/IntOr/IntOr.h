@@ -1,19 +1,19 @@
 #ifndef _INTOR_H_
 #define _INTOR_H_
 
-#include "SimpleMaster.h"
+#include "BusMaster.h"
 
 // not so obvious inclusions
 #include "tlm_utils/simple_target_socket.h"
 
 /// Class to OR several interrupts into a single one
-struct IntOr: SimpleMaster
+struct IntOr: BusMaster
 {
     /** IntOr class constructor
      * @param[in] name Name of the module
      */
     IntOr(sc_core::sc_module_name name)
-    : SimpleMaster(name)
+    : BusMaster(name)
     , m_or(0)
     , m_master_num(0)
     {

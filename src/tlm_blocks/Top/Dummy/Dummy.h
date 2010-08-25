@@ -1,7 +1,7 @@
 #ifndef DUMMY_H_
 #define DUMMY_H_
 
-#include "SimpleMasterSlave.h"
+#include "BusMasterSlave.h"
 
 /// debug level
 #define DUMMY_DEBUG_LEVEL 0
@@ -18,13 +18,13 @@
     } while (false)
 
 /// "Dummy" module with a bus slave socket and an interrupt master socket
-struct Dummy : SimpleMasterSlave
+struct Dummy : BusMasterSlave
 {
     /** Dummy default constructor
      * @param[in] name Name of the module
      */
     Dummy(sc_core::sc_module_name name)
-    : SimpleMasterSlave(name, this->m_reg, sizeof(this->m_reg))
+    : BusMasterSlave(name, this->m_reg, sizeof(this->m_reg))
     {
     }
 
@@ -56,7 +56,7 @@ struct Dummy : SimpleMasterSlave
         assert(index < REG_SIZE);
 
         // mark as busy
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         m_free = false;
         #endif
 
@@ -82,7 +82,7 @@ struct Dummy : SimpleMasterSlave
         trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
         // mark as free
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         m_free = true;
         #endif
 

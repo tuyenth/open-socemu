@@ -1,7 +1,7 @@
 #ifndef ADDRDEC_H_
 #define ADDRDEC_H_
 
-#include "SimpleSlave.h"
+#include "BusSlave.h"
 
 #include "tlm_utils/simple_initiator_socket.h"
 
@@ -24,7 +24,7 @@
  * several slaves
  */
 template<uint8_t N_TARGETS>
-struct AddrDec : SimpleSlave
+struct AddrDec : BusSlave
 {
     /// TLM-2 master socket to forward bus accesses
     tlm_utils::simple_initiator_socket_tagged<AddrDec>* bus_m_socket[N_TARGETS];
@@ -35,7 +35,7 @@ struct AddrDec : SimpleSlave
      *            window)
      */
     AddrDec(sc_core::sc_module_name name, sc_dt::uint64 mask = 0xFFFFFFFFFFFFFFFFLL)
-    : SimpleSlave(name)
+    : BusSlave(name)
     , m_mask(mask)
     , m_num_slaves(0)
     {
@@ -112,7 +112,7 @@ struct AddrDec : SimpleSlave
     virtual void slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         // sanity check
-        #if SIMPLESLAVE_DEBUG
+        #if BUSSLAVE_DEBUG
         assert(this->m_free == true);
         #endif
 
@@ -128,7 +128,7 @@ struct AddrDec : SimpleSlave
             trans.set_address(masked_address);
 
             // mark the bus as busy
-            #if SIMPLESLAVE_DEBUG
+            #if BUSSLAVE_DEBUG
             this->m_free = false;
             #endif
 
@@ -139,7 +139,7 @@ struct AddrDec : SimpleSlave
             trans.set_address(address);
 
             // mark the bus as free
-            #if SIMPLESLAVE_DEBUG
+            #if BUSSLAVE_DEBUG
             this->m_free = true;
             #endif
         }
@@ -368,11 +368,11 @@ struct AddrDec : SimpleSlave
     }
 
     /** Bind a simple slave to the next available master socket
-     * @param[in, out] simpleslave SimpleSlave instance to bind
+     * @param[in, out] simpleslave BusSlave instance to bind
      * @param[in] start Start address for which transactions are forwarded to this slave
      * @return True if there was an error, False otherwise
      */
-    bool bind(SimpleSlave& slave, sc_dt::uint64 start)
+    bool bind(BusSlave& slave, sc_dt::uint64 start)
     {
         return this->bind(slave, start, start + slave.get_size());
     }

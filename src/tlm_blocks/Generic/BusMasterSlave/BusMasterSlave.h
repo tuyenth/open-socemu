@@ -1,5 +1,5 @@
-#ifndef SIMPLEMASTER_H_
-#define SIMPLEMASTER_H_
+#ifndef BUSMASTERSLAVE_H_
+#define BUSMASTERSLAVE_H_
 
 // necessary define for processes in simple_target_socket
 #define SC_INCLUDE_DYNAMIC_PROCESSES
@@ -14,42 +14,48 @@
 // for the helper macros
 #include "utils.h"
 
-// request the SimpleSlave
-#include "SimpleSlave.h"
+// main derived class
+#include "BusSlave.h"
 
 /// debug level
-#define SIMPLEMASTER_DEBUG_LEVEL 0
+#define BUSMASTERSLAVE_DEBUG_LEVEL 0
 
 /// Macro to print debug messages
 /// @param __l level of debug message (0 means always printed)
 /// @param __f format of the debug string
 /// @param ... variable arguments
-#define SIMPLEMASTER_TLM_DBG(__l, __f, ...)                                             \
+#define BUSMASTERSLAVE_TLM_DBG(__l, __f, ...)                                           \
     do {                                                                                \
-        if (SIMPLEMASTER_DEBUG_LEVEL >= __l) {                                          \
+        if (BUSMASTERSLAVE_DEBUG_LEVEL >= __l) {                                        \
             TLM_DBG(__f, __VA_ARGS__);                                                  \
         }                                                                               \
     } while (false)
 
-/// Base class for a slave only device
-struct SimpleMaster : sc_core::sc_module
+/// Base class for a master and slave device (not using multiple inheritance for speed)
+struct BusMasterSlave : BusSlave
 {
-    // Module has a thread
-    SC_HAS_PROCESS(SimpleMaster);
+    /// TLM-2 master socket, defaults to 32-bits wide, base protocol
+    tlm_utils::simple_initiator_socket<BusMasterSlave> master_socket;
 
-    /** SimpleMaster class constructor
-     * @param[in] name Name of the module
+    // Module has a thread
+    SC_HAS_PROCESS(BusMasterSlave);
+
+    /** BusMasterSlave class constructor
+     * @param name Name of the module
+     * @param data Pointer to the device data content
+     * @param size Size in bytes of the device data
      */
-    SimpleMaster(sc_core::sc_module_name name)
-    : master_socket("master_socket")
+    BusMasterSlave(sc_core::sc_module_name name, uint32_t* data, uint32_t size)
+    : BusSlave(name, data, size)
+    , master_socket("master_socket")
     {
         // force the default values of the BUS transaction
         master_b_pl.set_streaming_width(4);
         master_b_pl.set_byte_enable_ptr(0);
         master_b_pl.set_dmi_allowed(false);
         // register callbacks for incoming interface method calls
-        master_socket.register_nb_transport_bw(this, &SimpleMaster::master_nb_transport_bw);
-        master_socket.register_invalidate_direct_mem_ptr(this, &SimpleMaster::master_invalidate_direct_mem_ptr);
+        master_socket.register_nb_transport_bw(this, &BusMasterSlave::master_nb_transport_bw);
+        master_socket.register_invalidate_direct_mem_ptr(this, &BusMasterSlave::master_invalidate_direct_mem_ptr);
 
         // create the module thread
         SC_THREAD(thread_process);
@@ -59,8 +65,7 @@ struct SimpleMaster : sc_core::sc_module
     virtual void
     thread_process()
     {
-        // wait forever
-        sc_core::wait();
+        // by default, wait forever
     }
 
     /** slave_socket non-blocking forward transport method (default behavior, can be overridden)
@@ -91,33 +96,19 @@ struct SimpleMaster : sc_core::sc_module
      * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
      */
     void
-    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>& slave_socket)
+    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave_socket)
     {
         // hook the slave socket
-        this->master_socket.bind(slave_socket);
-    }
-
-    /** Bind a slave element to the local master socket
-     * @param[in, out] slave SimpleSlave inherited instance
-     */
-    void
-    bind(SimpleSlave& slave)
-    {
-        // hook the slave socket
-        this->master_socket.bind(slave);
+        this->master_socket.bind(*slave_socket);
     }
 
 protected:
-    /// TLM-2 master socket, defaults to 32-bits wide, base protocol
-    tlm_utils::simple_initiator_socket<SimpleMaster> master_socket;
-
     /** Generic payload transaction to use for master blocking requests.  This is used
      * to speed up the simulation by not allocating dynamically a payload for
      * each blocking transaction.
-     * @warn This can only be used for blocking accesses
+     * @warn This prevents can only be used for blocking accesses
      */
     tlm::tlm_generic_payload master_b_pl;
-
     /** Time object for delay to use for master blocking requests.  This is used
      * to speed up the simulation by not allocating dynamically a time object for
      * each blocking transaction.
@@ -126,4 +117,4 @@ protected:
     sc_core::sc_time master_b_delay;
 };
 
-#endif /*SIMPLEMASTER_H_*/
+#endif /*BUSMASTERSLAVE_H_*/
