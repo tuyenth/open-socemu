@@ -61,6 +61,30 @@ struct BusMasterSlave : BusSlave
         SC_THREAD(thread_process);
     }
 
+    /** Bind a slave socket to the local master socket
+     * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
+     */
+    void
+    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave_socket)
+    {
+        // hook the slave socket
+        this->master_socket.bind(*slave_socket);
+    }
+
+protected:
+    /** Generic payload transaction to use for master blocking requests.  This is used
+     * to speed up the simulation by not allocating dynamically a payload for
+     * each blocking transaction.
+     * @warn This prevents can only be used for blocking accesses
+     */
+    tlm::tlm_generic_payload master_b_pl;
+    /** Time object for delay to use for master blocking requests.  This is used
+     * to speed up the simulation by not allocating dynamically a time object for
+     * each blocking transaction.
+     * @warn This can only be used for blocking accesses
+     */
+    sc_core::sc_time master_b_delay;
+
     /// Main module thread
     virtual void
     thread_process()
@@ -92,29 +116,6 @@ struct BusMasterSlave : BusSlave
         SC_REPORT_FATAL("TLM-2", "DMI not implemented");
     }
 
-    /** Bind a slave socket to the local master socket
-     * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
-     */
-    void
-    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave_socket)
-    {
-        // hook the slave socket
-        this->master_socket.bind(*slave_socket);
-    }
-
-protected:
-    /** Generic payload transaction to use for master blocking requests.  This is used
-     * to speed up the simulation by not allocating dynamically a payload for
-     * each blocking transaction.
-     * @warn This prevents can only be used for blocking accesses
-     */
-    tlm::tlm_generic_payload master_b_pl;
-    /** Time object for delay to use for master blocking requests.  This is used
-     * to speed up the simulation by not allocating dynamically a time object for
-     * each blocking transaction.
-     * @warn This can only be used for blocking accesses
-     */
-    sc_core::sc_time master_b_delay;
 };
 
 #endif /*BUSMASTERSLAVE_H_*/

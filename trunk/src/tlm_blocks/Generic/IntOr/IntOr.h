@@ -24,7 +24,8 @@ struct IntOr: BusMaster
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @param[in, out] delay Time object, allocated by initiator, filled here
      */
-    virtual void int_s_b_transport(int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
+    void
+    int_s_b_transport(int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         // sanity check
         assert(id < m_master_num);
@@ -62,7 +63,8 @@ struct IntOr: BusMaster
     /** Add a new master socket to OR in the output master_socket of the IntOr
      * @param[in, out] master_socket TLM-2 master socket to OR with other master sockets
      */
-    void add(tlm::tlm_initiator_socket<32, tlm::tlm_base_protocol_types>* master_socket)
+    void
+    add(tlm::tlm_initiator_socket<32, tlm::tlm_base_protocol_types>* master_socket)
     {
         char txt[20];
         tlm_utils::simple_target_socket_tagged<IntOr>* int_s_socket;
@@ -82,7 +84,6 @@ struct IntOr: BusMaster
 
         // increment the number of masters
         m_master_num++;
-
     }
 
 protected:

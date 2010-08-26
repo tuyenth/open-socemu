@@ -17,10 +17,28 @@ struct IntMaster
     /// Constructor
     IntMaster()
     {
+        // force the default values of the BUS transaction
+        master_b_pl.set_streaming_width(4);
+        master_b_pl.set_byte_enable_ptr(0);
+        master_b_pl.set_dmi_allowed(false);
+        // register callbacks for incoming interface method calls
+        master_socket.register_nb_transport_bw(this, &IntMaster::master_nb_transport_bw);
+        master_socket.register_invalidate_direct_mem_ptr(this, &IntMaster::master_invalidate_direct_mem_ptr);
+    }
+
+    /// Assert the interrupt
+    void
+    set()
+    {
 
     }
 
+    /// De-assert the interrupt
+    void
+    clear()
+    {
 
+    }
 
 protected:
     /// TLM-2 master socket, defaults to 32-bits wide, base protocol
@@ -39,6 +57,30 @@ protected:
      * @warn This can only be used for blocking accesses
      */
     sc_core::sc_time master_b_delay;
+
+    /** slave_socket non-blocking forward transport method (default behavior, can be overridden)
+     * @param[in, out] trans Transaction payload object, allocated here, filled by target
+     * @param[in, out] phase Phase payload object, allocated here
+     * @param[in, out] delay Time object, allocated here, filled by target
+     */
+    tlm::tlm_sync_enum
+    master_nb_transport_bw(tlm::tlm_generic_payload& trans,
+                          tlm::tlm_phase& phase, sc_core::sc_time& delay)
+    {
+        SC_REPORT_FATAL("TLM-2", "Non blocking not implemented");
+        return tlm::TLM_COMPLETED;
+    }
+
+    /** master_socket tagged non-blocking forward transport method
+     * @param[in] start_range Start address of the memory invalidate command
+     * @param[in] end_range End address of the memory invalidate command
+     */
+    void
+    master_invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
+                                        sc_dt::uint64 end_range)
+    {
+        SC_REPORT_FATAL("TLM-2", "DMI not implemented");
+    }
 };
 
 #endif /* INTMASTER_H_ */

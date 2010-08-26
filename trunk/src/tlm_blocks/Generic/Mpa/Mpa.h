@@ -31,13 +31,11 @@ struct Mpa : sc_core::sc_module
     /// TLM-2 master socket to forward bus accesses
     tlm_utils::simple_initiator_socket<Mpa> bus_m_socket;
 
-    // Not necessary if this module does not have a thread
-    // SC_HAS_PROCESS(Mpa);
-
     /// Mpa constructor
-    Mpa(sc_core::sc_module_name name): bus_m_socket("bus_m_socket")
-        , m_one_pending(false)
-        , m_free(true)
+    Mpa(sc_core::sc_module_name name)
+    : bus_m_socket("bus_m_socket")
+    , m_one_pending(false)
+    , m_free(true)
     {
         // initialize all the master interfaces
         for (int i = 0; i < N_MASTERS; i++)
@@ -46,22 +44,20 @@ struct Mpa : sc_core::sc_module
             sprintf(txt, "bus_s_socket_%d", i);
             bus_s_socket[i] = new tlm_utils::simple_target_socket_tagged<Mpa>(txt);
 
-            bus_s_socket[i]->register_nb_transport_fw(   this, &Mpa::bus_s_nb_transport_fw, i);
-            bus_s_socket[i]->register_b_transport(       this, &Mpa::bus_s_b_transport, i);
+            bus_s_socket[i]->register_nb_transport_fw(this, &Mpa::bus_s_nb_transport_fw, i);
+            bus_s_socket[i]->register_b_transport(this, &Mpa::bus_s_b_transport, i);
             bus_s_socket[i]->register_get_direct_mem_ptr(this, &Mpa::bus_s_get_direct_mem_ptr, i);
-            bus_s_socket[i]->register_transport_dbg(     this, &Mpa::bus_s_transport_dbg, i);
+            bus_s_socket[i]->register_transport_dbg(this, &Mpa::bus_s_transport_dbg, i);
 
             // set the initiator as unused
             m_pending[i].is_pending = false;
         }
-
-//        SC_THREAD(thread_process);
     }
 
-
     /// Tagged non-blocking transport forward method
-    virtual tlm::tlm_sync_enum bus_s_nb_transport_fw(int id,
-            tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_core::sc_time& delay)
+    tlm::tlm_sync_enum
+    bus_s_nb_transport_fw(int id, tlm::tlm_generic_payload& trans,
+            tlm::tlm_phase& phase, sc_core::sc_time& delay)
     {
         SC_REPORT_FATAL("TLM-2", "Non blocking not yet implemented");
 
@@ -70,8 +66,8 @@ struct Mpa : sc_core::sc_module
 
 
     /// Tagged TLM-2 blocking transport method
-    virtual void bus_s_b_transport(int id,
-            tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+    void
+    bus_s_b_transport(int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         // sanity check
         assert(id < N_MASTERS);
@@ -130,8 +126,9 @@ struct Mpa : sc_core::sc_module
     }
 
     /// Tagged TLM-2 forward DMI method
-    virtual bool bus_s_get_direct_mem_ptr(int id,
-            tlm::tlm_generic_payload& trans, tlm::tlm_dmi& dmi_data)
+    bool
+    bus_s_get_direct_mem_ptr(int id, tlm::tlm_generic_payload& trans,
+            tlm::tlm_dmi& dmi_data)
     {
         // sanity check
         assert(id < N_MASTERS);
@@ -141,8 +138,8 @@ struct Mpa : sc_core::sc_module
     }
 
     /// Tagged debug transaction method
-    virtual unsigned int bus_s_transport_dbg(int id,
-            tlm::tlm_generic_payload& trans)
+    virtual unsigned int
+    bus_s_transport_dbg(int id, tlm::tlm_generic_payload& trans)
     {
         // sanity check
         assert(id < N_MASTERS);
@@ -151,12 +148,14 @@ struct Mpa : sc_core::sc_module
         return bus_m_socket->transport_dbg(trans);
     }
 
-    void bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave)
+    void
+    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave)
     {
         // hook the slave socket
         bus_m_socket.bind(*slave);
     }
 
+private:
     /// Array of structures containing the pending requests description
     struct {
         /// Indicate that initiator is pending
