@@ -40,12 +40,12 @@ struct Smc : BusSlave
         uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
 
         // sanity check
-        #if BUSSLAVE_DEBUG
+        #if BUSSLAVE_DEBUG_LEVEL
         assert(m_free);
         #endif
 
         // mark as busy
-        #if BUSSLAVE_DEBUG
+        #if BUSSLAVE_DEBUG_LEVEL
         m_free = false;
         #endif
 
@@ -62,7 +62,7 @@ struct Smc : BusSlave
         trans.set_response_status( tlm::TLM_OK_RESPONSE );
 
         // mark as free
-        #if BUSSLAVE_DEBUG
+        #if BUSSLAVE_DEBUG_LEVEL
         m_free = true;
         #endif
 

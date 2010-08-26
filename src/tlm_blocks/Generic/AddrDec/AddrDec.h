@@ -112,7 +112,7 @@ struct AddrDec : BusSlave
     virtual void slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         // sanity check
-        #if BUSSLAVE_DEBUG
+        #if BUSSLAVE_DEBUG_LEVEL
         assert(this->m_free == true);
         #endif
 
@@ -128,7 +128,7 @@ struct AddrDec : BusSlave
             trans.set_address(masked_address);
 
             // mark the bus as busy
-            #if BUSSLAVE_DEBUG
+            #if BUSSLAVE_DEBUG_LEVEL
             this->m_free = false;
             #endif
 
@@ -139,7 +139,7 @@ struct AddrDec : BusSlave
             trans.set_address(address);
 
             // mark the bus as free
-            #if BUSSLAVE_DEBUG
+            #if BUSSLAVE_DEBUG_LEVEL
             this->m_free = true;
             #endif
         }

@@ -41,7 +41,7 @@ struct BusSlave : sc_core::sc_module
      */
     BusSlave(sc_core::sc_module_name name, uint32_t* data = NULL, uint32_t size = 0)
     : slave_socket("slave_socket")
-    #if BUSSLAVE_DEBUG
+    #if BUSSLAVE_DEBUG_LEVEL
     , m_free(true)
     #endif
     {
@@ -141,9 +141,7 @@ struct BusSlave : sc_core::sc_module
     slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         // sanity check
-        #if BUSSLAVE_DEBUG
         TLM_TRANS_SANITY(trans);
-        #endif
 
         // retrieve the required parameters
         uint32_t length = trans.get_data_length();
@@ -153,10 +151,10 @@ struct BusSlave : sc_core::sc_module
         uint32_t mask, shift;
 
         // sanity check
-        #if BUSSLAVE_DEBUG
         assert(length <= 4);
         assert(length > 0);
         assert(index < m_size/4);
+        #if BUSSLAVE_DEBUG_LEVEL
         assert(m_free);
         #endif
 
@@ -185,12 +183,10 @@ struct BusSlave : sc_core::sc_module
         }
         shift = (addr & 3)*8;
 
-        #if BUSSLAVE_DEBUG
-        cout << this->name() << ": b_transport received addr=0x"<< hex << trans.get_address() << " at " << sc_core::sc_time_stamp() << endl;
-        #endif
+        BUSSLAVE_TLM_DBG(1, ": b_transport received addr=0x%08llX", trans.get_address());
 
         // mark as busy
-        #if BUSSLAVE_DEBUG
+        #if BUSSLAVE_DEBUG_LEVEL
         m_free = false;
         #endif
 
@@ -215,7 +211,7 @@ struct BusSlave : sc_core::sc_module
         trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
         // mark as free
-        #if BUSSLAVE_DEBUG
+        #if BUSSLAVE_DEBUG_LEVEL
         m_free = true;
         #endif
 
@@ -240,8 +236,9 @@ struct BusSlave : sc_core::sc_module
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @param[in, out] dmi_data Direct Memory Interface object
      */
-    virtual bool slave_get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
-            tlm::tlm_dmi& dmi_data)
+    virtual bool
+    slave_get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
+                             tlm::tlm_dmi& dmi_data)
     {
         SC_REPORT_FATAL("TLM-2", "DMI not implemented");
         return false;
@@ -255,9 +252,7 @@ struct BusSlave : sc_core::sc_module
     slave_dbg_transport(tlm::tlm_generic_payload& trans)
     {
         // sanity check
-        #if BUSSLAVE_DEBUG
         TLM_TRANS_SANITY(trans);
-        #endif
 
         // execute the debug command
         TLM_DBG_EXEC(trans, this->m_data, this->m_size);
@@ -277,7 +272,7 @@ protected:
     double m_delay;
 
     // Indicate that device is free for a new request, used for validation
-    #if BUSSLAVE_DEBUG
+    #if BUSSLAVE_DEBUG_LEVEL
     bool m_free;
     #endif
 };
