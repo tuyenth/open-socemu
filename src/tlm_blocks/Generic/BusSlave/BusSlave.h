@@ -133,6 +133,24 @@ struct BusSlave : sc_core::sc_module
         return this->slave_socket;
     }
 
+protected:
+    /// TLM-2 slave socket, defaults to 32-bits wide, base protocol
+    tlm_utils::simple_target_socket<BusSlave> slave_socket;
+
+    /// Pointer to the content of the device (as words)
+    uint32_t* m_data;
+
+    /// Size of the data of the device
+    uint32_t m_size;
+
+    /// Internal delay for each operation
+    double m_delay;
+
+    // Indicate that device is free for a new request, used for validation
+    #if BUSSLAVE_DEBUG_LEVEL
+    bool m_free;
+    #endif
+
     /** slave_socket blocking transport method (default behavior, can be overridden)
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @param[in, out] delay Time object, allocated by initiator, filled here
@@ -257,24 +275,6 @@ struct BusSlave : sc_core::sc_module
         // execute the debug command
         TLM_DBG_EXEC(trans, this->m_data, this->m_size);
     }
-
-protected:
-    /// TLM-2 slave socket, defaults to 32-bits wide, base protocol
-    tlm_utils::simple_target_socket<BusSlave> slave_socket;
-
-    /// Pointer to the content of the device (as words)
-    uint32_t* m_data;
-
-    /// Size of the data of the device
-    uint32_t m_size;
-
-    /// Internal delay for each operation
-    double m_delay;
-
-    // Indicate that device is free for a new request, used for validation
-    #if BUSSLAVE_DEBUG_LEVEL
-    bool m_free;
-    #endif
 };
 
 #endif /*BUSSLAVE_H_*/

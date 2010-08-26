@@ -26,9 +26,6 @@
 template<uint8_t N_TARGETS>
 struct AddrDec : BusSlave
 {
-    /// TLM-2 master socket to forward bus accesses
-    tlm_utils::simple_initiator_socket_tagged<AddrDec>* bus_m_socket[N_TARGETS];
-
     /** AddrDec constructor
      * @param[in] name Name of the module
      * @param[in] mask Mask of the address decoding (used to alias slaves on a specific
@@ -61,7 +58,8 @@ struct AddrDec : BusSlave
      * @param[in] end Decoding end address (exclusive, first address not to be decoded)
      * @return true if there was an error, false otherwise
      */
-    bool set_range(uint8_t id, sc_dt::uint64 start, sc_dt::uint64 end)
+    bool
+    set_range(uint8_t id, sc_dt::uint64 start, sc_dt::uint64 end)
     {
         uint8_t i;
 
@@ -105,11 +103,69 @@ struct AddrDec : BusSlave
         return false;
     }
 
+    /** Bind a slave socket to the next available master socket
+     * @param[in, out] slave Slave socket to bind
+     * @param[in] start Start address for which transactions are forwarded to this slave
+     * @param[in] end First address after start for which transactions are NOT forward to this slave
+     * @return True if there was an error, False otherwise
+     */
+    bool
+    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>& slave,
+         sc_dt::uint64 start, sc_dt::uint64 end)
+    {
+        bool status;
+
+        // sanity check
+        assert(m_num_slaves < N_TARGETS);
+
+        // hook the slave socket
+        bus_m_socket[m_num_slaves]->bind(slave);
+
+        // add the range specification
+        status = this->set_range(m_num_slaves, start, end);
+
+        // increment the index
+        m_num_slaves++;
+
+        return status;
+    }
+
+    /** Bind a simple slave to the next available master socket
+     * @param[in, out] simpleslave BusSlave instance to bind
+     * @param[in] start Start address for which transactions are forwarded to this slave
+     * @return True if there was an error, False otherwise
+     */
+    bool
+    bind(BusSlave& slave, sc_dt::uint64 start)
+    {
+        return this->bind(slave, start, start + slave.get_size());
+    }
+
+protected:
+    /// TLM-2 master socket to forward bus accesses
+    tlm_utils::simple_initiator_socket_tagged<AddrDec>* bus_m_socket[N_TARGETS];
+
+    /// Array of structures containing the address ranges of the targets
+    struct {
+        /// Start address of the range (included in range)
+        sc_dt::uint64 start;
+        /// End address of the range (not included in range)
+        sc_dt::uint64 end;
+    } m_bus_m_range[N_TARGETS];
+
+    /// Decoder global address mask
+    sc_dt::uint64 m_mask;
+
+    /// Number of slave socket connections (equals number of internal master sockets)
+    int m_num_slaves;
+
+private:
     /** slave_socket blocking transport method
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @param[in, out] delay Time object, allocated by initiator, filled here
      */
-    virtual void slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
+    void
+    slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         // sanity check
         #if BUSSLAVE_DEBUG_LEVEL
@@ -154,8 +210,9 @@ struct AddrDec : BusSlave
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @param[in, out] dmi_data Direct Memory Interface object
      */
-    virtual bool slave_get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
-            tlm::tlm_dmi& dmi_data)
+    bool
+    slave_get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
+                             tlm::tlm_dmi& dmi_data)
     {
         sc_dt::uint64 address = trans.get_address();
         sc_dt::uint64 masked_address;
@@ -182,7 +239,8 @@ struct AddrDec : BusSlave
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @return The number of bytes read or written
      */
-    virtual unsigned int slave_dbg_transport(tlm::tlm_generic_payload& trans)
+    unsigned int
+    slave_dbg_transport(tlm::tlm_generic_payload& trans)
     {
         sc_dt::uint64 init_addr = trans.get_address();
         sc_dt::uint64 curr_addr = init_addr & m_mask;
@@ -240,8 +298,9 @@ struct AddrDec : BusSlave
      * @param[in, out] phase Phase payload object, allocated here
      * @param[in, out] delay Time object, allocated here, filled by target
      */
-    virtual tlm::tlm_sync_enum bus_m_nb_transport_bw(int id,
-            tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_core::sc_time& delay)
+    tlm::tlm_sync_enum
+    bus_m_nb_transport_bw(int id, tlm::tlm_generic_payload& trans,
+                          tlm::tlm_phase& phase, sc_core::sc_time& delay)
     {
         SC_REPORT_FATAL("TLM-2", "Non blocking not yet implemented");
         // sanity check
@@ -256,9 +315,9 @@ struct AddrDec : BusSlave
      * @param[in] start_range Start address of the memory invalidate command
      * @param[in] end_range End address of the memory invalidate command
      */
-    virtual void bus_m_invalidate_direct_mem_ptr(int id,
-            sc_dt::uint64 start_range,
-            sc_dt::uint64 end_range)
+    void
+    bus_m_invalidate_direct_mem_ptr(int id, sc_dt::uint64 start_range,
+                                    sc_dt::uint64 end_range)
     {
         // Reconstruct address range in system memory map
         sc_dt::uint64 bw_start_range = compose_address(id, start_range);
@@ -275,7 +334,8 @@ struct AddrDec : BusSlave
      * @param masked_address Masked address within the target range
      * @return The target index or beyond maximum index if not correct
      */
-    inline uint8_t decode_address(sc_dt::uint64 address, sc_dt::uint64& masked_address)
+    inline uint8_t
+    decode_address(sc_dt::uint64 address, sc_dt::uint64& masked_address)
     {
         uint8_t i;
         for (i = 0; i < N_TARGETS; i++)
@@ -301,7 +361,8 @@ struct AddrDec : BusSlave
      *                 address is greater than last supported target)
      * @return The found target index or beyond maximum index if not found
      */
-    inline uint8_t find_target(sc_dt::uint64 address, sc_dt::uint64& masked_address, uint32_t& len)
+    inline uint8_t
+    find_target(sc_dt::uint64 address, sc_dt::uint64& masked_address, uint32_t& len)
     {
         uint8_t i;
         uint32_t length_to_next = 0xFFFFFFFF;
@@ -336,61 +397,11 @@ struct AddrDec : BusSlave
      * @param[in] address Target address
      * @return The initiator's point of view address
      */
-    inline sc_dt::uint64 compose_address(uint8_t target_nr, sc_dt::uint64 address)
+    inline sc_dt::uint64
+    compose_address(uint8_t target_nr, sc_dt::uint64 address)
     {
         return address + m_bus_m_range[target_nr].start;
     }
-
-    /** Bind a slave socket to the next available master socket
-     * @param[in, out] slave Slave socket to bind
-     * @param[in] start Start address for which transactions are forwarded to this slave
-     * @param[in] end First address after start for which transactions are NOT forward to this slave
-     * @return True if there was an error, False otherwise
-     */
-    bool bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>& slave,
-            sc_dt::uint64 start, sc_dt::uint64 end)
-    {
-        bool status;
-
-        // sanity check
-        assert(m_num_slaves < N_TARGETS);
-
-        // hook the slave socket
-        bus_m_socket[m_num_slaves]->bind(slave);
-
-        // add the range specification
-        status = this->set_range(m_num_slaves, start, end);
-
-        // increment the index
-        m_num_slaves++;
-
-        return status;
-    }
-
-    /** Bind a simple slave to the next available master socket
-     * @param[in, out] simpleslave BusSlave instance to bind
-     * @param[in] start Start address for which transactions are forwarded to this slave
-     * @return True if there was an error, False otherwise
-     */
-    bool bind(BusSlave& slave, sc_dt::uint64 start)
-    {
-        return this->bind(slave, start, start + slave.get_size());
-    }
-
-    /// Array of structures containing the address ranges of the targets
-    struct {
-        /// Start address of the range (included in range)
-        sc_dt::uint64 start;
-        /// End address of the range (not included in range)
-        sc_dt::uint64 end;
-    } m_bus_m_range[N_TARGETS];
-
-    /// Decoder global address mask
-    sc_dt::uint64 m_mask;
-
-    /// Number of slave socket connections (equals number of internal master sockets)
-    int m_num_slaves;
-
 };
 
 

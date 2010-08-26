@@ -63,30 +63,6 @@ struct BusMaster : sc_core::sc_module
         sc_core::wait();
     }
 
-    /** slave_socket non-blocking forward transport method (default behavior, can be overridden)
-     * @param[in, out] trans Transaction payload object, allocated here, filled by target
-     * @param[in, out] phase Phase payload object, allocated here
-     * @param[in, out] delay Time object, allocated here, filled by target
-     */
-    virtual tlm::tlm_sync_enum
-    master_nb_transport_bw(tlm::tlm_generic_payload& trans,
-                          tlm::tlm_phase& phase, sc_core::sc_time& delay)
-    {
-        SC_REPORT_FATAL("TLM-2", "Non blocking not implemented");
-        return tlm::TLM_COMPLETED;
-    }
-
-    /** master_socket tagged non-blocking forward transport method
-     * @param[in] start_range Start address of the memory invalidate command
-     * @param[in] end_range End address of the memory invalidate command
-     */
-    virtual void
-    master_invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
-                                        sc_dt::uint64 end_range)
-    {
-        SC_REPORT_FATAL("TLM-2", "DMI not implemented");
-    }
-
     /** Bind a slave socket to the local master socket
      * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
      */
@@ -124,6 +100,31 @@ protected:
      * @warn This can only be used for blocking accesses
      */
     sc_core::sc_time master_b_delay;
+
+    /** slave_socket non-blocking forward transport method (default behavior, can be overridden)
+     * @param[in, out] trans Transaction payload object, allocated here, filled by target
+     * @param[in, out] phase Phase payload object, allocated here
+     * @param[in, out] delay Time object, allocated here, filled by target
+     */
+    virtual tlm::tlm_sync_enum
+    master_nb_transport_bw(tlm::tlm_generic_payload& trans,
+                          tlm::tlm_phase& phase, sc_core::sc_time& delay)
+    {
+        SC_REPORT_FATAL("TLM-2", "Non blocking not implemented");
+        return tlm::TLM_COMPLETED;
+    }
+
+    /** master_socket tagged non-blocking forward transport method
+     * @param[in] start_range Start address of the memory invalidate command
+     * @param[in] end_range End address of the memory invalidate command
+     */
+    virtual void
+    master_invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
+                                        sc_dt::uint64 end_range)
+    {
+        SC_REPORT_FATAL("TLM-2", "DMI not implemented");
+    }
+
 };
 
 #endif /*BUSMASTER_H_*/

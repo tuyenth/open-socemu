@@ -32,17 +32,17 @@ struct IntSlave
 {
     /** Constructor
      * @param[in] mod Pointer to the module that contains this object
-     * @param[in] assert_cb Pointer to the method of the object handling interrupt assertion
-     * @param[in] deassert_cb Pointer to the method of the object handling interrupt deassertion
+     * @param[in] set_cb Pointer to the method of the object handling interrupt assertion
+     * @param[in] clear_cb Pointer to the method of the object handling interrupt deassertion
      * @param[in] opaque Opaque pointer passed to the methods when invoked
      */
     IntSlave(MODULE* mod,
-             void (MODULE::*assert_cb)(void*),
-             void (MODULE::*deassert_cb)(void*),
+             void (MODULE::*set_cb)(void*),
+             void (MODULE::*clear_cb)(void*),
              void* opaque)
     : slave_socket("int_slave")
-    , assert_cb(assert_cb)
-    , deassert_cb(deassert_cb)
+    , set_cb(set_cb)
+    , clear_cb(clear_cb)
     , opaque(opaque)
     , state(false)
     {
@@ -52,6 +52,42 @@ struct IntSlave
         slave_socket.register_get_direct_mem_ptr(this, &IntSlave::slave_get_direct_mem_ptr);
         slave_socket.register_transport_dbg(this, &IntSlave::slave_dbg_transport);
     }
+
+    /** Operator & to return the reference to the slave socket
+     * @return The reference to the slave socket
+     */
+    operator tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types> & ()
+    {
+        return this->slave_socket;
+    }
+
+    /** Get the current interrupt state
+     * @return True if interrupt is set, false otherwise
+     */
+    bool
+    get_state()
+    {
+        return this->state;
+    }
+
+protected:
+    /// TLM-2 slave socket, defaults to 32-bits wide, base protocol
+    tlm_utils::simple_target_socket<IntSlave> slave_socket;
+
+    /// Pointer to the owner instance of the interrupt slave
+    MODULE* owner;
+
+    /// Pointer to the class of the owner handling interrupt assertion
+    void (MODULE::*set_cb)(void*);
+
+    /// Pointer to the class of the owner handling interrupt deassertion
+    void (MODULE::*clear_cb)(void*);
+
+    /// Opaque parameter of the owner methods
+    void* opaque;
+
+    /// Current state
+    bool state;
 
     /** slave_socket blocking transport method (default behavior, can be overridden)
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
@@ -69,12 +105,12 @@ struct IntSlave
         if (*ptr)
         {
             this->state = true;
-            this->owner->*this->assert_cb(this->opaque);
+            this->owner->*this->set_cb(this->opaque);
         }
         else
         {
             this->state = false;
-            this->owner->*this->deassert_cb(this->opaque);
+            this->owner->*this->clear_cb(this->opaque);
         }
     }
 
@@ -96,7 +132,7 @@ struct IntSlave
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @param[in, out] dmi_data Direct Memory Interface object
      */
-    virtual bool
+    bool
     slave_get_direct_mem_ptr(tlm::tlm_generic_payload& trans,
                              tlm::tlm_dmi& dmi_data)
     {
@@ -108,40 +144,12 @@ struct IntSlave
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @return The number of bytes read or written
      */
-    virtual unsigned int
+    unsigned int
     slave_dbg_transport(tlm::tlm_generic_payload& trans)
     {
         SC_REPORT_FATAL("TLM-2", "DBG not implemented");
         return false;
     }
-
-    /** Get the current interrupt state
-     * @return True if interrupt is set, false otherwise
-     */
-    bool
-    get_state()
-    {
-        return this->state;
-    }
-
-protected:
-    /// TLM-2 slave socket, defaults to 32-bits wide, base protocol
-    tlm_utils::simple_target_socket<IntSlave> slave_socket;
-
-    /// Pointer to the owner instance of the interrupt slave
-    MODULE* owner;
-
-    /// Pointer to the class of the owner handling interrupt assertion
-    void (MODULE::*assert_cb)(void*);
-
-    /// Pointer to the class of the owner handling interrupt deassertion
-    void (MODULE::*deassert_cb)(void*);
-
-    /// Opaque parameter of the owner methods
-    void* opaque;
-
-    /// Current state
-    bool state;
 };
 
 #endif /* INTSLAVE_H_ */
