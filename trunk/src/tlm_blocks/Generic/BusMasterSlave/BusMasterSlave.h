@@ -75,7 +75,7 @@ struct BusMasterSlave : BusSlave
      */
     virtual tlm::tlm_sync_enum
     master_nb_transport_bw(tlm::tlm_generic_payload& trans,
-                          tlm::tlm_phase& phase, sc_core::sc_time& delay)
+                           tlm::tlm_phase& phase, sc_core::sc_time& delay)
     {
         SC_REPORT_FATAL("TLM-2", "Non blocking not implemented");
         return tlm::TLM_COMPLETED;
@@ -87,7 +87,7 @@ struct BusMasterSlave : BusSlave
      */
     virtual void
     master_invalidate_direct_mem_ptr(sc_dt::uint64 start_range,
-                                        sc_dt::uint64 end_range)
+                                     sc_dt::uint64 end_range)
     {
         SC_REPORT_FATAL("TLM-2", "DMI not implemented");
     }

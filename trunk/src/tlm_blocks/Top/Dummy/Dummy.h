@@ -56,7 +56,7 @@ struct Dummy : BusMasterSlave
         assert(index < REG_SIZE);
 
         // mark as busy
-        #if BUSSLAVE_DEBUG
+        #if BUSSLAVE_DEBUG_LEVEL
         m_free = false;
         #endif
 
@@ -82,7 +82,7 @@ struct Dummy : BusMasterSlave
         trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
         // mark as free
-        #if BUSSLAVE_DEBUG
+        #if BUSSLAVE_DEBUG_LEVEL
         m_free = true;
         #endif
 

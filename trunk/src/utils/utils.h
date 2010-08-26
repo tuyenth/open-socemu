@@ -185,62 +185,6 @@ do {                                                                        \
     if (UTILS_DEBUG_LEVEL > 0)                                              \
         TLM_DBG("read byte @0x%08X = 0x%X", (uint32_t)__a, (uint32_t)__d)
 
-/// Macro to make an unknown size copy from APP buffer to EMB buffer
-/// @param[in] __s socket for the EMB access
-/// @param[in] __t transaction object to use to perform access
-/// @param[in] __y time object to use to indicate delay
-/// @param[in] __a pointer to the APP buffer
-/// @param[in] __e next address in the EMB buffer
-/// @param[in] __r remaining bytes to copy
-/// @param[out] __n number of bytes copied
-#define TLM_B_A2E_COPY(__s, __t, __y, __a, __e, __r, __n)                   \
-    do {                                                                    \
-        uint32_t __d;                                                       \
-        __d = *((uint32_t*)(__a));                                          \
-        if ((((__e) & 3) == 0) && ((__r) >= 4)) {                           \
-            (__n) = 4;                                                      \
-            TLM_B_WR_WORD((__s), (__t), (__y), (__e), __d);                 \
-        }                                                                   \
-        else if ((((__e) & 1) == 0) && ((__r) >= 2)) {                      \
-            (__n) = 2;                                                      \
-            __d &= 0xFFFF;                                                  \
-            TLM_B_WR_HALFWORD((__s), (__t), (__y), (__e), __d);             \
-        }                                                                   \
-        else {                                                              \
-            (__n) = 1;                                                      \
-            __d &= 0xFF;                                                    \
-            TLM_B_WR_BYTE((__s), (__t), (__y), (__e), __d);                 \
-        }                                                                   \
-    } while(false)
-
-/// Macro to make an unknown size copy from EMB buffer to APP buffer
-/// @param[in] __s socket for the EMB access
-/// @param[in] __t transaction object to use to perform access
-/// @param[in] __y time object to use to indicate delay
-/// @param[in] __e next address in the EMB buffer
-/// @param[in, out] __a pointer to the APP buffer
-/// @param[in] __r remaining bytes to copy
-/// @param[out] __n number of bytes copied
-#define TLM_B_E2A_COPY(__s, __t, __y, __e, __a, __r, __n)                   \
-    do {                                                                    \
-        uint32_t __d;                                                       \
-        if ((((__e) & 3) == 0) && ((__r) >= 4)) {                           \
-            (__n) = 4;                                                      \
-            TLM_B_RD_WORD((__s), (__t), (__y), (__e), __d);                 \
-            *((uint32_t*)(__a)) = __d;                                      \
-        }                                                                   \
-        else if ((((__e) & 1) == 0) && ((__r) >= 2)) {                      \
-            (__n) = 2;                                                      \
-            TLM_B_RD_HALFWORD((__s), (__t), (__y), (__e), __d);             \
-            *((uint16_t*)(__a)) = __d;                                      \
-        }                                                                   \
-        else {                                                              \
-            (__n) = 1;                                                      \
-            TLM_B_RD_BYTE((__s), (__t), (__y), (__e), __d);                 \
-            *((uint8_t*)(__a)) = __d;                                       \
-        }                                                                   \
-    } while(false)
-
 /// Macro to set an interrupt
 /// @param[in] __s socket for the interrupt access
 /// @param[in] __t transaction object to use to perform access
