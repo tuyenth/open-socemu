@@ -62,18 +62,18 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
         return;
     }
     //   - bind interfaces
-    this->aic->irq_m_socket.bind(this->cpu->irq_s_socket);
-    this->aic->fiq_m_socket.bind(this->cpu->fiq_s_socket);
+    this->aic->irq_m_socket.bind(this->cpu->irq);
+    this->aic->fiq_m_socket.bind(this->cpu->fiq);
     //     + by default, hook all the interrupt sources to dummies
     for (int i = 0; i < 32; i++)
     {
         if ( (i != 0) && (i != 29))
         {
             char txt[256];
-            tlm_utils::simple_initiator_socket<At91sam9261>* dummy_int_m_socket;
+            tlm::tlm_initiator_socket<>* dummy_int_m_socket;
 
             sprintf(txt, "dummy_int_m_socket[%d]", i);
-            dummy_int_m_socket = new tlm_utils::simple_initiator_socket<At91sam9261>(txt);
+            dummy_int_m_socket = new tlm::tlm_initiator_socket<>(txt);
             dummy_int_m_socket->bind(*this->aic->int_s_socket[i]);
         }
     }

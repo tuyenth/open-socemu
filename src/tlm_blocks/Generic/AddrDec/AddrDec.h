@@ -110,7 +110,7 @@ struct AddrDec : BusSlave
      * @return True if there was an error, False otherwise
      */
     bool
-    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>& slave,
+    bind(tlm::tlm_target_socket<>& slave,
          sc_dt::uint64 start, sc_dt::uint64 end)
     {
         bool status;

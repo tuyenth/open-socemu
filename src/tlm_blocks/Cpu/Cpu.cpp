@@ -12,8 +12,6 @@ uint64_t *g_numinstr;
 
 Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& parameters, MSP& config)
 : BusMaster(name)
-, irq_s_socket("irq_s_socket")
-, fiq_s_socket("fiq_s_socket")
 {
     // structure whose definition belongs to a specific class
     struct mmu::bus bus;
@@ -28,20 +26,20 @@ Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& p
     // check if there is an elf file defined
     if (config.count("elffile") == 0)
     {
-        this->elfpath = NULL;
+        this->m_elfpath = NULL;
     }
     else
     {
         elffile = config["elffile"];
         elffile->add_path(parameters.configpath);
         // copy the path into an internal variable
-        this->elfpath = elffile->get_string();
+        this->m_elfpath = elffile->get_string();
     }
     gdbserver = config["gdbserver"];
 
     // only blocking calls supported by IRQ and FIQ sockets
-    irq_s_socket.register_b_transport(this, &Cpu::irq_s_b_transport);
-    fiq_s_socket.register_b_transport(this, &Cpu::fiq_s_b_transport);
+    this->irq.init(this, &Cpu::interrupt_set, &Cpu::interrupt_clr, (void*)0);
+    this->fiq.init(this, &Cpu::interrupt_set, &Cpu::interrupt_clr, (void*)1);
 
     bus.obj = (void*)this;
     bus.rd_l = &rd_l_cb;
@@ -75,16 +73,17 @@ Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& p
 
 }
 
-void Cpu::thread_process()
+void
+Cpu::thread_process()
 {
     // create an instance of ElfReader
     ElfReader ElfReader;
 
     // check if there was an ELF file specified for this CPU
-    if (this->elfpath != NULL)
+    if (this->m_elfpath != NULL)
     {
         // open the ELF file
-        ElfReader.Open(this->elfpath->c_str());
+        ElfReader.Open(this->m_elfpath->c_str());
 
         // use a Segment pointer
         Segment* Segment;
@@ -103,54 +102,34 @@ void Cpu::thread_process()
     assert(0);
 }
 
-void Cpu::irq_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+void
+Cpu::interrupt_set(void* opaque)
 {
-    TLM_INT_SANITY(trans);
-
-    // retrieve the required parameters
-    uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
-
-    // check if it is a set or clear command
-    if (*ptr)
+    if (opaque == 0)
     {
         this->m_arm->irq_set();
-        // notify the interrupt (after setting the interrupt in processor)
-        m_interrupt.notify();
     }
     else
     {
-        this->m_arm->irq_clear();
+        this->m_arm->fiq_set();
     }
-
-    // there was no error in the processing of the transaction
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
-
-    return;
+    // notify the interrupt (after setting the interrupt in processor)
+    m_interrupt.notify();
 }
 
-void Cpu::fiq_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+void
+Cpu::interrupt_clr(void* opaque)
 {
-    TLM_INT_SANITY(trans);
-
-    // retrieve the required parameters
-    uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
-
-    // check if it is a set or clear command
-    if (*ptr)
+    if (opaque == 0)
     {
-        this->m_arm->fiq_set();
-        // notify the interrupt (after setting the interrupt in arm)
-        m_interrupt.notify();
+        this->m_arm->irq_clear();
     }
     else
     {
         this->m_arm->fiq_clear();
     }
-
-    // there was no error in the processing of the transaction
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
-
-    return;
+    // notify the interrupt (after setting the interrupt in processor)
+    m_interrupt.notify();
 }
 
 uint32_t

@@ -83,8 +83,8 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->itc = new Itc("itc");
     //   - bind interfaces
     //      -> CPU IRQ and FIQ
-    this->itc->irq_m_socket.bind(this->cpu->irq_s_socket);
-    this->itc->fiq_m_socket.bind(this->cpu->fiq_s_socket);
+    this->itc->irq_m_socket.bind(this->cpu->irq);
+    this->itc->fiq_m_socket.bind(this->cpu->fiq);
     //      -> address decoder
     if (this->addrdec->bind(this->itc->reg_s_socket, REG_ITC_BASE_ADDR,
         REG_ITC_BASE_ADDR + (REG_ITC_COUNT*4)))

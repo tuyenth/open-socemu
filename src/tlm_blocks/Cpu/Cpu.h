@@ -2,8 +2,7 @@
 #define CPU_H_
 
 #include "BusMaster.h"
-
-#include "tlm_utils/simple_target_socket.h"
+#include "IntSlave.h"
 
 // command line and configuration parameters
 #include "Parameters.h"
@@ -27,11 +26,6 @@
 
 struct Cpu : BusMaster
 {
-    /// Socket to receive IRQ set and clear commands
-    tlm_utils::simple_target_socket<Cpu> irq_s_socket;
-    /// Socket to receive FIQ set and clear commands
-    tlm_utils::simple_target_socket<Cpu> fiq_s_socket;
-
     // Module has a thread
     SC_HAS_PROCESS(Cpu);
 
@@ -43,26 +37,14 @@ struct Cpu : BusMaster
      */
     Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& parameters, MSP& config);
 
+    /// irq
+    IntSlave<Cpu> irq;
+    /// fiq
+    IntSlave<Cpu> fiq;
+
     /// Main module thread
     void
     thread_process();
-
-    /** IRQ slave socket blocking call handler
-     * @param[in, out] trans Transport generic payload
-     * @param[in, out] phase Transport phase
-     * @param[in, out] delay Transport delay
-     */
-    virtual void
-    irq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
-
-    /** FIQ slave socket blocking call handler
-     * @param[in, out] trans Transport generic payload
-     * @param[in, out] phase Transport phase
-     * @param[in, out] delay Transport delay
-     */
-    virtual void
-    fiq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
-
 
     /** Function to read a word from the system, going through timing process
      * @param[in] addr Address to read from
@@ -212,7 +194,6 @@ struct Cpu : BusMaster
         CPU_TLM_DBG(1, "WFI: exit %d", 0);
     }
 
-
     /** Callback to read a word from the system, going through timing process
      * @warning This function is static because it is used as a callback
      * @param[in, out] obj Pointer to the instance to use
@@ -306,13 +287,25 @@ struct Cpu : BusMaster
 
 private:
     /// ELF file name and path
-    std::string* elfpath;
+    std::string* m_elfpath;
 
     /// MMU class (can be any kind of ARM)
     struct mmu* m_arm;
 
     /// Event used to wait for an interrupt
     sc_core::sc_event m_interrupt;
+
+    /** Interrupt set handler
+     * @param[in] opaque Pointer passed in parameter when registering
+     */
+    void
+    interrupt_set(void* opaque);
+
+    /** Interrupt clear handler
+     * @param[in] opaque Pointer passed in parameter when registering
+     */
+    void
+    interrupt_clr(void* opaque);
 };
 
 #endif /*CPU_H_*/

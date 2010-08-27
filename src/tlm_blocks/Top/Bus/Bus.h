@@ -32,7 +32,7 @@ template<uint8_t N_INITIATORS, uint8_t N_TARGETS>
 struct Bus : sc_core::sc_module
 {
     // Tagged sockets allow incoming transactions to be identified
-    tlm_utils::simple_target_socket_tagged<Bus>*    targ_socket[N_INITIATORS];
+    tlm_utils::simple_target_socket_tagged<Bus>* targ_socket[N_INITIATORS];
     tlm_utils::simple_initiator_socket_tagged<Bus>* init_socket[N_TARGETS];
 
     /// Bus constructor
@@ -48,10 +48,10 @@ struct Bus : sc_core::sc_module
             sprintf(txt, "targ_socket_%d", i);
             targ_socket[i] = new tlm_utils::simple_target_socket_tagged<Bus>(txt);
 
-            targ_socket[i]->register_nb_transport_fw(   this, &Bus::nb_transport_fw, i);
-            targ_socket[i]->register_b_transport(       this, &Bus::b_transport, i);
+            targ_socket[i]->register_nb_transport_fw(this, &Bus::nb_transport_fw, i);
+            targ_socket[i]->register_b_transport(this, &Bus::b_transport, i);
             targ_socket[i]->register_get_direct_mem_ptr(this, &Bus::get_direct_mem_ptr, i);
-            targ_socket[i]->register_transport_dbg(     this, &Bus::transport_dbg, i);
+            targ_socket[i]->register_transport_dbg(this, &Bus::transport_dbg, i);
 
             // set the initiator as unused
             m_pending[i].is_pending = false;
@@ -62,14 +62,11 @@ struct Bus : sc_core::sc_module
             sprintf(txt, "init_socket_%d", i);
             init_socket[i] = new tlm_utils::simple_initiator_socket_tagged<Bus>(txt);
 
-            init_socket[i]->register_nb_transport_bw(          this, &Bus::nb_transport_bw, i);
+            init_socket[i]->register_nb_transport_bw(this, &Bus::nb_transport_bw, i);
             init_socket[i]->register_invalidate_direct_mem_ptr(this, &Bus::invalidate_direct_mem_ptr, i);
             m_targ_range[i].base = 0xFFFFFFFFFFFFFFFFLL;
             m_targ_range[i].mask = 0xFFFFFFFFFFFFFFFFLL;
-
         }
-
-//        SC_THREAD(thread_process);
     }
 
     /** Set a target's address range
@@ -78,7 +75,8 @@ struct Bus : sc_core::sc_module
      * @param mask Decoding mask address
      * @return true if there was an error, false otherwise
      */
-    bool set_range(uint8_t id, sc_dt::uint64 base, sc_dt::uint64 mask)
+    bool
+    set_range(uint8_t id, sc_dt::uint64 base, sc_dt::uint64 mask)
     {
         sc_dt::uint64 u64_temp;
         uint8_t i;
@@ -119,9 +117,11 @@ struct Bus : sc_core::sc_module
         }
     }
 
+private:
     /// Tagged non-blocking transport forward method
-    virtual tlm::tlm_sync_enum nb_transport_fw(int id,
-            tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_core::sc_time& delay)
+    tlm::tlm_sync_enum
+    nb_transport_fw(int id, tlm::tlm_generic_payload& trans,
+            tlm::tlm_phase& phase, sc_core::sc_time& delay)
     {
         SC_REPORT_FATAL("TLM-2", "Non blocking not yet implemented");
         // sanity check
@@ -131,10 +131,10 @@ struct Bus : sc_core::sc_module
         return tlm::TLM_COMPLETED;
     }
 
-
     /// Tagged non-blocking transport backward method
-    virtual tlm::tlm_sync_enum nb_transport_bw(int id,
-            tlm::tlm_generic_payload& trans, tlm::tlm_phase& phase, sc_core::sc_time& delay)
+    tlm::tlm_sync_enum
+    nb_transport_bw(int id, tlm::tlm_generic_payload& trans,
+            tlm::tlm_phase& phase, sc_core::sc_time& delay)
     {
         SC_REPORT_FATAL("TLM-2", "Non blocking not yet implemented");
         // sanity check
@@ -144,22 +144,22 @@ struct Bus : sc_core::sc_module
         return tlm::TLM_COMPLETED;
     }
 
-
     /// Tagged TLM-2 blocking transport method
-    virtual void b_transport( int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+    void
+    b_transport(int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         if ((id < N_INITIATORS) && (id >= 0))
         {
             // Forward path
             sc_dt::uint64 address = trans.get_address();
             sc_dt::uint64 masked_address;
-            uint8_t target_nr = decode_address( address, masked_address);
+            uint8_t target_nr = decode_address(address, masked_address);
 
             // check that the adress is corrct
             if (target_nr < N_TARGETS)
             {
                 // Modify address within transaction
-                trans.set_address( masked_address );
+                trans.set_address(masked_address);
 
                 // check if bus is free
                 if (!this->m_free)
@@ -196,7 +196,7 @@ struct Bus : sc_core::sc_module
                 (*init_socket[target_nr])->b_transport(trans, delay);
 
                 // Replace original address
-                trans.set_address( address );
+                trans.set_address(address);
 
                 // mark the bus as free
                 this->m_free = true;
@@ -217,7 +217,7 @@ struct Bus : sc_core::sc_module
             else
             {
                 // address was wrong
-                trans.set_response_status( tlm::TLM_ADDRESS_ERROR_RESPONSE );
+                trans.set_response_status(tlm::TLM_ADDRESS_ERROR_RESPONSE);
             }
         }
         else
@@ -227,56 +227,55 @@ struct Bus : sc_core::sc_module
     }
 
     /// Tagged TLM-2 forward DMI method
-    virtual bool get_direct_mem_ptr(int id,
-            tlm::tlm_generic_payload& trans,
-            tlm::tlm_dmi&  dmi_data)
+    bool
+    get_direct_mem_ptr(int id, tlm::tlm_generic_payload& trans,
+            tlm::tlm_dmi& dmi_data)
     {
         sc_dt::uint64 masked_address;
-        uint8_t target_nr = decode_address( trans.get_address(), masked_address );
+        uint8_t target_nr = decode_address(trans.get_address(), masked_address);
 
         // check address is correct
         if (target_nr >= N_TARGETS)
             return false;
 
-        trans.set_address( masked_address );
+        trans.set_address(masked_address);
 
-        bool status = ( *init_socket[target_nr] )->get_direct_mem_ptr( trans, dmi_data );
+        bool status = (*init_socket[target_nr])->get_direct_mem_ptr(trans, dmi_data);
 
         // Calculate DMI address of target in system address space
-        dmi_data.set_start_address( compose_address( target_nr, dmi_data.get_start_address() ));
-        dmi_data.set_end_address  ( compose_address( target_nr, dmi_data.get_end_address() ));
+        dmi_data.set_start_address(compose_address(target_nr, dmi_data.get_start_address()));
+        dmi_data.set_end_address(compose_address(target_nr, dmi_data.get_end_address()));
 
         return status;
     }
 
     /// Tagged debug transaction method
-    virtual unsigned int transport_dbg(int id, tlm::tlm_generic_payload& trans)
+    unsigned int
+    transport_dbg(int id, tlm::tlm_generic_payload& trans)
     {
         sc_dt::uint64 masked_address;
-        uint8_t target_nr = decode_address( trans.get_address(), masked_address );
+        uint8_t target_nr = decode_address(trans.get_address(), masked_address);
         if (target_nr >= N_TARGETS)
             return 0;
-        trans.set_address( masked_address );
+        trans.set_address(masked_address);
 
         // Forward debug transaction to appropriate target
-        return ( *init_socket[target_nr] )->transport_dbg( trans );
+        return (*init_socket[target_nr])->transport_dbg(trans);
     }
 
-
     /// Tagged backward DMI method
-    virtual void invalidate_direct_mem_ptr(int id,
-            sc_dt::uint64 start_range,
+    void
+    invalidate_direct_mem_ptr(int id, sc_dt::uint64 start_range,
             sc_dt::uint64 end_range)
     {
         // Reconstruct address range in system memory map
-        sc_dt::uint64 bw_start_range = compose_address( id, start_range );
-        sc_dt::uint64 bw_end_range   = compose_address( id, end_range );
+        sc_dt::uint64 bw_start_range = compose_address(id, start_range);
+        sc_dt::uint64 bw_end_range   = compose_address(id, end_range);
 
         // Propagate call backward to all initiators
         for (uint8_t i = 0; i < N_INITIATORS; i++)
             (*targ_socket[i])->invalidate_direct_mem_ptr(bw_start_range, bw_end_range);
     }
-
 
     /** Fixed address decoding
      * Check to which target range the input address belongs and mask the address in order
@@ -285,7 +284,8 @@ struct Bus : sc_core::sc_module
      * @param masked_address Masked address within the target range
      * @return The target index or beyond maximum index if not correct
      */
-    inline uint8_t decode_address( sc_dt::uint64 address, sc_dt::uint64& masked_address )
+    inline uint8_t
+    decode_address(sc_dt::uint64 address, sc_dt::uint64& masked_address)
     {
         uint8_t i;
         for (i = 0; i < N_TARGETS; i++)
@@ -300,11 +300,11 @@ struct Bus : sc_core::sc_module
         return i;
     }
 
-    inline sc_dt::uint64 compose_address( uint8_t target_nr, sc_dt::uint64 address)
+    inline sc_dt::uint64
+    compose_address(uint8_t target_nr, sc_dt::uint64 address)
     {
         return address + m_targ_range[target_nr].base;
     }
-
 
     /// Array of structures containing the address ranges of the targets
     struct {
@@ -325,8 +325,6 @@ struct Bus : sc_core::sc_module
 
     // Indicate that bus is free for a new request.
     bool m_free;
-
 };
-
 
 #endif /*BUS_H_*/

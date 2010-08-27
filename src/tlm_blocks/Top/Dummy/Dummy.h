@@ -56,10 +56,9 @@ struct Dummy : Peripheral<REG_DUMMY_COUNT>
     }
 
     /// Define the interrupt source
-    IntMaster m_int;
+    IntMaster interrupt;
 
 protected:
-
     /** Register read function
      * @param[in] offset Offset of the register to read
      * @return The value read
