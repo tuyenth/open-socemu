@@ -12,6 +12,9 @@
 #include "tlm_utils/simple_target_socket.h"
 #include "tlm_utils/simple_initiator_socket.h"
 
+// for the helper macros
+#include "utils.h"
+
 struct IntMaster
 {
     /// Constructor
@@ -30,14 +33,24 @@ struct IntMaster
     void
     set()
     {
-
+        TLM_INT_SET(master_socket, master_b_pl, master_b_delay);
     }
 
     /// De-assert the interrupt
     void
     clear()
     {
+        TLM_INT_CLR(master_socket, master_b_pl, master_b_delay);
+    }
 
+    /** Bind a slave socket to the local master socket
+     * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
+     */
+    void
+    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>& slave_socket)
+    {
+        // hook the slave socket
+        this->master_socket.bind(slave_socket);
     }
 
 protected:

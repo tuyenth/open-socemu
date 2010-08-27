@@ -10,6 +10,8 @@ const struct {
         {65536, 0x00000000, 0xFFFFFFFFFF000000LL}
 };
 
+#define DUMMY_BASE_ADDR 0x02000000
+
 Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
     uint8_t i;
@@ -85,11 +87,11 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // create the dummy module
     dummy = new Dummy("dummy");
     // bind the MAC socket to the second targ socket of the BUS
-    dummy->bind(&intctrl->int_socket);
+    dummy->m_int.bind(intctrl->int_socket);
     // bind the init port of the BUS to the MAC
     (*(bus->init_socket[TOP_NUM_MEMORIES+1])).bind(*dummy);
     // specify the MAC address range from the BUS perspective
-    if (bus->set_range(TOP_NUM_MEMORIES+1, 0x02000000, 0xFFFFFFFFFF000000LL))
+    if (bus->set_range(TOP_NUM_MEMORIES+1, DUMMY_BASE_ADDR, 0xFFFFFFFFFF000000LL))
     {
         TLM_ERR("Dummy address range is wrong %d", -1);
         return;

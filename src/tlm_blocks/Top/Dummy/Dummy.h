@@ -1,7 +1,8 @@
 #ifndef DUMMY_H_
 #define DUMMY_H_
 
-#include "BusMasterSlave.h"
+#include "Peripheral.h"
+#include "IntMaster.h"
 
 /// debug level
 #define DUMMY_DEBUG_LEVEL 0
@@ -17,15 +18,31 @@
         }                                                                               \
     } while (false)
 
-/// "Dummy" module with a bus slave socket and an interrupt master socket
-struct Dummy : BusMasterSlave
+/// Registers definition
+enum {
+    REG_DUMMY_STATUS,
+    REG_DUMMY_ACK,
+    REG_DUMMY_COMMAND,
+    REG_DUMMY_SOURCEADDR,
+    REG_DUMMY_DESTADDR,
+    REG_DUMMY_LENGTH,
+    REG_DUMMY_COUNT        = 256
+};
+
+/// "Dummy" Peripheral with an interrupt
+struct Dummy : Peripheral<REG_DUMMY_COUNT>
 {
+    // Module has a thread
+    SC_HAS_PROCESS(Dummy);
+
     /** Dummy default constructor
      * @param[in] name Name of the module
      */
     Dummy(sc_core::sc_module_name name)
-    : BusMasterSlave(name, this->m_reg, sizeof(this->m_reg))
+    : Peripheral<REG_DUMMY_COUNT>(name)
     {
+        // create the module thread
+        SC_THREAD(thread_process);
     }
 
     /// Module thread
@@ -38,69 +55,23 @@ struct Dummy : BusMasterSlave
         }
     }
 
-    /** slave_socket blocking transport method (default behavior, can be overridden)
-     * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
-     * @param[in, out] delay Time object, allocated by initiator, filled here
+    /// Define the interrupt source
+    IntMaster m_int;
+
+protected:
+
+    /** Register read function
+     * @param[in] offset Offset of the register to read
+     * @return The value read
      */
-    virtual void
-    slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
-    {
-        // sanity check
-        TLM_WORD_SANITY(trans);
+    uint32_t
+    reg_rd(uint32_t offset);
 
-        // retrieve the required parameters
-        sc_dt::uint64 index = trans.get_address()/4;
-        uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
-
-        // sanity check
-        assert(index < REG_SIZE);
-
-        // mark as busy
-        #if BUSSLAVE_DEBUG_LEVEL
-        m_free = false;
-        #endif
-
-        // internal delay
-        this->delay();
-
-        if (trans.get_command() == tlm::TLM_READ_COMMAND)
-        {
-            *ptr = m_reg[index];
-        }
-        else
-        {
-            switch (index)
-            {
-            case REG_COMMAND:
-                TLM_INT_SET(master_socket, master_b_pl, master_b_delay);
-                break;
-            case REG_ACK:
-                TLM_INT_CLR(master_socket, master_b_pl, master_b_delay);
-                break;
-            }
-        }
-        trans.set_response_status(tlm::TLM_OK_RESPONSE);
-
-        // mark as free
-        #if BUSSLAVE_DEBUG_LEVEL
-        m_free = true;
-        #endif
-
-    }
-
-    /// Registers definition
-    enum {
-        REG_STATUS,
-        REG_ACK,
-        REG_COMMAND,
-        REG_SOURCEADDR,
-        REG_DESTADDR,
-        REG_LENGTH,
-        REG_SIZE        = 256
-    };
-
-    /// Registers content
-    uint32_t m_reg[REG_SIZE];
+    /** Register write function
+     * @param[in] offset Offset of the register to read
+     */
+    void
+    reg_wr(uint32_t offset, uint32_t value);
 };
 
 #endif /*DUMMY_H_*/

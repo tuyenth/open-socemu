@@ -169,7 +169,7 @@ bool gdbserver::cpu_gdb_rw_memory(uint32_t addr, uint8_t* buf, uint32_t len, uin
             return true;
         }
         // sanity check
-        assert (num_bytes == len);
+        assert (num_bytes == (int)len);
         return false;
     }
     else
@@ -182,7 +182,7 @@ bool gdbserver::cpu_gdb_rw_memory(uint32_t addr, uint8_t* buf, uint32_t len, uin
             return true;
         }
         // sanity check
-        assert (num_bytes == len);
+        assert (num_bytes == (int)len);
         return false;
     }
 }
@@ -397,7 +397,7 @@ void gdbserver::read_byte(int ch)
     case RS_GETLINE:
         if (ch == '#') {
             m_state = RS_CHKSUM1;
-        } else if (m_line_buf_index >= sizeof(m_line_buf) - 1) {
+        } else if (m_line_buf_index >= (int)(sizeof(m_line_buf) - 1)) {
             m_state = RS_IDLE;
         } else {
             m_line_buf[m_line_buf_index++] = ch;
