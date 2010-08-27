@@ -32,7 +32,7 @@ struct Smc : BusSlave
 
     /// Override the virtual function
     void
-    reg_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+    reg_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         TLM_WORD_SANITY(trans);
 
@@ -59,7 +59,7 @@ struct Smc : BusSlave
         }
 
         // there was no error in the processing
-        trans.set_response_status( tlm::TLM_OK_RESPONSE );
+        trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
         // mark as free
         #if BUSSLAVE_DEBUG_LEVEL
@@ -67,17 +67,16 @@ struct Smc : BusSlave
         #endif
 
         return;
-
     }
 
     /// TLM-2 socket blocking path
     virtual void
-    bus_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
+    bus_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 
     /// TLM-2 socket non blocking path
     virtual tlm::tlm_sync_enum
-    bus_s_nb_transport_fw( tlm::tlm_generic_payload& trans,
-            tlm::tlm_phase& phase, sc_core::sc_time& delay );
+    bus_s_nb_transport_fw(tlm::tlm_generic_payload& trans,
+            tlm::tlm_phase& phase, sc_core::sc_time& delay);
 
     /// TLM-2 socket debug path
     virtual unsigned int

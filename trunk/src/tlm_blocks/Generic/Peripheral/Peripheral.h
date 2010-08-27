@@ -12,7 +12,7 @@ struct Peripheral : BusSlave
 
     /// Override the virtual function
     void
-    slave_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+    slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         TLM_WORD_SANITY(trans);
 
@@ -39,7 +39,7 @@ struct Peripheral : BusSlave
         }
 
         // there was no error in the processing
-        trans.set_response_status( tlm::TLM_OK_RESPONSE );
+        trans.set_response_status(tlm::TLM_OK_RESPONSE);
 
         // mark as free
         #if BUSSLAVE_DEBUG_LEVEL

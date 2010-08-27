@@ -67,7 +67,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
     //     + by default, hook all the interrupt sources to dummies
     for (int i = 0; i < 32; i++)
     {
-        if ( (i != 0) && (i != 29))
+        if ((i != 0) && (i != 29))
         {
             char txt[256];
             tlm::tlm_initiator_socket<>* dummy_int_m_socket;

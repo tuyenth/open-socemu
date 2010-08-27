@@ -1918,7 +1918,8 @@ void Arm::thread_process()
     }
 }
 
-void Arm::irq_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+void
+Arm::irq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
 {
     TLM_INT_SANITY(trans);
 
@@ -1943,7 +1944,8 @@ void Arm::irq_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& 
     return;
 }
 
-void Arm::fiq_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+void
+Arm::fiq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
 {
     TLM_INT_SANITY(trans);
 

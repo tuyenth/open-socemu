@@ -2973,7 +2973,7 @@ arm::GetDPRegRHS(uint32_t instr)
 				return ((uint32_t) ((int) base >> 31L));
 			else
 				return ((uint32_t)
-					(( int) base >> (int) shamt));
+					((int) base >> (int) shamt));
 		case ROR:
 			shamt &= 0x1f;
 			if (shamt == 0)
@@ -2997,10 +2997,10 @@ arm::GetDPRegRHS(uint32_t instr)
 				return (base >> shamt);
 		case ASR:
 			if (shamt == 0)
-				return ((uint32_t) (( int) base >> 31L));
+				return ((uint32_t) ((int) base >> 31L));
 			else
 				return ((uint32_t)
-					(( int) base >> (int) shamt));
+					((int) base >> (int) shamt));
 		case ROR:
 			if (shamt == 0)
 				/* It's an RRX.  */
@@ -3063,11 +3063,11 @@ arm::GetDPSRegRHS(uint32_t instr)
 				return (base);
 			else if (shamt >= 32) {
 				ASSIGNC (base >> 31L);
-				return ((uint32_t) (( int) base >> 31L));
+				return ((uint32_t) ((int) base >> 31L));
 			}
 			else {
 				ASSIGNC ((uint32_t)
-					 (( int) base >>
+					 ((int) base >>
 					  (int) (shamt - 1)) & 1);
 				return ((uint32_t)
 					((int) base >> (int) shamt));
@@ -3115,7 +3115,7 @@ arm::GetDPSRegRHS(uint32_t instr)
 					 ((int) base >>
 					  (int) (shamt - 1)) & 1);
 				return ((uint32_t)
-					(( int) base >> (int) shamt));
+					((int) base >> (int) shamt));
 			}
 		case ROR:
 			if (shamt == 0) {
@@ -3154,9 +3154,9 @@ arm::GetLSRegRHS(uint32_t instr)
             return (base >> shamt);
     case ASR:
         if (shamt == 0)
-            return ((uint32_t) (( int) base >> 31L));
+            return ((uint32_t) ((int) base >> 31L));
         else
-            return ((uint32_t) (( int) base >> (int) shamt));
+            return ((uint32_t) ((int) base >> (int) shamt));
     case ROR:
         if (shamt == 0)
             /* It's an RRX.  */

@@ -40,8 +40,8 @@ extern uint32_t isize;
 #define R15FBIT (1L << 26)
 #define R15IFBITS (3L << 26)
 
-#define POS(i) ( (~(i)) >> 31 )
-#define NEG(i) ( (i) >> 31 )
+#define POS(i) ((~(i)) >> 31)
+#define NEG(i) ((i) >> 31)
 
 /* ??? This bit is actually in the low order bit of the PC in the hardware.
    It isn't clear if the simulator needs to model that or not.  */
@@ -246,7 +246,7 @@ extern uint32_t isize;
 
 // Only co processor 14 and 15 are allowed
 #define CP_ACCESS_ALLOWED(STATE, CP)                \
-    ( ((CP) >= 14) )
+    (((CP) >= 14))
 
 /* Macro to rotate n right by b bits.  */
 #define ROTATER(n, b) (((n) >> (b)) | ((n) << (32 - (b))))

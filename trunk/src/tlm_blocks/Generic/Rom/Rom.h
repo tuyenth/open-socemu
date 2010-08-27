@@ -27,7 +27,7 @@ struct Rom : BusSlave
 
     /// Override the virtual function
     void
-    slave_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay )
+    slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         if (likely(trans.get_command() == tlm::TLM_READ_COMMAND))
         {
