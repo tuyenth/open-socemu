@@ -224,7 +224,7 @@ private:
 
         trans.set_address(masked_address);
 
-        bool status = ( *bus_m_socket[target_nr] )->get_direct_mem_ptr(trans, dmi_data);
+        bool status = (*bus_m_socket[target_nr] )->get_direct_mem_ptr(trans, dmi_data);
 
         trans.set_address(address);
 

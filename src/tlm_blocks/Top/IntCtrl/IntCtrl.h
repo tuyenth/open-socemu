@@ -40,7 +40,7 @@ struct IntCtrl : Peripheral<REG_INTCTRL_COUNT>
 
     // TLM-2 blocking transport method
     void
-    int_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
+    int_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
 
     /// Interrupt socket (only one interrupt source)
     tlm_utils::simple_target_socket<IntCtrl> int_socket;

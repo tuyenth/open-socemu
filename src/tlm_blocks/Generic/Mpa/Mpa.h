@@ -134,7 +134,7 @@ struct Mpa : sc_core::sc_module
         assert(id < N_MASTERS);
 
         // forward as is the request to the unique master side
-        return bus_m_socket->get_direct_mem_ptr( trans, dmi_data );
+        return bus_m_socket->get_direct_mem_ptr(trans, dmi_data );
     }
 
     /// Tagged debug transaction method
