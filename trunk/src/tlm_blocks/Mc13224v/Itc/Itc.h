@@ -1,81 +1,92 @@
 #ifndef ITC_H_
 #define ITC_H_
 
-// necessary define for processes in simple_target_socket
-#define SC_INCLUDE_DYNAMIC_PROCESSES
+// this is a peripheral
+#include "Peripheral.h"
 
-// obvious inclusion
-#include "systemc"
-
-// not so obvious inclusions
-#include "tlm.h"
-#include "tlm_utils/simple_target_socket.h"
-#include "tlm_utils/simple_initiator_socket.h"
+// with slave and master interrupts
+#include "IntMaster.h"
+#include "IntSlave.h"
 
 // include the registers definition
 #include "reg_itc.h"
 
 /// Interrupt Controller block model
-struct Itc : sc_core::sc_module
+struct Itc : Peripheral<REG_ITC_COUNT>
 {
     enum
     {
         NUM_INT = 16
     };
-    /// TLM-2 slave sockets for interrupt sources (tagged to use only one callback)
-    tlm_utils::simple_target_socket_tagged<Itc>* int_s_socket[NUM_INT];
-
-    /// TLM-2 slave socket to handle bus accesses
-    tlm_utils::simple_target_socket<Itc> reg_s_socket;
-
-    /// TLM-2 master socket to set/clear IRQ signal
-    tlm_utils::simple_initiator_socket<Itc> irq_m_socket;
-
-    /// TLM-2 master socket to set/clear FIQ signal
-    tlm_utils::simple_initiator_socket<Itc> fiq_m_socket;
-
-    // Not necessary if this module does not have a thread
-//    SC_HAS_PROCESS(Itc);
-
     /// Constructor
-    Itc(sc_core::sc_module_name name);
+    Itc(sc_core::sc_module_name name)
+    : Peripheral<REG_ITC_COUNT>(name)
+    {
+        // initialized the register access
+        reg_itc = &(m_reg[0]);
 
-    /// TLM-2 socket blocking method
-    virtual void reg_s_b_transport( tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
+        for (int i = 0; i < NUM_INT; i++)
+        {
+            this->interrupts[i].init(this, &Itc::interrupt_set, &Itc::interrupt_clr, (void*)i);
+        }
+    }
 
-    /// TLM-2 socket non blocking path
-    virtual tlm::tlm_sync_enum reg_s_nb_transport_fw( tlm::tlm_generic_payload& trans,
-            tlm::tlm_phase& phase, sc_core::sc_time& delay );
+    /// Slave interrupts array
+    IntSlave<Itc> interrupts[NUM_INT];
 
-    /// TLM-2 socket debug path
-    virtual unsigned int reg_s_transport_dbg(tlm::tlm_generic_payload& trans);
+    /// IRQ interrupt
+    IntMaster irq;
 
-    /// TLM-2 socket blocking path
-    virtual void int_s_b_transport( int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay );
+    /// FIQ interrupt
+    IntMaster fiq;
 
-    /// Read access to the registers
-    uint32_t reg_rd(uint32_t offset);
+private:
+    /** Register read function
+     * @param[in] offset Offset of the register to read
+     * @return The value read
+     */
+    uint32_t
+    reg_rd(uint32_t offset);
 
-    /// Write access to the registers
-    void reg_wr(uint32_t offset, uint32_t value);
+    /** Register write function
+     * @param[in] offset Offset of the register to read
+     */
+    void
+    reg_wr(uint32_t offset, uint32_t value);
 
     /// Check that interrupt status
-    void check_int();
+    void
+    check_int();
 
-    /// Registers content
-    uint32_t m_reg[REG_ITC_COUNT];
+    /** Interrupt set handler
+     * @param[in] opaque Pointer passed in parameter when registering
+     */
+    void
+    interrupt_set(void* opaque);
 
-    /// Indicate if busy for sanity check
-    bool m_free;
+    /** Interrupt clear handler
+     * @param[in] opaque Pointer passed in parameter when registering
+     */
+    void
+    interrupt_clr(void* opaque);
 
-    /// Generic payload transaction to use for FIQ requests
-    tlm::tlm_generic_payload fiq_pl;
-    /// Time object for delay to use for FIQ requests
-    sc_core::sc_time fiq_delay;
-    /// Generic payload transaction to use for IRQ requests
-    tlm::tlm_generic_payload irq_pl;
-    /// Time object for delay to use for IRQ requests
-    sc_core::sc_time irq_delay;
+    /// End of elaboration:  unhooked interrupt should be connected
+    void
+    end_of_elaboration()
+    {
+        // initialize the slave interrupt
+        for (int i = 0; i < NUM_INT; i++)
+        {
+            if (!this->interrupts[i].is_bound())
+            {
+                char txt[256];
+                tlm::tlm_initiator_socket<>* dummy_int_m_socket;
+
+                sprintf(txt, "itc_dummy_int[%d]", i);
+                dummy_int_m_socket = new tlm::tlm_initiator_socket<>(txt);
+                dummy_int_m_socket->bind(this->interrupts[i]);
+            }
+        }
+    }
 };
-
 #endif /*ITC_H_*/

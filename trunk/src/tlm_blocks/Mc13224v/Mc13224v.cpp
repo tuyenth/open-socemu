@@ -83,11 +83,10 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->itc = new Itc("itc");
     //   - bind interfaces
     //      -> CPU IRQ and FIQ
-    this->itc->irq_m_socket.bind(this->cpu->irq);
-    this->itc->fiq_m_socket.bind(this->cpu->fiq);
+    this->itc->irq.bind(this->cpu->irq);
+    this->itc->fiq.bind(this->cpu->fiq);
     //      -> address decoder
-    if (this->addrdec->bind(this->itc->reg_s_socket, REG_ITC_BASE_ADDR,
-        REG_ITC_BASE_ADDR + (REG_ITC_COUNT*4)))
+    if (this->addrdec->bind(*this->itc, REG_ITC_BASE_ADDR))
     {
         TLM_ERR("ITC address range wrong %d", 0);
         return;
@@ -98,14 +97,13 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->crm = new Crm("crm");
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(this->crm->reg_s_socket, REG_CRM_BASE_ADDR,
-        REG_CRM_BASE_ADDR + (REG_CRM_COUNT*4)))
+    if (this->addrdec->bind(*this->crm, REG_CRM_BASE_ADDR))
     {
         TLM_ERR("CRM address range wrong %d", 0);
         return;
     }
     //      -> interrupt hooked to ITC
-    this->crm->int_m_socket.bind(*this->itc->int_s_socket[3]);
+    this->crm->interrupt.bind(this->itc->interrupts[3]);
 
     // SPIF:
     //   - create instance
@@ -122,7 +120,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
         return;
     }
     //      -> interrupt hooked to ITC
-    this->spif->int_m_socket.bind(*this->itc->int_s_socket[6]);
+    this->spif->int_m_socket.bind(*this->itc->interrupts[6]);
 
     // SPI:
     //   - create instance
@@ -136,15 +134,14 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
         return;
     }
     //      -> interrupt hooked to ITC
-    this->spi->int_m_socket.bind(*this->itc->int_s_socket[10]);
+    this->spi->int_m_socket.bind(*this->itc->interrupts[10]);
 
     // GPIO:
     //   - create instance
     this->gpio = new Gpio("gpio");
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(this->gpio->reg_s_socket, REG_GPIO_BASE_ADDR,
-        REG_GPIO_BASE_ADDR + (REG_GPIO_COUNT*4)))
+    if (this->addrdec->bind(*this->gpio, REG_GPIO_BASE_ADDR))
     {
         TLM_ERR("GPIO address range wrong %d", 0);
         return;
@@ -162,7 +159,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
         return;
     }
     //      -> interrupt hooked to ITC
-    this->uart1->int_m_socket.bind(*this->itc->int_s_socket[1]);
+    this->uart1->int_m_socket.bind(*this->itc->interrupts[1]);
 
     // UART2:
     //   - create instance
@@ -176,22 +173,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
         return;
     }
     //      -> interrupt hooked to ITC
-    this->uart2->int_m_socket.bind(*this->itc->int_s_socket[2]);
-
-    // hook all the interrupt sources not connected to dummies
-    for (int i = 0; i < Itc::NUM_INT; i++)
-    {
-        char txt[256];
-        tlm_utils::simple_initiator_socket<Mc13224v>* dummy_m_socket;
-
-        // check if the socket is already bound
-        if (this->itc->int_s_socket[i]->get_base_port().get_interface() == NULL)
-        {
-            sprintf(txt, "dummy_itc_int_m_socket[%d]", i);
-            dummy_m_socket = new tlm_utils::simple_initiator_socket<Mc13224v>(txt);
-            dummy_m_socket->bind(*this->itc->int_s_socket[i]);
-        }
-    }
+    this->uart2->int_m_socket.bind(*this->itc->interrupts[2]);
 
     {
         int fd;
@@ -220,11 +202,9 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
             memcpy(this->sram->get_data(), &(flashdata[8]), U32(flashdata[4]));
 
             // initialize the CRM
-            this->crm->m_reg[STATUS_INDEX] = 3;
+            this->crm->set_status(3);
         }
-
         close(fd);
-
     }
 }
 
