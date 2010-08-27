@@ -41,13 +41,13 @@ Dummy::reg_wr(uint32_t offset, uint32_t value)
     switch (index)
     {
     case REG_DUMMY_COMMAND:
-        m_int.set();
+        interrupt.set();
         break;
     case REG_DUMMY_ACK:
-        m_int.clear();
+        interrupt.clear();
         break;
     default:
-       m_reg[index] = value;
+        m_reg[index] = value;
         break;
     }
 }

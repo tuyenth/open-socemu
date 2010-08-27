@@ -119,7 +119,7 @@ struct BusSlave : sc_core::sc_module
     /** Operator & to return the reference to the slave socket
      * @return The reference to the slave socket
      */
-    operator tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types> & ()
+    operator tlm::tlm_target_socket<> & ()
     {
         return this->slave_socket;
     }

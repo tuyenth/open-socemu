@@ -16,9 +16,9 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
     uint8_t i;
     Parameter *cpu_parameter;
-    tlm_utils::simple_target_socket<Cpu>* irq;
+    tlm::tlm_target_socket<>* irq;
     /// Socket to receive FIQ set and clear commands
-    tlm_utils::simple_target_socket<Cpu>* fiq;
+    tlm::tlm_target_socket<>* fiq;
 
     // sanity check: check parameters
     if (config.count("cpu") != 1)
@@ -36,15 +36,15 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     {
         cpubase = new CpuBase<GdbServerTcp>("cpu", parameters, *cpu_parameter);
         cpubase->bind(*(bus->targ_socket[0]));
-        irq = new tlm_utils::simple_target_socket<Cpu>("false_irq");
-        fiq = new tlm_utils::simple_target_socket<Cpu>("false_fiq");
+        irq = new tlm::tlm_target_socket<>("false_irq");
+        fiq = new tlm::tlm_target_socket<>("false_fiq");
     }
     else if (*cpu_parameter == "Arm32")
     {
         cpubase = new Arm32<GdbServerTcp>("cpu", parameters, *cpu_parameter);
         cpubase->bind(*(bus->targ_socket[0]));
-        irq = new tlm_utils::simple_target_socket<Cpu>("false_irq");
-        fiq = new tlm_utils::simple_target_socket<Cpu>("false_fiq");
+        irq = new tlm::tlm_target_socket<>("false_irq");
+        fiq = new tlm::tlm_target_socket<>("false_fiq");
     }
     else
     {
@@ -54,15 +54,15 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         // bind the CPU socket to the first targ socket of the BUS
         cpu->bind(*(bus->targ_socket[0]));
 
-        irq = &cpu->irq_s_socket;
-        fiq = &cpu->fiq_s_socket;
+        irq = cpu->irq;
+        fiq = cpu->fiq;
     }
     for (i = 0; i < sizeof(Memories)/sizeof(Memories[0]); i++)
     {
         // create the MEMORY instance with specific size
         memory[i] = new Memory("memory", Memories[i].size);
         // bind the init port of the BUS to the MEMORY
-        ( *(bus->init_socket[i]) ).bind(*memory[i]);
+        (*(bus->init_socket[i])).bind(*memory[i]);
         // specify the MEMORY address range from the BUS perspective
         if (bus->set_range(i, Memories[i].base, Memories[i].mask))
         {
@@ -87,7 +87,7 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // create the dummy module
     dummy = new Dummy("dummy");
     // bind the MAC socket to the second targ socket of the BUS
-    dummy->m_int.bind(intctrl->int_socket);
+    dummy->interrupt.bind(intctrl->int_socket);
     // bind the init port of the BUS to the MAC
     (*(bus->init_socket[TOP_NUM_MEMORIES+1])).bind(*dummy);
     // specify the MAC address range from the BUS perspective

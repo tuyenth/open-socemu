@@ -34,9 +34,6 @@
 /// Base class for a master and slave device (not using multiple inheritance for speed)
 struct BusMasterSlave : BusSlave
 {
-    /// TLM-2 master socket, defaults to 32-bits wide, base protocol
-    tlm_utils::simple_initiator_socket<BusMasterSlave> master_socket;
-
     // Module has a thread
     SC_HAS_PROCESS(BusMasterSlave);
 
@@ -65,13 +62,16 @@ struct BusMasterSlave : BusSlave
      * @param[in, out] slave_socket TLM-2 slave socket to bind to the master socket
      */
     void
-    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave_socket)
+    bind(tlm::tlm_target_socket<>* slave_socket)
     {
         // hook the slave socket
         this->master_socket.bind(*slave_socket);
     }
 
 protected:
+    /// TLM-2 master socket, defaults to 32-bits wide, base protocol
+    tlm_utils::simple_initiator_socket<BusMasterSlave> master_socket;
+
     /** Generic payload transaction to use for master blocking requests.  This is used
      * to speed up the simulation by not allocating dynamically a payload for
      * each blocking transaction.

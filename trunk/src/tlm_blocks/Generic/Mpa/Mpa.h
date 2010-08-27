@@ -149,7 +149,7 @@ struct Mpa : sc_core::sc_module
     }
 
     void
-    bind(tlm::tlm_target_socket<32, tlm::tlm_base_protocol_types>* slave)
+    bind(tlm::tlm_target_socket<>* slave)
     {
         // hook the slave socket
         bus_m_socket.bind(*slave);
