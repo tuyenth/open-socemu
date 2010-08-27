@@ -1,116 +1,51 @@
 #ifndef AIC_H_
 #define AIC_H_
 
-// by default, this is a simple bus slave
-#include "BusSlave.h"
+// this is a peripheral
+#include "Peripheral.h"
 
-// includes also interrupt masters
-#include "tlm_utils/simple_initiator_socket.h"
+// with 2 interrupt masters
+#include "IntMaster.h"
+
+// and 32 int slaves
+#include "IntSlave.h"
 
 // include the registers definition
 #include "reg_aic.h"
 
 /// Advanced Interrupt Controller block model
-struct Aic : BusSlave
+struct Aic : Peripheral<REG_AIC_COUNT>
 {
     /// Constructor
     Aic(sc_core::sc_module_name name)
-    : BusSlave(name, m_reg, sizeof(m_reg))
-    , irq_m_socket("irq_m_socket")
-    , fiq_m_socket("fiq_m_socket")
+    : Peripheral<REG_AIC_COUNT>(name)
     {
-        // force the default values of the FIQ transaction
-        fiq_pl.set_streaming_width(4);
-        fiq_pl.set_byte_enable_ptr(0);
-        fiq_pl.set_dmi_allowed(false);
-        // force the default values of the IRQ transaction
-        irq_pl.set_streaming_width(4);
-        irq_pl.set_byte_enable_ptr(0);
-        irq_pl.set_dmi_allowed(false);
         // initialize the register access
         reg_aic = &(m_reg[0]);
 
-        // clear all the registers
-        memset(m_reg, 0, sizeof(m_reg));
-
-        for (uint8_t i = 0; i < 32; i++)
+        // initialize the slave interrupt
+        for (int i = 0; i < 32; i++)
         {
-            char txt[20];
-            sprintf(txt, "int_s_socket_%d", i);
-            int_s_socket[i] = new tlm_utils::simple_target_socket_tagged<Aic>(txt);
-            // only blocking method is supported
-            int_s_socket[i]->register_b_transport(this, &Aic::int_s_b_transport, i);
+            interrupts[i].init(this, &Aic::interrupt_set, &Aic::interrupt_clr, (void*)i);
         }
     }
 
     /// TLM-2 slave sockets for interrupt sources (tagged to use only one callback)
     tlm_utils::simple_target_socket_tagged<Aic>* int_s_socket[32];
 
-    /// TLM-2 master socket to set/clear IRQ signal
-    tlm_utils::simple_initiator_socket<Aic> irq_m_socket;
+    /// IRQ interrupt
+    IntMaster irq;
 
-    /// TLM-2 master socket to set/clear FIQ signal
-    tlm_utils::simple_initiator_socket<Aic> fiq_m_socket;
+    /// FIQ interrupt
+    IntMaster fiq;
 
-    /// Override the virtual function
-    void
-    slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
-    {
-        TLM_WORD_SANITY(trans);
-
-        // retrieve the required parameters
-        uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
-
-        // sanity check
-        #if BUSSLAVE_DEBUG_LEVEL
-        assert(m_free);
-        #endif
-
-        // mark as busy
-        #if BUSSLAVE_DEBUG_LEVEL
-        m_free = false;
-        #endif
-
-        if (trans.get_command() == tlm::TLM_READ_COMMAND)
-        {
-            *ptr = reg_rd(trans.get_address());
-        }
-        else
-        {
-            reg_wr(trans.get_address(), *ptr);
-        }
-
-        // there was no error in the processing
-        trans.set_response_status(tlm::TLM_OK_RESPONSE);
-
-        // mark as free
-        #if BUSSLAVE_DEBUG_LEVEL
-        m_free = true;
-        #endif
-
-        return;
-    }
-
-    /// TLM-2 socket blocking path
-    virtual void
-    int_s_b_transport(int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay);
+    /// FIQ interrupt
+    IntSlave<Aic> interrupts[32];
 
     /// Check the pending interrupts
     void check_int();
 
-    /// Registers content
-    uint32_t m_reg[REG_AIC_COUNT];
-
-    /// Generic payload transaction to use for FIQ requests
-    tlm::tlm_generic_payload fiq_pl;
-    /// Time object for delay to use for FIQ requests
-    sc_core::sc_time fiq_delay;
-    /// Generic payload transaction to use for IRQ requests
-    tlm::tlm_generic_payload irq_pl;
-    /// Time object for delay to use for IRQ requests
-    sc_core::sc_time irq_delay;
-
-protected:
+private:
     /** Register read function
      * @param[in] offset Offset of the register to read
      * @return The value read
@@ -124,6 +59,36 @@ protected:
     void
     reg_wr(uint32_t offset, uint32_t value);
 
+    /** Interrupt set handler
+     * @param[in] opaque Pointer passed in parameter when registering
+     */
+    void
+    interrupt_set(void* opaque);
+
+    /** Interrupt clear handler
+     * @param[in] opaque Pointer passed in parameter when registering
+     */
+    void
+    interrupt_clr(void* opaque);
+
+    /// End of elaboration:  unhooked interrupt should be connected
+    void
+    end_of_elaboration()
+    {
+        // initialize the slave interrupt
+        for (int i = 0; i < 32; i++)
+        {
+            if (!this->interrupts[i].is_bound())
+            {
+                char txt[256];
+                tlm::tlm_initiator_socket<>* dummy_int_m_socket;
+
+                sprintf(txt, "aic_dummy_int[%d]", i);
+                dummy_int_m_socket = new tlm::tlm_initiator_socket<>(txt);
+                dummy_int_m_socket->bind(this->interrupts[i]);
+            }
+        }
+    }
 };
 
 #endif /*AIC_H_*/

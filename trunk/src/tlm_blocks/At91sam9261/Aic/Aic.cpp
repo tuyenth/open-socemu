@@ -69,34 +69,6 @@ Aic::reg_wr(uint32_t offset, uint32_t value)
 }
 
 void
-Aic::int_s_b_transport(int id, tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
-{
-    TLM_INT_SANITY(trans);
-
-    // retrieve the required parameters
-    uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
-
-    if (*ptr == 1)
-    {
-        // set the register value
-        aic_ipr_set(aic_ipr_get() | (1 << id));
-    }
-    else
-    {
-        // clear the register value
-        aic_ipr_set(aic_ipr_get() & (~(1 << id)));
-    }
-
-    // check if interrupt configuration has changed
-    check_int();
-
-    // there was no error in the processing
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
-
-    return;
-}
-
-void
 Aic::check_int()
 {
     // find the highest interrupt pending
@@ -127,12 +99,12 @@ Aic::check_int()
     if (aic_cisr_nfiq_getf())
     {
         // set the FIQ
-        TLM_INT_SET(fiq_m_socket, fiq_pl, fiq_delay);
+        this->fiq.set();
     }
     else
     {
         // clear the FIQ
-        TLM_INT_CLR(fiq_m_socket, fiq_pl, fiq_delay);
+        this->fiq.clear();
     }
 
     // generate the IRQ
@@ -158,12 +130,35 @@ Aic::check_int()
     if (aic_cisr_nirq_getf())
     {
         // set the IRQ
-        TLM_INT_SET(irq_m_socket, irq_pl, irq_delay);
+        this->irq.set();
     }
     else
     {
         // clear the IRQ
-        TLM_INT_CLR(irq_m_socket, irq_pl, irq_delay);
+        this->irq.clear();
     }
 }
 
+void
+Aic::interrupt_set(void* opaque)
+{
+    int id = (int)opaque;
+
+    // set the register value
+    aic_ipr_set(aic_ipr_get() | (1 << id));
+
+    // check if interrupt configuration has changed
+    check_int();
+}
+
+void
+Aic::interrupt_clr(void* opaque)
+{
+    int id = (int)opaque;
+
+    // clear the register value
+    aic_ipr_set(aic_ipr_get() & (~(1 << id)));
+
+    // check if interrupt configuration has changed
+    check_int();
+}

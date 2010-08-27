@@ -8,6 +8,8 @@ struct Peripheral : BusSlave
     /// Constructor
     Peripheral(sc_core::sc_module_name name) : BusSlave(name, m_reg, sizeof(m_reg))
     {
+        // clear all the registers
+        memset(m_reg, 0, sizeof(m_reg));
     }
 
     /// Override the virtual function
