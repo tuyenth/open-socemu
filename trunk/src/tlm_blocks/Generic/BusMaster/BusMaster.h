@@ -14,7 +14,7 @@
 // for the helper macros
 #include "utils.h"
 
-// request the BusSlave
+// BusSlave definition for bind operation
 #include "BusSlave.h"
 
 /// debug level
