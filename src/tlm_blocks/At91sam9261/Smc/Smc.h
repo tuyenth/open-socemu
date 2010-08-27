@@ -39,6 +39,7 @@ protected:
 
     /** Register write function
      * @param[in] offset Offset of the register to read
+     * @param[in] offset Value to write in the register
      */
     void
     reg_wr(uint32_t offset, uint32_t value);

@@ -127,14 +127,13 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->spi = new Spi("spi");
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(this->spi->reg_s_socket, REG_SPI_BASE_ADDR,
-        REG_SPI_BASE_ADDR + (REG_SPI_COUNT*4)))
+    if (this->addrdec->bind(*this->spi, REG_SPI_BASE_ADDR))
     {
         TLM_ERR("SPI address range wrong %d", 0);
         return;
     }
     //      -> interrupt hooked to ITC
-    this->spi->int_m_socket.bind(*this->itc->interrupts[10]);
+    this->spi->interrupt.bind(*this->itc->interrupts[10]);
 
     // GPIO:
     //   - create instance
