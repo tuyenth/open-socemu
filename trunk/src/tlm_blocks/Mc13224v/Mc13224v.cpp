@@ -113,14 +113,13 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     this->spif = new Spif("spif", (uint8_t*)flashdata, FLASH_SIZE);
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(this->spif->reg_s_socket, REG_SPIF_BASE_ADDR,
-        REG_SPIF_BASE_ADDR + (REG_SPIF_COUNT*4)))
+    if (this->addrdec->bind(*this->spif, REG_SPIF_BASE_ADDR))
     {
         TLM_ERR("SPIF address range wrong %d", 0);
         return;
     }
     //      -> interrupt hooked to ITC
-    this->spif->int_m_socket.bind(*this->itc->interrupts[6]);
+    this->spif->interrupt.bind(*this->itc->interrupts[6]);
 
     // SPI:
     //   - create instance
@@ -148,31 +147,29 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
 
     // UART1:
     //   - create instance
-    this->uart1 = new Uart(0, "uart1");
+    this->uart1 = new Uart("uart1", 0);
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(this->uart1->reg_s_socket, REG_UART1_BASE_ADDR,
-        REG_UART1_BASE_ADDR + (REG_UART_COUNT*4)))
+    if (this->addrdec->bind(*this->uart1, REG_UART1_BASE_ADDR))
     {
         TLM_ERR("UART1 address range wrong %d", 0);
         return;
     }
     //      -> interrupt hooked to ITC
-    this->uart1->int_m_socket.bind(*this->itc->interrupts[1]);
+    this->uart1->interrupt.bind(*this->itc->interrupts[1]);
 
     // UART2:
     //   - create instance
-    this->uart2 = new Uart(1, "uart2");
+    this->uart2 = new Uart("uart2", 1);
     //   - bind interfaces
     //      -> address decoder
-    if (this->addrdec->bind(this->uart2->reg_s_socket, REG_UART2_BASE_ADDR,
-        REG_UART2_BASE_ADDR + (REG_UART_COUNT*4)))
+    if (this->addrdec->bind(*this->uart2, REG_UART2_BASE_ADDR))
     {
         TLM_ERR("UART2 address range wrong %d", 0);
         return;
     }
     //      -> interrupt hooked to ITC
-    this->uart2->int_m_socket.bind(*this->itc->interrupts[2]);
+    this->uart2->interrupt.bind(*this->itc->interrupts[2]);
 
     {
         int fd;
