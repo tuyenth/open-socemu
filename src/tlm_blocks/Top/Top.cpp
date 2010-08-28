@@ -74,8 +74,8 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     intctrl = new IntCtrl("intctrl");
     // bind the init port of the BUS to the INTCTRL
     (*(bus->init_socket[TOP_NUM_MEMORIES])).bind(*intctrl);
-    intctrl->irq_socket.bind(*irq);
-    intctrl->fiq_socket.bind(*fiq);
+    intctrl->irq.bind(*irq);
+    intctrl->fiq.bind(*fiq);
 
     // specify the INTCTRL address range from the BUS perspective
     if (bus->set_range(TOP_NUM_MEMORIES, 0x01000000, 0xFFFFFFFFFF000000LL))
@@ -87,7 +87,7 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // create the dummy module
     dummy = new Dummy("dummy");
     // bind the MAC socket to the second targ socket of the BUS
-    dummy->interrupt.bind(intctrl->int_socket);
+    dummy->interrupt.bind(intctrl->interrupt);
     // bind the init port of the BUS to the MAC
     (*(bus->init_socket[TOP_NUM_MEMORIES+1])).bind(*dummy);
     // specify the MAC address range from the BUS perspective
