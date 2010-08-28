@@ -7,33 +7,25 @@
 // using this namespace to simplify streaming
 using namespace std;
 
+
 void
-IntCtrl::int_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
+IntCtrl::interrupt_set(void* opaque)
 {
-    TLM_INT_SANITY(trans);
-
-    // retrieve the required parameters
-    uint32_t* ptr = reinterpret_cast<uint32_t*>(trans.get_data_ptr());
-
-    if (*ptr == 1)
+    m_reg[REG_INTCTRL_IRQST_RAW] |= 1;
+    if (m_reg[REG_INTCTRL_IRQST_RAW] != 0)
     {
-        this->m_reg[REG_INTCTRL_IRQST_RAW] |= 1;
-        if (this->m_reg[REG_INTCTRL_IRQST_RAW] != 0)
-        {
-            TLM_INT_SET(irq_socket, irq_pl, irq_delay);
-        }
+        this->irq.set();
     }
-    else
-    {
-        this->m_reg[REG_INTCTRL_IRQST_RAW] &= ~1;
-        if (this->m_reg[REG_INTCTRL_IRQST_RAW] == 0)
-        {
-            TLM_INT_CLR(irq_socket, irq_pl, irq_delay);
-        }
-    }
+}
 
-    // there was no error in the processing
-    trans.set_response_status(tlm::TLM_OK_RESPONSE);
+void
+IntCtrl::interrupt_clr(void* opaque)
+{
+    m_reg[REG_INTCTRL_IRQST_RAW] &= ~1;
+    if (m_reg[REG_INTCTRL_IRQST_RAW] == 0)
+    {
+        this->irq.clear();
+    }
 }
 
 uint32_t
@@ -53,7 +45,7 @@ IntCtrl::reg_rd(uint32_t offset)
     {
     default:
         // read the register value
-        result = this->m_reg[index];
+        result = m_reg[index];
         break;
     }
 
