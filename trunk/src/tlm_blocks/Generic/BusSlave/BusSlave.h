@@ -65,7 +65,7 @@ struct BusSlave : sc_core::sc_module
     delay(void)
     {
         // internal delay
-        sc_core::wait(this->m_delay, sc_core::SC_NS);
+        sc_core::wait(m_delay, sc_core::SC_NS);
 
     }
 
@@ -75,7 +75,7 @@ struct BusSlave : sc_core::sc_module
     double
     get_delay(void)
     {
-        return this->m_delay;
+        return m_delay;
     }
 
     /** Set the internal delay of the module in nanoseconds
@@ -84,7 +84,7 @@ struct BusSlave : sc_core::sc_module
     void
     set_delay(double delay)
     {
-        this->m_delay = delay;
+        m_delay = delay;
     }
 
     /** Set the data container of the module
@@ -94,8 +94,8 @@ struct BusSlave : sc_core::sc_module
     void
     set_data(uint32_t* data, uint32_t size)
     {
-        this->m_data = data;
-        this->m_size = size;
+        m_data = data;
+        m_size = size;
     }
 
     /** Get the memory mapped content of the module
@@ -104,7 +104,7 @@ struct BusSlave : sc_core::sc_module
     virtual uint32_t*
     get_data()
     {
-        return this->m_data;
+        return m_data;
     }
 
     /** Get the size
@@ -113,7 +113,7 @@ struct BusSlave : sc_core::sc_module
     virtual uint32_t
     get_size()
     {
-        return this->m_size;
+        return m_size;
     }
 
     /** Operator & to return the reference to the slave socket
@@ -273,7 +273,7 @@ protected:
         TLM_TRANS_SANITY(trans);
 
         // execute the debug command
-        TLM_DBG_EXEC(trans, this->m_data, this->m_size);
+        TLM_DBG_EXEC(trans, m_data, m_size);
     }
 };
 

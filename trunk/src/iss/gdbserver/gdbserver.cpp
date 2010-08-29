@@ -488,34 +488,34 @@ bool gdbserver::checkctrlc(void)
 bool gdbserver::checkremote(bool forced)
 {
     // if the gdbserver is disabled and not enforced by caller
-    if (!this->m_enabled && !forced)
+    if (!m_enabled && !forced)
         return false;
 
     // if no client already accepted
-    if (this->m_clientfd == -1)
+    if (m_clientfd == -1)
     {
         struct sockaddr_in sockaddr;
         socklen_t len;
         int val;
 
         // if the connection is configured as blocking, print message
-        if (this->m_blocking)
+        if (m_blocking)
         {
             std::cout << "GDB Server TCP: waiting for connection on port " << this->port << std::endl;
         }
 
         len = sizeof(sockaddr);
-        this->m_clientfd = accept(this->m_serverfd, (struct sockaddr *)&sockaddr, &len);
-        if (this->m_clientfd < 0)
+        m_clientfd = accept(m_serverfd, (struct sockaddr *)&sockaddr, &len);
+        if (m_clientfd < 0)
         {
             return false;
         }
 
         /* set short latency */
         val = 1;
-        setsockopt(this->m_clientfd, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(val));
+        setsockopt(m_clientfd, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(val));
 
-        fcntl(this->m_clientfd, F_SETFL, O_NONBLOCK);
+        fcntl(m_clientfd, F_SETFL, O_NONBLOCK);
 
         // this is a first connection -> handle messages from debugger
         handlesig(0);
@@ -566,22 +566,22 @@ void gdbserver::start(int port, bool enabled, bool blocking)
 {
     // init the member variables the information
     this->port = port;
-    this->m_enabled = enabled;
-    this->m_blocking = blocking;
+    m_enabled = enabled;
+    m_blocking = blocking;
     // by default, no remote debugger connected
-    this->m_clientfd = -1;
+    m_clientfd = -1;
 
     // open the server port
-    this->m_serverfd = this->open();
+    m_serverfd = this->open();
 
     // sanity check: server socket could not be opened
-    assert(this->m_serverfd >= 0);
+    assert(m_serverfd >= 0);
 
     // if non blocking mode was requested, set the socket non blocking
-    if (!this->m_blocking)
+    if (!m_blocking)
     {
         // by default configure the server socket in non blocking
-        fcntl(this->m_serverfd, F_SETFL, O_NONBLOCK);
+        fcntl(m_serverfd, F_SETFL, O_NONBLOCK);
     }
 }
 

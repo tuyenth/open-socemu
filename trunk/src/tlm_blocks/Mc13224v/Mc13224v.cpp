@@ -50,7 +50,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     cpu_config = cpu_parameter->get_config();
 
     // create the address decoder instance
-    this->addrdec = new AddrDec<9> ("addrdec");
+    this->addrdec = new AddrDec("addrdec");
 
     // ARM7TDMI CPU:
     //   - create instance

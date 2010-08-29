@@ -150,15 +150,15 @@ Uart::reg_rd(uint32_t offset)
         break;
     case URXCON_INDEX:
         // read the number of used bytes in the RX FIFO
-        result = this->m_rx.fifo.size();
+        result = m_rx.fifo.size();
         break;
     case UTXCON_INDEX:
         // read the number of free bytes in the TX FIFO
-        result = 32-this->m_tx.fifo.size();
+        result = 32-m_tx.fifo.size();
         break;
     default:
         // read the register value
-        result = this->m_reg[index];
+        result = m_reg[index];
         break;
     }
 

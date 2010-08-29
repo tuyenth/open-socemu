@@ -73,7 +73,7 @@ protected:
         {
         default:
             // read the register value
-            result = this->m_reg[index];
+            result = m_reg[index];
             break;
         }
 
@@ -99,7 +99,7 @@ protected:
         switch (index)
         {
         default:
-            this->m_reg[index] = value;
+            m_reg[index] = value;
             break;
         }
     }

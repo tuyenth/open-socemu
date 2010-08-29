@@ -23,7 +23,6 @@
 /** AddrDec model is an address decoder to demux accesses from a single initiator to
  * several slaves
  */
-template<uint8_t N_TARGETS>
 struct AddrDec : BusSlave
 {
     /** AddrDec constructor
@@ -36,71 +35,6 @@ struct AddrDec : BusSlave
     , m_mask(mask)
     , m_num_slaves(0)
     {
-        for (uint8_t i = 0; i < N_TARGETS; i++)
-        {
-            char txt[20];
-            sprintf(txt, "bus_m_socket_%d", i);
-            bus_m_socket[i] = new tlm_utils::simple_initiator_socket_tagged<AddrDec>(txt);
-
-            // hook the master callbacks
-            bus_m_socket[i]->register_nb_transport_bw(this, &AddrDec::bus_m_nb_transport_bw, i);
-            bus_m_socket[i]->register_invalidate_direct_mem_ptr(this, &AddrDec::bus_m_invalidate_direct_mem_ptr, i);
-
-            // configure the default range
-            m_bus_m_range[i].start = 0xFFFFFFFFFFFFFFFFLL;
-            m_bus_m_range[i].end = 0xFFFFFFFFFFFFFFFFLL;
-        }
-    }
-
-    /** Set a target's address range
-     * @param[in] id Target identifier
-     * @param[in] start Decoding start address (inclusive)
-     * @param[in] end Decoding end address (exclusive, first address not to be decoded)
-     * @return true if there was an error, false otherwise
-     */
-    bool
-    set_range(uint8_t id, sc_dt::uint64 start, sc_dt::uint64 end)
-    {
-        uint8_t i;
-
-        // sanity check
-        assert(id < N_TARGETS);
-
-        // sanity checks:
-        //  - start address alignment
-        assert((start & 0x3) == 0);
-        //  - end address alignment
-        assert((end & 0x3) == 0);
-        //  - start address greater than end address
-        assert(start < end);
-        //  - addresses does not go beyond mask
-        assert((start & (~m_mask)) == 0);
-        assert((end & (~m_mask)) == 0);
-
-        // check that the range setting is not conflicting with others
-        for (i = 0; i < N_TARGETS; i++)
-        {
-            if (start < m_bus_m_range[i].start)
-            {
-                if (end > m_bus_m_range[i].start)
-                {
-                   // the requested base conflicts with another already configured
-                    return true;
-                }
-            }
-            else
-            {
-                if (start < m_bus_m_range[i].end)
-                {
-                   // the requested base conflicts with another already configured
-                    return true;
-                }
-            }
-        }
-
-        m_bus_m_range[id].start = start;
-        m_bus_m_range[id].end = end;
-        return false;
     }
 
     /** Bind a slave socket to the next available master socket
@@ -113,21 +47,29 @@ struct AddrDec : BusSlave
     bind(tlm::tlm_target_socket<>& slave,
          sc_dt::uint64 start, sc_dt::uint64 end)
     {
-        bool status;
+        struct range* new_range;
 
-        // sanity check
-        assert(m_num_slaves < N_TARGETS);
+        // check if the specified range does not overlap an existing slave
+        if (this->check_range(start, end))
+            return true;
+
+        // allocate a new slave structure
+        new_range = (struct range*)malloc(sizeof(struct range));
+        new_range->start = start;
+        new_range->end = end;
+        new_range->master_socket = new tlm_utils::simple_initiator_socket_tagged<AddrDec>("addrdec_m_socket");
+
+        // hook the master callbacks
+        new_range->master_socket->register_nb_transport_bw(this, &AddrDec::bus_m_nb_transport_bw, (int)new_range);
+        new_range->master_socket->register_invalidate_direct_mem_ptr(this, &AddrDec::bus_m_invalidate_direct_mem_ptr, (int)new_range);
 
         // hook the slave socket
-        bus_m_socket[m_num_slaves]->bind(slave);
-
-        // add the range specification
-        status = this->set_range(m_num_slaves, start, end);
+        new_range->master_socket->bind(slave);
 
         // increment the index
         m_num_slaves++;
 
-        return status;
+        return false;
     }
 
     /** Bind a simple slave to the next available master socket
@@ -141,17 +83,18 @@ struct AddrDec : BusSlave
         return this->bind(slave, start, start + slave.get_size());
     }
 
-protected:
-    /// TLM-2 master socket to forward bus accesses
-    tlm_utils::simple_initiator_socket_tagged<AddrDec>* bus_m_socket[N_TARGETS];
-
+private:
     /// Array of structures containing the address ranges of the targets
-    struct {
+    struct range {
         /// Start address of the range (included in range)
         sc_dt::uint64 start;
         /// End address of the range (not included in range)
         sc_dt::uint64 end;
-    } m_bus_m_range[N_TARGETS];
+        /// Pointer to the socket allocated for this range access
+        tlm_utils::simple_initiator_socket_tagged<AddrDec>* master_socket;
+        /// Pointer to the next slave in the chained list
+        struct range* next;
+    }* m_head;
 
     /// Decoder global address mask
     sc_dt::uint64 m_mask;
@@ -159,7 +102,6 @@ protected:
     /// Number of slave socket connections (equals number of internal master sockets)
     int m_num_slaves;
 
-private:
     /** slave_socket blocking transport method
      * @param[in, out] trans Transaction payload object, allocated by initiator, filled here
      * @param[in, out] delay Time object, allocated by initiator, filled here
@@ -169,34 +111,33 @@ private:
     {
         // sanity check
         #if BUSSLAVE_DEBUG_LEVEL
-        assert(this->m_free == true);
+        assert(m_free == true);
         #endif
 
         // forward path
         sc_dt::uint64 address = trans.get_address();
-        sc_dt::uint64 masked_address;
-        uint8_t target_nr = decode_address(address & m_mask, masked_address);
+        struct range* match = this->find_range(address & m_mask);
 
         // check that the address is correct
-        if (target_nr < N_TARGETS)
+        if (match != NULL)
         {
             // modify address within transaction
-            trans.set_address(masked_address);
+            trans.set_address(address - match->start);
 
             // mark the bus as busy
             #if BUSSLAVE_DEBUG_LEVEL
-            this->m_free = false;
+            m_free = false;
             #endif
 
             // forward transaction to appropriate target
-            (*bus_m_socket[target_nr])->b_transport(trans, delay);
+            (*match->master_socket)->b_transport(trans, delay);
 
             // replace original address
             trans.set_address(address);
 
             // mark the bus as free
             #if BUSSLAVE_DEBUG_LEVEL
-            this->m_free = true;
+            m_free = true;
             #endif
         }
         else
@@ -215,22 +156,21 @@ private:
                              tlm::tlm_dmi& dmi_data)
     {
         sc_dt::uint64 address = trans.get_address();
-        sc_dt::uint64 masked_address;
-        uint8_t target_nr = decode_address(address & m_mask, masked_address);
+        struct range* match = this->find_range(address & m_mask);
 
         // check address is correct
-        if (target_nr >= N_TARGETS)
+        if (unlikely(match == NULL))
             return false;
 
-        trans.set_address(masked_address);
+        trans.set_address(address - match->start);
 
-        bool status = (*bus_m_socket[target_nr] )->get_direct_mem_ptr(trans, dmi_data);
+        bool status = (*match->master_socket)->get_direct_mem_ptr(trans, dmi_data);
 
         trans.set_address(address);
 
-        // Calculate DMI address of target in system address space
-        dmi_data.set_start_address(compose_address(target_nr, dmi_data.get_start_address()));
-        dmi_data.set_end_address(compose_address(target_nr, dmi_data.get_end_address()));
+        // calculate DMI address of target in system address space
+        dmi_data.set_start_address(match->start + dmi_data.get_start_address());
+        dmi_data.set_end_address(match->start + dmi_data.get_end_address());
 
         return status;
     }
@@ -251,29 +191,37 @@ private:
 
         while (curr_len > 0)
         {
-            sc_dt::uint64 mask_addr;
-            uint32_t targ_len, read_len;
-            uint8_t target_nr;
+            uint32_t read_len;
+            struct range* match;
 
+            // find the next range
+            match = find_range(curr_addr);
 
-            // check if there is a slave at the current base address
-            target_nr = find_target(curr_addr, mask_addr, targ_len);
-            if (target_nr < N_TARGETS)
+            if (likely(match != NULL))
             {
                 // target was found
-                trans.set_address(mask_addr);
+                trans.set_address(curr_addr - match->start);
                 trans.set_data_length(curr_len);
                 trans.set_data_ptr(curr_ptr);
 
                 // Forward debug transaction to appropriate target
-                read_len = (*bus_m_socket[target_nr])->transport_dbg(trans);
+                read_len = (*match->master_socket)->transport_dbg(trans);
             }
             else
             {
-                // target was not found
-                // check if there is a reachable target within remaining len
-                read_len = (curr_len < targ_len)?curr_len:targ_len;
-
+                // matching range was not found
+                struct range* closest = this->find_next_closest_range(curr_addr);
+                if (closest == NULL)
+                {
+                    // no next range, then fill with FF until the end
+                    read_len = curr_len;
+                }
+                else
+                {
+                    // check if the next is closer than remaining bytes to read
+                    read_len = (curr_len < (closest->start - curr_addr))?
+                                curr_len:(closest->start - curr_addr);
+                }
                 // set to 0xFF the remaining
                 memset(curr_ptr, 0xFF, read_len);
             }
@@ -304,8 +252,7 @@ private:
     {
         SC_REPORT_FATAL("TLM-2", "Non blocking not yet implemented");
         // sanity check
-        assert(id < N_TARGETS);
-        assert(id >= 0);
+        assert((struct range*)id != NULL);
 
         return tlm::TLM_COMPLETED;
     }
@@ -319,88 +266,127 @@ private:
     bus_m_invalidate_direct_mem_ptr(int id, sc_dt::uint64 start_range,
                                     sc_dt::uint64 end_range)
     {
+        struct range* match = (struct range*)id;
+
         // Reconstruct address range in system memory map
-        sc_dt::uint64 bw_start_range = compose_address(id, start_range);
-        sc_dt::uint64 bw_end_range   = compose_address(id, end_range);
+        sc_dt::uint64 bw_start_range = match->start + start_range;
+        sc_dt::uint64 bw_end_range   = match->start + end_range;
 
         // propagate call backward to initiator
         slave_socket->invalidate_direct_mem_ptr(bw_start_range, bw_end_range);
     }
 
-    /** Fixed address decoding
-     * Check to which target range the input address belongs and mask the address in order
-     * to forward to the target only the offset address being accessed.
-     * @param address Input address
-     * @param masked_address Masked address within the target range
-     * @return The target index or beyond maximum index if not correct
+    /** Set a target's address range
+     * @param[in] id Target identifier
+     * @param[in] start Decoding start address (inclusive)
+     * @param[in] end Decoding end address (exclusive, first address not to be decoded)
+     * @return true if there was an error, false otherwise
      */
-    inline uint8_t
-    decode_address(sc_dt::uint64 address, sc_dt::uint64& masked_address)
+    bool
+    check_range(sc_dt::uint64 start, sc_dt::uint64 end)
     {
-        uint8_t i;
-        for (i = 0; i < N_TARGETS; i++)
-        {
-            // check if this is the concerned target
-            if ((address >= m_bus_m_range[i].start) &&
-                (address < m_bus_m_range[i].end))
-            {
-                masked_address = address - m_bus_m_range[i].start;
-                break;
-            }
-        }
-        return i;
-    }
+        struct range* rover = m_head;
 
-    /** Address Decoding
-     * Check to which target range the input address belongs and mask the address in order
-     * to forward to the target only the offset address being accessed
-     * @param[in] address Fixed input address within input range
-     * @param[out] masked_address Masked address within the target range only
-     * @param[out] len If target match, contains the length to its end, otherwise
-     *                 contains the length to the next target in range (0xFFFFFFFF if
-     *                 address is greater than last supported target)
-     * @return The found target index or beyond maximum index if not found
-     */
-    inline uint8_t
-    find_target(sc_dt::uint64 address, sc_dt::uint64& masked_address, uint32_t& len)
-    {
-        uint8_t i;
-        uint32_t length_to_next = 0xFFFFFFFF;
+        // sanity checks:
+        //  - start address alignment
+        assert((start & 0x3) == 0);
+        //  - end address alignment
+        assert((end & 0x3) == 0);
+        //  - start address greater than end address
+        assert(start < end);
+        //  - addresses does not go beyond mask
+        assert((start & (~m_mask)) == 0);
+        assert((end & (~m_mask)) == 0);
 
-        for (i = 0; i < N_TARGETS; i++)
+        // check that the range setting is not conflicting with others
+        while (rover != NULL)
         {
-            // check if this is the concerned target
-            if ((address >= m_bus_m_range[i].start) &&
-                (address < m_bus_m_range[i].end))
+            if (start < rover->start)
             {
-                masked_address = address - m_bus_m_range[i].start;
-                len = m_bus_m_range[i].end - masked_address;
-                return i;
-            }
-            // check if the address is before start of target
-            else if (address < m_bus_m_range[i].start)
-            {
-                // check if this is the closest target
-                if (length_to_next > (m_bus_m_range[i].start - address))
+                if (end > rover->start)
                 {
-                    length_to_next = (m_bus_m_range[i].start - address);
+                   // the requested base conflicts with another already configured
+                    return true;
                 }
             }
+            else
+            {
+                if (start < rover->end)
+                {
+                   // the requested base conflicts with another already configured
+                    return true;
+                }
+            }
+            // move to the next slave
+            rover = rover->next;
         }
-        len = length_to_next;
-        return i;
+        return false;
     }
 
-    /** Fixed address recomposing
-     * Recompose the address for a given target number
-     * @param[in] target_nr Target number
-     * @param[in] address Target address
-     * @return The initiator's point of view address
+    /** Find the range to which the input address belongs
+     * @param[in] address Input address
+     * @return The pointer to the found range or NULL if not found
      */
-    inline sc_dt::uint64
-    compose_address(uint8_t target_nr, sc_dt::uint64 address)
+    inline struct range*
+    find_range(sc_dt::uint64 address)
     {
-        return address + m_bus_m_range[target_nr].start;
+        struct range* rover = m_head;
+        struct range* prev = NULL;
+
+        while (rover != NULL)
+        {
+            // check if this is the concerned target
+            if ((address >= rover->start) &&
+                (address < rover->end))
+            {
+                // move this element to head if not already there
+                if (unlikely(prev != NULL))
+                {
+                    prev->next = rover->next;
+                    rover->next = m_head;
+                    m_head = rover;
+                }
+
+                // return element pointer
+                return rover;
+            }
+            // move to the next
+            prev = rover;
+            rover = rover->next;
+        }
+        return NULL;
+    }
+
+    /** Find next closest range
+     * existing range
+     * @param[in] address
+     * @return The pointer to the next closest range
+     */
+    struct range*
+    find_next_closest_range(sc_dt::uint64 address)
+    {
+        struct range* rover = m_head;
+        struct range* closest = NULL;
+
+        while (rover != NULL)
+        {
+            if (rover->start > address)
+            {
+                if (closest == NULL)
+                    closest = NULL;
+                else
+                {
+                    if ((closest->start - address) > (rover->start - address))
+                    {
+                        closest = rover;
+                    }
+                }
+            }
+            // check if this is the closest target
+            // move to the next
+            rover = rover->next;
+        }
+        return closest;
     }
 };
 

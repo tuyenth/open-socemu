@@ -24,7 +24,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     cpu_config = cpu_parameter->get_config();
 
     // create the address decoder instance
-    this->addrdec = new AddrDec<3> ("addrdec");
+    this->addrdec = new AddrDec("addrdec");
 
     // CPU:
     //   - create instance
@@ -63,7 +63,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     }
 
     // hook the ARM input interrupts to dummies if not yet connected
-    if (this->cpu->fiq.is_bound())
+    if (!this->cpu->fiq.is_bound())
     {
         char txt[256];
         tlm::tlm_initiator_socket<>* dummy_m_socket;
@@ -72,7 +72,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         dummy_m_socket = new tlm::tlm_initiator_socket<>(txt);
         dummy_m_socket->bind(this->cpu->fiq);
     }
-    if (this->cpu->irq.is_bound())
+    if (!this->cpu->irq.is_bound())
     {
         char txt[256];
         tlm::tlm_initiator_socket<>* dummy_m_socket;

@@ -175,19 +175,19 @@ struct Cpu : BusMaster
         CPU_TLM_DBG(1, "WFI: enter %d", 0);
 
         // check if neither the IRQ nor the FIQ is asserted
-        while ((!this->m_arm->irq_get()) && (!this->m_arm->fiq_get()))
+        while ((!m_arm->irq_get()) && (!m_arm->fiq_get()))
         {
             // wait for an interrupt (timeout to poll on debugger activity)
             sc_core::wait(1, sc_core::SC_MS, m_interrupt);
 
             // check if there is a remote connection (or a request)
-            if (this->m_arm->checkremote(true))
+            if (m_arm->checkremote(true))
             {
                 // check if ctrl-c (stop request) was received
-                if (this->m_arm->checkctrlc())
+                if (m_arm->checkctrlc())
                 {
                     // send signal to debugger
-                    this->m_arm->handlesig(SIGTRAP);
+                    m_arm->handlesig(SIGTRAP);
                 }
             }
         }

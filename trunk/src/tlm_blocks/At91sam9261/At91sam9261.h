@@ -25,7 +25,7 @@
 struct At91sam9261 : sc_core::sc_module
 {
     /// Address decoder
-    AddrDec<4>* addrdec;
+    AddrDec* addrdec;
     /// ARM 926EJ-S instruction simulation
     Cpu* cpu;
     /// Advanced Interrupt controller

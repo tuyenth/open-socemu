@@ -26,14 +26,14 @@ Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& p
     // check if there is an elf file defined
     if (config.count("elffile") == 0)
     {
-        this->m_elfpath = NULL;
+        m_elfpath = NULL;
     }
     else
     {
         elffile = config["elffile"];
         elffile->add_path(parameters.configpath);
         // copy the path into an internal variable
-        this->m_elfpath = elffile->get_string();
+        m_elfpath = elffile->get_string();
     }
     gdbserver = config["gdbserver"];
 
@@ -57,11 +57,11 @@ Cpu::Cpu(sc_core::sc_module_name name, const std::string& cpuname, Parameters& p
     TLM_DBG("CPU: gdbwait = %s", parameters.gdb_wait.get_bool()?"TRUE":"FALSE");
     if (cpuname == "ARM926EJ-S")
     {
-        this->m_arm = new arm926ejs(&bus, gdbserver->get_bool(), parameters.gdb_wait.get_bool());
+        m_arm = new arm926ejs(&bus, gdbserver->get_bool(), parameters.gdb_wait.get_bool());
     }
     else if (cpuname == "ARM7TDMI")
     {
-        this->m_arm = new arm7tdmi(&bus, gdbserver->get_bool(), parameters.gdb_wait.get_bool());
+        m_arm = new arm7tdmi(&bus, gdbserver->get_bool(), parameters.gdb_wait.get_bool());
     }
     else
     {
@@ -80,10 +80,10 @@ Cpu::thread_process()
     ElfReader ElfReader;
 
     // check if there was an ELF file specified for this CPU
-    if (this->m_elfpath != NULL)
+    if (m_elfpath != NULL)
     {
         // open the ELF file
-        ElfReader.Open(this->m_elfpath->c_str());
+        ElfReader.Open(m_elfpath->c_str());
 
         // use a Segment pointer
         Segment* Segment;
@@ -96,7 +96,7 @@ Cpu::thread_process()
     }
 
     // run armulator (should never return)
-    this->m_arm->run();
+    m_arm->run();
 
     // should never reach here
     assert(0);
@@ -107,11 +107,11 @@ Cpu::interrupt_set(void* opaque)
 {
     if (opaque == 0)
     {
-        this->m_arm->irq_set();
+        m_arm->irq_set();
     }
     else
     {
-        this->m_arm->fiq_set();
+        m_arm->fiq_set();
     }
     // notify the interrupt (after setting the interrupt in processor)
     m_interrupt.notify();
@@ -122,11 +122,11 @@ Cpu::interrupt_clr(void* opaque)
 {
     if (opaque == 0)
     {
-        this->m_arm->irq_clear();
+        m_arm->irq_clear();
     }
     else
     {
-        this->m_arm->fiq_clear();
+        m_arm->fiq_clear();
     }
     // notify the interrupt (after setting the interrupt in processor)
     m_interrupt.notify();

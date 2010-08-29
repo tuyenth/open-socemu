@@ -29,7 +29,7 @@
 struct Mc13224v : sc_core::sc_module
 {
     /// Address decoder
-    AddrDec<9>* addrdec;
+    AddrDec* addrdec;
     /// ARM7TDMI-S instruction simulation
     Cpu* cpu;
     /// Embedded ROM

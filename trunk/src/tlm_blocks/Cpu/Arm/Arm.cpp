@@ -1929,13 +1929,13 @@ Arm::irq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     // check if it is a set or clear command
     if (*ptr)
     {
-//        this->m_arm->irq_set();
+//        m_arm->irq_set();
         // notify the interrupt (after setting the interrupt in processor)
         m_interrupt.notify();
     }
     else
     {
-//        this->m_arm->irq_clear();
+//        m_arm->irq_clear();
     }
 
     // there was no error in the processing of the transaction
@@ -1955,13 +1955,13 @@ Arm::fiq_s_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     // check if it is a set or clear command
     if (*ptr)
     {
-//        this->m_arm->fiq_set();
+//        m_arm->fiq_set();
         // notify the interrupt (after setting the interrupt in arm)
         m_interrupt.notify();
     }
     else
     {
-//        this->m_arm->fiq_clear();
+//        m_arm->fiq_clear();
     }
 
     // there was no error in the processing of the transaction
