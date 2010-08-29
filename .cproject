@@ -29,7 +29,7 @@
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.archiver.cygwin.base.1650098009" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.cygwin.base"/>
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.exe.debug.1842773441" name="Cygwin C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.exe.debug">
-<option id="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level.521039991" name="Optimization Level" superClass="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level.521039991" name="Optimization Level" superClass="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.cygwin.exe.debug.option.debugging.level.937305684" name="Debug Level" superClass="gnu.cpp.compiler.cygwin.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.option.preprocessor.nostdinc.194712034" name="Do not search system directories (-nostdinc)" superClass="gnu.cpp.compiler.option.preprocessor.nostdinc"/>
 <option id="gnu.cpp.compiler.option.preprocessor.preprocess.429899620" name="Preprocess only (-E)" superClass="gnu.cpp.compiler.option.preprocessor.preprocess"/>
@@ -136,7 +136,7 @@
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.archiver.cygwin.base.1897126867" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.cygwin.base.1650098009"/>
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.exe.debug.387223671" name="Cygwin C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.exe.debug.1842773441">
-<option id="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level.120468860" name="Optimization Level" superClass="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level.120468860" name="Optimization Level" superClass="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.cygwin.exe.debug.option.debugging.level.1553625687" name="Debug Level" superClass="gnu.cpp.compiler.cygwin.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin.1883702525" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin"/>
 </tool>
@@ -161,7 +161,7 @@
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.archiver.cygwin.base.1362797467" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.cygwin.base.1650098009"/>
 <tool id="cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.exe.debug.1113480763" name="Cygwin C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.exe.debug.1842773441">
-<option id="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level.788872955" name="Optimization Level" superClass="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
+<option id="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level.788872955" name="Optimization Level" superClass="gnu.cpp.compiler.cygwin.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.cygwin.exe.debug.option.debugging.level.545530028" name="Debug Level" superClass="gnu.cpp.compiler.cygwin.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin.437022183" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin"/>
 </tool>

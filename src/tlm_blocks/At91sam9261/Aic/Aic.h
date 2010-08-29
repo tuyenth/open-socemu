@@ -82,10 +82,10 @@ private:
             if (!this->interrupts[i].is_bound())
             {
                 char txt[256];
-                tlm::tlm_initiator_socket<>* dummy_int_m_socket;
+                tlm_utils::simple_initiator_socket<Aic>* dummy_int_m_socket;
 
                 sprintf(txt, "aic_dummy_int[%d]", i);
-                dummy_int_m_socket = new tlm::tlm_initiator_socket<>(txt);
+                dummy_int_m_socket = new tlm_utils::simple_initiator_socket<Aic>(txt);
                 dummy_int_m_socket->bind(this->interrupts[i]);
             }
         }

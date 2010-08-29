@@ -65,20 +65,16 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // hook the ARM input interrupts to dummies if not yet connected
     if (!this->cpu->fiq.is_bound())
     {
-        char txt[256];
-        tlm::tlm_initiator_socket<>* dummy_m_socket;
+        tlm_utils::simple_initiator_socket<B2070>* dummy_m_socket;
 
-        sprintf(txt, "dummy_fiq_m_socket");
-        dummy_m_socket = new tlm::tlm_initiator_socket<>(txt);
+        dummy_m_socket = new tlm_utils::simple_initiator_socket<B2070>("dummy_fiq_m_socket");
         dummy_m_socket->bind(this->cpu->fiq);
     }
     if (!this->cpu->irq.is_bound())
     {
-        char txt[256];
-        tlm::tlm_initiator_socket<>* dummy_m_socket;
+        tlm_utils::simple_initiator_socket<B2070>* dummy_m_socket;
 
-        sprintf(txt, "dummy_irq_m_socket");
-        dummy_m_socket = new tlm::tlm_initiator_socket<>(txt);
+        dummy_m_socket = new tlm_utils::simple_initiator_socket<B2070>("dummy_irq_m_socket");
         dummy_m_socket->bind(this->cpu->irq);
     }
 }

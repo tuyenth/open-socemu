@@ -32,6 +32,7 @@ struct AddrDec : BusSlave
      */
     AddrDec(sc_core::sc_module_name name, sc_dt::uint64 mask = 0xFFFFFFFFFFFFFFFFLL)
     : BusSlave(name)
+    , m_head(NULL)
     , m_mask(mask)
     , m_num_slaves(0)
     {
@@ -66,8 +67,12 @@ struct AddrDec : BusSlave
         // hook the slave socket
         new_range->master_socket->bind(slave);
 
-        // increment the index
+        // increment the number of slaves
         m_num_slaves++;
+
+        // add the new range in the chained list
+        new_range->next = m_head;
+        m_head = new_range;
 
         return false;
     }
