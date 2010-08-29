@@ -18,7 +18,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
     cpu_parameter = config["cpu"];
 
     // create the address decoder instance
-    this->addrdec = new AddrDec<4> ("addrdec");
+    this->addrdec = new AddrDec("addrdec");
 
     // CPU:
     //   - create instance

@@ -31,7 +31,7 @@ Smc::reg_rd(uint32_t offset)
     {
     default:
         // read the register value
-        result = this->m_reg[index];
+        result = m_reg[index];
         break;
     }
 

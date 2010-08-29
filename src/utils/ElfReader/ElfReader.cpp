@@ -30,26 +30,26 @@ ElfReader::~ElfReader()
     int i;
     
     // check if the file was successfully opened
-    if (this->m_Fd != -1)
+    if (m_Fd != -1)
     {
         // check if the file content was successfully mapped
-        if (this->m_MmapBuf != NULL)
+        if (m_MmapBuf != NULL)
         {
             // unmap the file content
-            munmap(this->m_MmapBuf, this->m_MmapSize);
+            munmap(m_MmapBuf, m_MmapSize);
         }
         // close the file
-        close(this->m_Fd);
+        close(m_Fd);
         
 
         // destroy the Segment instances
-        for (i=0; i < this->m_SegmentsNum; i++)
+        for (i=0; i < m_SegmentsNum; i++)
         {
-            delete this->m_Segments[i];
+            delete m_Segments[i];
         }
         
         // destroy the array of Segments
-        delete [] this->m_Segments;
+        delete [] m_Segments;
     }
 }
 
@@ -67,27 +67,27 @@ ElfReader::Open(const char* file)
     elfreader_dbg("  - file '%s'\n", file);
 
     // open the file needed
-    this->m_Fd = open(file, O_RDONLY);
-    if (this->m_Fd == -1)
+    m_Fd = open(file, O_RDONLY);
+    if (m_Fd == -1)
     {
         fprintf (stderr, "ERROR: open %s (%s)\n", file, strerror(errno));
         goto elfreader_exit;
     }
 
     // get the file information
-    fstat(this->m_Fd, &stat);
+    fstat(m_Fd, &stat);
 
     // map structure elf Ehdr
-    this->m_MmapSize = stat.st_size;
-    this->m_MmapBuf = mmap(NULL, this->m_MmapSize, PROT_READ, MAP_PRIVATE, this->m_Fd, 0);
-    Ehdr = (Elf32_Ehdr*)this->m_MmapBuf;
+    m_MmapSize = stat.st_size;
+    m_MmapBuf = mmap(NULL, m_MmapSize, PROT_READ, MAP_PRIVATE, m_Fd, 0);
+    Ehdr = (Elf32_Ehdr*)m_MmapBuf;
     // sanity check, this can not happen
     assert(Ehdr != NULL);
     if (Ehdr == MAP_FAILED)
     {
         fprintf(stderr, "ERROR: mmap (%s)\n", strerror(errno));
         // reinit the address
-        this->m_MmapBuf = NULL;
+        m_MmapBuf = NULL;
         goto elfreader_exit;
     }
     // check that the specified file is elf
@@ -239,10 +239,10 @@ ElfReader::Open(const char* file)
     }
     
     // initialize the number of segments
-    this->m_SegmentsNum = Ehdr->e_phnum;
+    m_SegmentsNum = Ehdr->e_phnum;
     
     // allocate the array of Segment pointers
-    this->m_Segments = new Segment * [this->m_SegmentsNum];
+    m_Segments = new Segment * [m_SegmentsNum];
     
     // fill the arrays
     for (i=0; i < Ehdr->e_phnum; i++)
@@ -250,13 +250,13 @@ ElfReader::Open(const char* file)
         // map the program header
         Phdr = (Elf32_Phdr*)((uint32_t)Ehdr + Ehdr->e_phoff + (Ehdr->e_phentsize * i));
         
-        this->m_Segments[i] = new Segment((char*)Ehdr + Phdr->p_offset, Phdr->p_filesz, Phdr->p_vaddr);
+        m_Segments[i] = new Segment((char*)Ehdr + Phdr->p_offset, Phdr->p_filesz, Phdr->p_vaddr);
         
-        elfreader_dbg("  - segment %d: %d bytes at 0x%08X\n", i, this->m_Segments[i]->Size(), 
-                (int)this->m_Segments[i]->Address());
+        elfreader_dbg("  - segment %d: %d bytes at 0x%08X\n", i, m_Segments[i]->Size(), 
+                (int)m_Segments[i]->Address());
     }
     
-    elfreader_dbg("  - number of segments: %d\n", this->m_SegmentsNum);
+    elfreader_dbg("  - number of segments: %d\n", m_SegmentsNum);
 
 elfreader_exit:
     return;
@@ -266,10 +266,10 @@ Segment*
 ElfReader::GetNextSegment()
 {
     // check if the current segment is within boundaries
-    if (this->m_CurrentSegment < this->m_SegmentsNum)
+    if (m_CurrentSegment < m_SegmentsNum)
     {
         // return the current segment pointer and increment the index
-        return this->m_Segments[this->m_CurrentSegment++];
+        return m_Segments[m_CurrentSegment++];
     }
     else
     {

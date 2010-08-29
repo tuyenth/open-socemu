@@ -20,7 +20,7 @@
 struct B2070 : sc_core::sc_module
 {
     /// Address decoder instance pointer
-    AddrDec<3>* addrdec;
+    AddrDec* addrdec;
     /// CPU instance pointer
     Cpu* cpu;
     /// ROM instance pointer

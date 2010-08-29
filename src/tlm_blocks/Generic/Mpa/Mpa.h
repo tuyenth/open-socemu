@@ -73,47 +73,47 @@ struct Mpa : sc_core::sc_module
         assert(id < N_MASTERS);
 
         // check if bus is free
-        if (!this->m_free)
+        if (!m_free)
         {
             // mark that at least one request is pending
-            this->m_one_pending = true;
+            m_one_pending = true;
 
             // mark the initiator as pending
-            this->m_pending[id].is_pending = true;
+            m_pending[id].is_pending = true;
 
             // wait to get re-scheduled
-            wait(this->m_pending[id].event);
+            wait(m_pending[id].event);
 
             // mark the initiator as not pending anymore
-            this->m_pending[id].is_pending = false;
+            m_pending[id].is_pending = false;
 
             // clear m_one_pending if there are no other pending transaction
-            this->m_one_pending = false;
+            m_one_pending = false;
             for (int i = 0; i < N_MASTERS; i++)
             {
-                if (this->m_pending[i].is_pending)
+                if (m_pending[i].is_pending)
                 {
                     // there is still at least one pending
-                    this->m_one_pending = true;
+                    m_one_pending = true;
                     break;
                 }
             }
         }
 
         // mark the bus as busy
-        this->m_free = false;
+        m_free = false;
 
         // Forward transaction to single master
         bus_m_socket->b_transport(trans, delay);
 
         // check if there are requests pending (schedule the highest priority)
-        if (this->m_one_pending)
+        if (m_one_pending)
         {
             for (int i = 0; i < N_MASTERS; i++)
             {
-                if (this->m_pending[i].is_pending)
+                if (m_pending[i].is_pending)
                 {
-                    this->m_pending[i].event.notify();
+                    m_pending[i].event.notify();
                     break;
                 }
             }
@@ -121,7 +121,7 @@ struct Mpa : sc_core::sc_module
         else
         {
             // mark the bus as free
-            this->m_free = true;
+            m_free = true;
         }
     }
 
