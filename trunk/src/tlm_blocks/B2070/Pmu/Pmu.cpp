@@ -1,21 +1,21 @@
-#include "B2070_Cr.h"
+#include "Pmu.h"
 #include "utils.h"
 
 /// Used to select debugging (0 = OFF, 1 = ON)
-#define DEBUG_B2070_CR 0
+#define DEBUG_PMU 0
 
 // using this namespace to simplify streaming
 using namespace std;
 
 uint32_t
-B2070_Cr::reg_rd(uint32_t offset)
+Pmu::reg_rd(uint32_t offset)
 {
     uint32_t result;
     // retrieve the required parameters
     uint32_t index = offset/4;
 
     // sanity check
-    assert(index < REG_CR_COUNT);
+    assert(index < REG_PMU_COUNT);
 
     // internal delay
     this->delay();
@@ -32,13 +32,13 @@ B2070_Cr::reg_rd(uint32_t offset)
 }
 
 void
-B2070_Cr::reg_wr(uint32_t offset, uint32_t value)
+Pmu::reg_wr(uint32_t offset, uint32_t value)
 {
     // retrieve the required parameters
     uint32_t index = offset/4;
 
     // sanity check
-    assert(index < REG_CR_COUNT);
+    assert(index < REG_PMU_COUNT);
 
     // internal delay
     this->delay();
