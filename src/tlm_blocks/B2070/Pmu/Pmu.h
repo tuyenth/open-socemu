@@ -1,5 +1,5 @@
-#ifndef B2070_CR_H_
-#define B2070_CR_H_
+#ifndef PMU_H_
+#define PMU_H_
 
 #include "Peripheral.h"
 
@@ -8,14 +8,14 @@ enum
 {
     REG_CR_CLK_DIV_SEL  = 0,
 
-    REG_CR_COUNT        = 61
+    REG_PMU_COUNT        = 61
 };
 
-struct B2070_Cr : Peripheral<REG_CR_COUNT>
+struct Pmu : Peripheral<REG_PMU_COUNT>
 {
     /// Constructor
-    B2070_Cr(sc_core::sc_module_name name)
-    : Peripheral<REG_CR_COUNT>(name)
+    Pmu(sc_core::sc_module_name name)
+    : Peripheral<REG_PMU_COUNT>(name)
     {
     }
 
@@ -36,4 +36,4 @@ protected:
 
 };
 
-#endif /*B2070_CR_H_*/
+#endif /*PMU_H_*/
