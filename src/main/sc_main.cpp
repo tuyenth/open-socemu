@@ -1,6 +1,7 @@
 #include <vector>
 
 #include "Top.h"
+#include "Bob.h"
 #include "At91sam9261.h"
 #include "Mc13224v.h"
 #include "B2070.h"
@@ -278,6 +279,11 @@ int sc_main(int argc, char* argv[])
     {
         // create the Top level system
         Top top("top", parameters, *parameter);
+    }
+    else if (*parameter == "bob")
+    {
+        // create the Top level system
+        Bob bob("top", parameters, *parameter);
     }
     else
     {
