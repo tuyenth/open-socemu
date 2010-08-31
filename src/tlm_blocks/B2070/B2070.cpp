@@ -9,6 +9,8 @@
 #define FLASH_BASE_ADDR (0xFC000000)
 #define FLASH_SIZE (512*1024)
 
+#define PMU_BASE_ADDR (0x000F0000)
+
 B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
     Parameter *cpu_parameter;
@@ -58,7 +60,17 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (sram is hooked to the address decoder)
     if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR))
     {
-        TLM_ERR("SRAM address range wrong %d", 0);
+        TLM_ERR("FLASH address range wrong %d", 0);
+        return;
+    }
+
+    // PMU:
+    //   - create the PMU instance
+    this->pmu = new Pmu("pmu");
+    //   - bind interface (sram is hooked to the address decoder)
+    if (this->addrdec->bind(*this->pmu, PMU_BASE_ADDR))
+    {
+        TLM_ERR("PMU address range wrong %d", 0);
         return;
     }
 
