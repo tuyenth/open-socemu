@@ -15,6 +15,7 @@
 #include "Cpu.h"
 #include "Memory.h"
 #include "Rom.h"
+#include "Pmu/Pmu.h"
 
 /// B2070 level platform module
 struct B2070 : sc_core::sc_module
@@ -29,6 +30,8 @@ struct B2070 : sc_core::sc_module
     Memory* sram;
     /// FLASH instance pointer
     Rom* flash;
+    /// PMU instance pointer
+    Pmu* pmu;
 
     /** Constructor of the top level module
      * @param[in] name Name of the module
