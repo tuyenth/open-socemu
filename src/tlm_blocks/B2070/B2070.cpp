@@ -37,7 +37,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // ROM:
     //   - create the memory instance
     this->rom = new Rom("rom", ROM_SIZE);
-    //   - bind interface (rom is hooked to the address decoder)
+    //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR))
     {
         TLM_ERR("ROM address range wrong %d", 0);
@@ -47,7 +47,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // SRAM:
     //   - create the memory instance
     this->sram = new Memory("sram", SRAM_SIZE);
-    //   - bind interface (sram is hooked to the address decoder)
+    //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR))
     {
         TLM_ERR("SRAM address range wrong %d", 0);
@@ -57,7 +57,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // FLASH:
     //   - create the memory instance
     this->flash = new Rom("flash", FLASH_SIZE);
-    //   - bind interface (sram is hooked to the address decoder)
+    //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR))
     {
         TLM_ERR("FLASH address range wrong %d", 0);
@@ -67,7 +67,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     // PMU:
     //   - create the PMU instance
     this->pmu = new Pmu("pmu");
-    //   - bind interface (sram is hooked to the address decoder)
+    //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->pmu, PMU_BASE_ADDR))
     {
         TLM_ERR("PMU address range wrong %d", 0);
