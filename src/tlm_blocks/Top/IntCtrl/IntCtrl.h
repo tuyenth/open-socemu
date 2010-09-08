@@ -2,11 +2,11 @@
 #define INTCTRL_H_
 
 // this is  a peripheral
-#include "Peripheral.h"
+#include "Generic/Peripheral/Peripheral.h"
 
 // with master and slave interrupts
-#include "IntMaster.h"
-#include "IntSlave.h"
+#include "Generic/IntMaster/IntMaster.h"
+#include "Generic/IntSlave/IntSlave.h"
 
 #include "tlm_utils/simple_initiator_socket.h"
 

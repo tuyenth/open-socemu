@@ -2,13 +2,13 @@
 #define AIC_H_
 
 // this is a peripheral
-#include "Peripheral.h"
+#include "Generic/Peripheral/Peripheral.h"
 
 // with 2 interrupt masters
-#include "IntMaster.h"
+#include "Generic/IntMaster/IntMaster.h"
 
 // and 32 int slaves
-#include "IntSlave.h"
+#include "Generic/IntSlave/IntSlave.h"
 
 // include the registers definition
 #include "reg_aic.h"

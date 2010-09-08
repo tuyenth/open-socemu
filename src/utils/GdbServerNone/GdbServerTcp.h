@@ -10,7 +10,7 @@
 #include <netinet/tcp.h>
 #include <netinet/in.h>
 
-#include "GdbServerNone.h"
+#include "GdbServerNone/GdbServerNone.h"
 
 #include "utils.h"
 

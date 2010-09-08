@@ -1,5 +1,5 @@
-#include "GdbServerNone.h"
-#include "GdbServerTcp.h"
+#include "GdbServerNone/GdbServerNone.h"
+#include "GdbServerNone/GdbServerTcp.h"
 #include "CpuBase.h"
 
 template class CpuBase<GdbServerNone>;

@@ -11,16 +11,16 @@
 #include "Parameters.h"
 
 // generic blocks
-#include "AddrDec.h"
-#include "Cpu.h"
-#include "Memory.h"
+#include "Generic/AddrDec/AddrDec.h"
+#include "Cpu/Cpu.h"
+#include "Generic/Memory/Memory.h"
 // system specific blocks
-#include "Itc/Itc.h"
-#include "Crm/Crm.h"
-#include "Spif/Spif.h"
-#include "Spi/Spi.h"
-#include "Gpio/Gpio.h"
-#include "Uart/Uart.h"
+#include "Mc13224v/Itc/Itc.h"
+#include "Mc13224v/Crm/Crm.h"
+#include "Mc13224v/Spif/Spif.h"
+#include "Mc13224v/Spi/Spi.h"
+#include "Mc13224v/Gpio/Gpio.h"
+#include "Mc13224v/Uart/Uart.h"
 
 // necessary for dummies
 #include "tlm_utils/simple_initiator_socket.h"

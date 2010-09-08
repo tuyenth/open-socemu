@@ -1,10 +1,10 @@
 #include <vector>
 
-#include "Top.h"
-#include "Bob.h"
-#include "At91sam9261.h"
-#include "Mc13224v.h"
-#include "B2070.h"
+#include "Top/Top.h"
+#include "Bob/Bob.h"
+#include "At91sam9261/At91sam9261.h"
+#include "Mc13224v/Mc13224v.h"
+#include "B2070/B2070.h"
 
 void usage(void)
 {

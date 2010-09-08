@@ -11,11 +11,11 @@
 #include "Parameters.h"
 
 // necessary for system definition
-#include "AddrDec.h"
-#include "Cpu.h"
-#include "Memory.h"
-#include "Rom.h"
-#include "../Bob/Pmu/Pmu.h"
+#include "Generic/AddrDec/AddrDec.h"
+#include "Cpu/Cpu.h"
+#include "Generic/Memory/Memory.h"
+#include "Generic/Rom/Rom.h"
+#include "Bob/Pmu/Pmu.h"
 
 /// B2070 level platform module
 struct B2070 : sc_core::sc_module

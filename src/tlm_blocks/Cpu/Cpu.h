@@ -1,8 +1,8 @@
 #ifndef CPU_H_
 #define CPU_H_
 
-#include "BusMaster.h"
-#include "IntSlave.h"
+#include "Generic/BusMaster/BusMaster.h"
+#include "Generic/IntSlave/IntSlave.h"
 
 // command line and configuration parameters
 #include "Parameters.h"

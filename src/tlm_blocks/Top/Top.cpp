@@ -1,6 +1,6 @@
 #include "Top.h"
-#include "GdbServerTcp.h"
-#include "Arm32.h"
+#include "GdbServerNone/GdbServerTcp.h"
+#include "Cpu/Arm/Arm32.h"
 
 const struct {
     uint32_t size;

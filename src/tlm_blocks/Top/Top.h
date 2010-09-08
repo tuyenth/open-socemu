@@ -11,12 +11,12 @@
 #include "Parameters.h"
 
 // generic blocks
-#include "Cpu.h"
-#include "Memory.h"
+#include "Cpu/Cpu.h"
+#include "Generic/Memory/Memory.h"
 // system specific blocks
-#include "Bus/Bus.h"
-#include "IntCtrl/IntCtrl.h"
-#include "Dummy/Dummy.h"
+#include "Top/Bus/Bus.h"
+#include "Top/IntCtrl/IntCtrl.h"
+#include "Top/Dummy/Dummy.h"
 
 // necessary for dummy target
 #include "tlm_utils/simple_target_socket.h"

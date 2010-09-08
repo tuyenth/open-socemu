@@ -2,13 +2,13 @@
 #define CPUBASE_H_
 
 // this block is a bus master
-#include "BusMaster.h"
+#include "Generic/BusMaster/BusMaster.h"
 // with a default empty gdb server
-#include "GdbServerNone.h"
+#include "GdbServerNone/GdbServerNone.h"
 // that has parameters
 #include "Parameters.h"
 // and needs to be able to read ELF files
-#include "ElfReader.h"
+#include "ElfReader/ElfReader.h"
 
 /// debug level
 #define CPUBASE_DEBUG_LEVEL 0

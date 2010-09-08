@@ -1,7 +1,7 @@
-#include "Cpu.h"
+#include "Cpu/Cpu.h"
 
 // include the tools
-#include "ElfReader.h"
+#include "ElfReader/ElfReader.h"
 #include "arm926ejs.h"
 #include "arm7tdmi.h"
 

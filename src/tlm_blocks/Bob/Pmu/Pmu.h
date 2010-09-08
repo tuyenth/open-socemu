@@ -1,7 +1,7 @@
 #ifndef PMU_H_
 #define PMU_H_
 
-#include "Peripheral.h"
+#include "Generic/Peripheral/Peripheral.h"
 
 /// Registers definition
 enum
@@ -79,6 +79,7 @@ struct Pmu : Peripheral<REG_PMU_COUNT>
     {
         // initialize the registers content
         m_reg[REG_CR_MEM_CTL] = 0x1E;
+        m_reg[REG_XTAL_STRAP] = 8 | 0x30 | 0x80;
     }
 
 protected:

@@ -1,7 +1,7 @@
 #ifndef PERIPHERAL_H_
 #define PERIPHERAL_H_
 
-#include "BusSlave.h"
+#include "Generic/BusSlave/BusSlave.h"
 template <int REG_COUNT>
 struct Peripheral : BusSlave
 {

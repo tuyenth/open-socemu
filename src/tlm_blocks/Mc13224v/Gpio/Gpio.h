@@ -2,7 +2,7 @@
 #define GPIO_H_
 
 // this is a peripheral
-#include "Peripheral.h"
+#include "Generic/Peripheral/Peripheral.h"
 
 // include the registers definition
 #include "reg_gpio.h"

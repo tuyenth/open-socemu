@@ -42,30 +42,12 @@
 									<listOptionValue builtIn="false" value="../src/compiler/gcc"/>
 									<listOptionValue builtIn="false" value="../src"/>
 									<listOptionValue builtIn="false" value="../src/utils"/>
-									<listOptionValue builtIn="false" value="../src/utils/ElfReader"/>
-									<listOptionValue builtIn="false" value="../src/utils/GdbServerNone"/>
 									<listOptionValue builtIn="false" value="../src/iss"/>
 									<listOptionValue builtIn="false" value="../src/iss/arch/arm"/>
 									<listOptionValue builtIn="false" value="../src/iss/arch/arm/base"/>
 									<listOptionValue builtIn="false" value="../src/iss/arch/arm/mmu"/>
 									<listOptionValue builtIn="false" value="../src/iss/gdbserver"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Cpu"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Cpu/Arm"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Memory"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusSlave"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusMaster"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusMasterSlave"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/AddrDec"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntOr"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntSlave"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntMaster"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Peripheral"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Rom"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Top"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/At91sam9261"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/B2070"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Mc13224v"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Bob"/>
+									<listOptionValue builtIn="false" value="../src/tlm_blocks"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.flags.191713128" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags"/>
 								<option id="gnu.cpp.compiler.option.debugging.other.662426022" name="Other debugging flags" superClass="gnu.cpp.compiler.option.debugging.other"/>
@@ -904,30 +886,12 @@
 									<listOptionValue builtIn="false" value="../src/compiler/gcc"/>
 									<listOptionValue builtIn="false" value="../src"/>
 									<listOptionValue builtIn="false" value="../src/utils"/>
-									<listOptionValue builtIn="false" value="../src/utils/ElfReader"/>
-									<listOptionValue builtIn="false" value="../src/utils/GdbServerNone"/>
 									<listOptionValue builtIn="false" value="../src/iss"/>
 									<listOptionValue builtIn="false" value="../src/iss/arch/arm"/>
 									<listOptionValue builtIn="false" value="../src/iss/arch/arm/base"/>
 									<listOptionValue builtIn="false" value="../src/iss/arch/arm/mmu"/>
 									<listOptionValue builtIn="false" value="../src/iss/gdbserver"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Cpu"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Cpu/Arm"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Memory"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusSlave"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusMaster"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusMasterSlave"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/AddrDec"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntOr"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntSlave"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntMaster"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Peripheral"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Rom"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Top"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/At91sam9261"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/B2070"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Mc13224v"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Bob"/>
+									<listOptionValue builtIn="false" value="../src/tlm_blocks"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.flags.313212603" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags"/>
 								<option id="gnu.cpp.compiler.option.debugging.other.1395765494" name="Other debugging flags" superClass="gnu.cpp.compiler.option.debugging.other"/>
@@ -1788,30 +1752,12 @@
 									<listOptionValue builtIn="false" value="../src/compiler/gcc"/>
 									<listOptionValue builtIn="false" value="../src"/>
 									<listOptionValue builtIn="false" value="../src/utils"/>
-									<listOptionValue builtIn="false" value="../src/utils/ElfReader"/>
-									<listOptionValue builtIn="false" value="../src/utils/GdbServerNone"/>
 									<listOptionValue builtIn="false" value="../src/iss"/>
 									<listOptionValue builtIn="false" value="../src/iss/arch/arm"/>
 									<listOptionValue builtIn="false" value="../src/iss/arch/arm/base"/>
 									<listOptionValue builtIn="false" value="../src/iss/arch/arm/mmu"/>
 									<listOptionValue builtIn="false" value="../src/iss/gdbserver"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Cpu"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Cpu/Arm"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Memory"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusSlave"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusMaster"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/BusMasterSlave"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/AddrDec"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntOr"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntSlave"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/IntMaster"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Peripheral"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Generic/Rom"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Top"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/At91sam9261"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/B2070"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Mc13224v"/>
-									<listOptionValue builtIn="false" value="../src/tlm_blocks/Bob"/>
+									<listOptionValue builtIn="false" value="../src/tlm_blocks"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.optimization.flags.747339498" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags"/>
 								<option id="gnu.cpp.compiler.option.debugging.other.836596868" name="Other debugging flags" superClass="gnu.cpp.compiler.option.debugging.other"/>

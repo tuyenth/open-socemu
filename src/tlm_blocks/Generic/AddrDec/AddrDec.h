@@ -1,7 +1,7 @@
 #ifndef ADDRDEC_H_
 #define ADDRDEC_H_
 
-#include "BusSlave.h"
+#include "Generic/BusSlave/BusSlave.h"
 
 #include "tlm_utils/simple_initiator_socket.h"
 

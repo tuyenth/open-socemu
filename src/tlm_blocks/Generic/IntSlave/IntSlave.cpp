@@ -1,1 +1,1 @@
-#include "IntSlave.h"
+#include "Generic/IntSlave/IntSlave.h"

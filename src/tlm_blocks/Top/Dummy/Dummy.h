@@ -1,8 +1,8 @@
 #ifndef DUMMY_H_
 #define DUMMY_H_
 
-#include "Peripheral.h"
-#include "IntMaster.h"
+#include "Generic/Peripheral/Peripheral.h"
+#include "Generic/IntMaster/IntMaster.h"
 
 /// debug level
 #define DUMMY_DEBUG_LEVEL 0

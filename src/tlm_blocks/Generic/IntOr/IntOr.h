@@ -1,7 +1,7 @@
 #ifndef _INTOR_H_
 #define _INTOR_H_
 
-#include "BusMaster.h"
+#include "Generic/BusMaster/BusMaster.h"
 
 // not so obvious inclusions
 #include "tlm_utils/simple_target_socket.h"

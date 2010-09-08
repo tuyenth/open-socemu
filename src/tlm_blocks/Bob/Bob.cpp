@@ -9,7 +9,11 @@
 #define FLASH_BASE_ADDR (0xFC000000)
 #define FLASH_SIZE (512*1024)
 
+// peripherals base addresses
 #define PMU_BASE_ADDR (0x000F0000)
+#define GPIO2_BASE_ADDR (0x000FB000)
+#define GPIO_BASE_ADDR (0x000FC000)
+#define RBG_BASE_ADDR (0x000E9A00)
 
 Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
@@ -35,7 +39,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     this->cpu->bind(*this->addrdec);
 
     // ROM:
-    //   - create the memory instance
+    //   - create the instance
     this->rom = new Rom("rom", ROM_SIZE);
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR))
@@ -45,7 +49,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     }
 
     // SRAM:
-    //   - create the memory instance
+    //   - create the instance
     this->sram = new Memory("sram", SRAM_SIZE);
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR))
@@ -55,7 +59,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     }
 
     // FLASH:
-    //   - create the memory instance
+    //   - create the instance
     this->flash = new Rom("flash", FLASH_SIZE);
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR))
@@ -65,12 +69,42 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     }
 
     // PMU:
-    //   - create the memory instance
+    //   - create the instance
     this->pmu = new Pmu("pmu");
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->pmu, PMU_BASE_ADDR))
     {
         TLM_ERR("PMU address range wrong %d", 0);
+        return;
+    }
+
+    // GPIO:
+    //   - create the instance
+    this->gpio = new Pl061("gpio");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->gpio, GPIO_BASE_ADDR))
+    {
+        TLM_ERR("GPIO address range wrong %d", 0);
+        return;
+    }
+
+    // GPIO2:
+    //   - create the instance
+    this->gpio2 = new Pl061("gpio2");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->gpio2, GPIO2_BASE_ADDR))
+    {
+        TLM_ERR("GPIO2 address range wrong %d", 0);
+        return;
+    }
+
+    // RBG:
+    //   - create the instance
+    this->rbg = new Rbg("rbg");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->rbg, RBG_BASE_ADDR))
+    {
+        TLM_ERR("RBG address range wrong %d", 0);
         return;
     }
 

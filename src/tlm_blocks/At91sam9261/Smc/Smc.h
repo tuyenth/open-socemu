@@ -2,7 +2,7 @@
 #define SMC_H_
 
 // this is a peripheral
-#include "Peripheral.h"
+#include "Generic/Peripheral/Peripheral.h"
 
 // with a bus master
 #include "tlm_utils/simple_initiator_socket.h"

@@ -1,7 +1,7 @@
 #ifndef MEMORY_H_
 #define MEMORY_H_
 
-#include "BusSlave.h"
+#include "Generic/BusSlave/BusSlave.h"
 
 /// Generic Memory TLM module, deriving the simple slave
 struct Memory : BusSlave
