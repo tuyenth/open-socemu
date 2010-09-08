@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <elf.h>
 
-#include "ElfReader.h"
+#include "ElfReader/ElfReader.h"
 
 /// Define this for debug purpose
 //#define ELFREADER_DEBUG is_defined

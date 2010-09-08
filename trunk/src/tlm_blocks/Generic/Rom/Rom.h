@@ -1,7 +1,7 @@
 #ifndef ROM_H_
 #define ROM_H_
 
-#include "BusSlave.h"
+#include "Generic/BusSlave/BusSlave.h"
 
 /// Generic Rom TLM module, deriving the simple slave
 struct Rom : BusSlave

@@ -15,7 +15,7 @@
 #include "utils.h"
 
 // BusSlave definition for bind operation
-#include "BusSlave.h"
+#include "Generic/BusSlave/BusSlave.h"
 
 /// debug level
 #define BUSMASTER_DEBUG_LEVEL 0

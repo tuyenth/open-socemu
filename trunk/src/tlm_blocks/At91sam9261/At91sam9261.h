@@ -11,12 +11,12 @@
 #include "Parameters.h"
 
 // generic blocks
-#include "AddrDec.h"
-#include "Cpu.h"
-#include "Memory.h"
+#include "Generic/AddrDec/AddrDec.h"
+#include "Cpu/Cpu.h"
+#include "Generic/Memory/Memory.h"
 // system specific blocks
-#include "Aic/Aic.h"
-#include "Smc/Smc.h"
+#include "At91sam9261/Aic/Aic.h"
+#include "At91sam9261/Smc/Smc.h"
 
 // necessary for dummies
 #include "tlm_utils/simple_initiator_socket.h"

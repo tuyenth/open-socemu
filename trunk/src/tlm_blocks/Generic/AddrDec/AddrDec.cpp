@@ -1,4 +1,4 @@
-#include "AddrDec.h"
+#include "Generic/AddrDec/AddrDec.h"
 
 // This file is empty because Bus is template based and templated classes
 // must be defined in header files:

@@ -2,10 +2,10 @@
 #define SPI_H_
 
 // this is a peripheral
-#include "Peripheral.h"
+#include "Generic/Peripheral/Peripheral.h"
 
 // that generates an interrupt
-#include "IntMaster.h"
+#include "Generic/IntMaster/IntMaster.h"
 
 // include the registers definition
 #include "reg_spi.h"

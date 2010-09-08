@@ -15,7 +15,7 @@
 #include "utils.h"
 
 // main derived class
-#include "BusSlave.h"
+#include "Generic/BusSlave/BusSlave.h"
 
 /// debug level
 #define BUSMASTERSLAVE_DEBUG_LEVEL 0
