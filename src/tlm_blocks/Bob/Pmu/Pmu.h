@@ -82,7 +82,7 @@ struct Pmu : Peripheral<REG_PMU_COUNT>
         m_reg[REG_XTAL_STRAP] = 8 | 0x30 | 0x80;
     }
 
-protected:
+private:
     /** Register read function
      * @param[in] offset Offset of the register to read
      * @return The value read

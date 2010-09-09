@@ -28,7 +28,7 @@ struct Rbg : Peripheral<REG_RBG_COUNT>
     }
 
 private:
-    /// Main module thread
+    /// Module thread
     void
     thread_process();
 
