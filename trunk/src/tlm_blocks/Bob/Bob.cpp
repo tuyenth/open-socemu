@@ -10,10 +10,13 @@
 #define FLASH_SIZE (512*1024)
 
 // peripherals base addresses
-#define PMU_BASE_ADDR (0x000F0000)
+#define PRC_BASE_ADDR   (0x000D8000)
+#define PTU_BASE_ADDR   (0x000E0074)
+#define SRI_BASE_ADDR   (0x000E8510)
+#define RBG_BASE_ADDR   (0x000E9A00)
+#define PMU_BASE_ADDR   (0x000F0000)
 #define GPIO2_BASE_ADDR (0x000FB000)
-#define GPIO_BASE_ADDR (0x000FC000)
-#define RBG_BASE_ADDR (0x000E9A00)
+#define GPIO_BASE_ADDR  (0x000FC000)
 
 Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 {
@@ -105,6 +108,36 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     if (this->addrdec->bind(*this->rbg, RBG_BASE_ADDR))
     {
         TLM_ERR("RBG address range wrong %d", 0);
+        return;
+    }
+
+    // PTU:
+    //   - create the instance
+    this->ptu = new Ptu("ptu");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->ptu, PTU_BASE_ADDR))
+    {
+        TLM_ERR("PTU address range wrong %d", 0);
+        return;
+    }
+
+    // PRC:
+    //   - create the instance
+    this->prc = new Sp808("prc");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->prc, PRC_BASE_ADDR))
+    {
+        TLM_ERR("PRC address range wrong %d", 0);
+        return;
+    }
+
+    // SRI:
+    //   - create the instance
+    this->sri = new Sri("sri");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->sri, SRI_BASE_ADDR))
+    {
+        TLM_ERR("SRI address range wrong %d", 0);
         return;
     }
 

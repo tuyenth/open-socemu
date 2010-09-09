@@ -17,7 +17,10 @@
 #include "Generic/Rom/Rom.h"
 #include "Pmu/Pmu.h"
 #include "Arm/PrimeCells/Pl061/Pl061.h"
+#include "Arm/PrimeCells/Sp808/Sp808.h"
 #include "Bob/Rbg/Rbg.h"
+#include "Bob/Ptu/Ptu.h"
+#include "Bob/Sri/Sri.h"
 
 /// Bob level platform module
 struct Bob : sc_core::sc_module
@@ -40,6 +43,12 @@ struct Bob : sc_core::sc_module
     Pl061* gpio2;
     /// RBG peripheral
     Rbg* rbg;
+    /// PTU peripheral
+    Ptu* ptu;
+    /// PRC peripheral
+    Sp808* prc;
+    /// SRI peripheral
+    Sri* sri;
 
     /** Constructor of the top level module
      * @param[in] name Name of the module
