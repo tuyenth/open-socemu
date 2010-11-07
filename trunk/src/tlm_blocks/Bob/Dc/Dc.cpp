@@ -1,21 +1,21 @@
-#include "Sp808.h"
+#include "Dc.h"
 #include "utils.h"
 
 /// Used to select debugging
-#define DEBUG_SP808 0
+#define DEBUG_DC 0
 
 // using this namespace to simplify streaming
 using namespace std;
 
 uint32_t
-Sp808::reg_rd(uint32_t offset)
+Dc::reg_rd(uint32_t offset)
 {
     uint32_t result;
     // retrieve the required parameters
     uint32_t index = offset/4;
 
     // sanity check
-    assert(index < REG_SP808_COUNT);
+    assert(index < REG_DC_COUNT);
 
     // internal delay
     this->delay();
@@ -32,13 +32,13 @@ Sp808::reg_rd(uint32_t offset)
 }
 
 void
-Sp808::reg_wr(uint32_t offset, uint32_t value)
+Dc::reg_wr(uint32_t offset, uint32_t value)
 {
     // retrieve the required parameters
     uint32_t index = offset/4;
 
     // sanity check
-    assert(index < REG_SP808_COUNT);
+    assert(index < REG_DC_COUNT);
 
     // internal delay
     this->delay();
