@@ -12,6 +12,7 @@
 // peripherals base addresses
 #define PRC_BASE_ADDR   (0x000D8000)
 #define PTU_BASE_ADDR   (0x000E0074)
+#define DC_BASE_ADDR    (0x000E8024)
 #define SRI_BASE_ADDR   (0x000E8510)
 #define RBG_BASE_ADDR   (0x000E9A00)
 #define PMU_BASE_ADDR   (0x000F0000)
@@ -123,7 +124,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 
     // PRC:
     //   - create the instance
-    this->prc = new Sp808("prc");
+    this->prc = new Prc("prc");
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->prc, PRC_BASE_ADDR))
     {
@@ -138,6 +139,16 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     if (this->addrdec->bind(*this->sri, SRI_BASE_ADDR))
     {
         TLM_ERR("SRI address range wrong %d", 0);
+        return;
+    }
+
+    // DC:
+    //   - create the instance
+    this->dc = new Dc("dc");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->dc, DC_BASE_ADDR))
+    {
+        TLM_ERR("DC address range wrong %d", 0);
         return;
     }
 
