@@ -23,13 +23,13 @@ The following ring buffer implementation has the following characteristics:
 #define RB_MODE_RD 1
 #define RB_MODE_WR 2
 
-extern int rb_open(int id, unsigned int size, unsigned int flags);
+extern int rb_open(int id, unsigned long size, unsigned long flags);
 
 extern int rb_close(int *p_desc);
 
-extern int rb_write(int desc, char *buf, unsigned int len);
+extern int rb_write(int desc, char *buf, unsigned long len);
 
-extern int rb_read(int desc, char *buf, unsigned int len);
+extern int rb_read(int desc, char *buf, unsigned long len);
 
 
 #endif /* RB_H */
@@ -71,8 +71,8 @@ typedef struct
 {
     int shmid;
     int semid;
-    unsigned int size;
-    unsigned int flags;
+    unsigned long size;
+    unsigned long flags;
     RB_HDR *hdr;
     char *shm;
 } RB;
@@ -174,7 +174,7 @@ static void rb_unlocksem(int semid)
     }
 }
 
-int rb_open(int id, unsigned int size, unsigned int flags)
+int rb_open(int id, unsigned long size, unsigned long flags)
 {
     key_t key;
     RB *p_rb;
@@ -216,7 +216,8 @@ int rb_open(int id, unsigned int size, unsigned int flags)
     rb_locksem(p_rb->semid);
 
     /* Create the SHM segment: read/write mode */
-    p_rb->shmid = shmget(key, size, IPC_CREAT | 0666);
+    p_rb->shmid = shmget(key, size + (unsigned long)(((RB_HDR *)0) + 1), 
+            IPC_CREAT | 0666);
     if (p_rb->shmid < 0)
     {
         perror("shmget");
@@ -339,11 +340,11 @@ rb_close_error_releasesem:
     return -1;
 }
 
-int rb_write(int desc, char *buf, unsigned int len)
+int rb_write(int desc, char *buf, unsigned long len)
 {
     RB *p_rb = (RB *)desc;
     RB_HDR *hdr ;
-    unsigned int remain;
+    unsigned long remain;
 
     /* Sanity check */
     assert(len != 0);
@@ -366,9 +367,9 @@ int rb_write(int desc, char *buf, unsigned int len)
     remain = len;
     while (remain)
     {
-        unsigned int available;
+        unsigned long available;
         /* Compute the size available for write (always keep 1 element free) */
-        available = hdr->r_idx + p_rb->size - hdr->w_idx - 1;
+        available = ((hdr->r_idx + p_rb->size - hdr->w_idx) % p_rb->size) - 1;
 
         /* Check if the size available is greater than requested len */
         if (available > remain) available = remain;
@@ -386,7 +387,7 @@ int rb_write(int desc, char *buf, unsigned int len)
         }
         else
         {
-            unsigned int partlen;
+            unsigned long partlen;
 
             /* Copy the first part */
             partlen = p_rb->size - hdr->w_idx;
@@ -410,9 +411,9 @@ int rb_write(int desc, char *buf, unsigned int len)
     return len-remain;
 }
 
-int rb_read(int desc, char *buf, unsigned int len)
+int rb_read(int desc, char *buf, unsigned long len)
 {
-    unsigned int available;
+    unsigned long available;
     RB *p_rb = (RB *)desc;
     RB_HDR *hdr;
 
@@ -447,7 +448,7 @@ int rb_read(int desc, char *buf, unsigned int len)
     }
     else
     {
-        unsigned int partlen;
+        unsigned long partlen;
 
         /* Copy the first part */
         partlen = p_rb->size - hdr->r_idx;
