@@ -3,7 +3,7 @@
 
 Standard PIPE and its assimilated IPCs (FIFO) have many advantages but also a few disadvantages when it comes to controlling its size and behavior or getting usage statistics. 
 
-The whole implementation can be found [here|rb_nolicense.tgz].  It is accompanied by a stress test program which is also a usage example.
+The whole implementation can be found [here rb_nolicense.tgz].  It is accompanied by a stress test program which is also a usage example.
 
 = Details =
 
