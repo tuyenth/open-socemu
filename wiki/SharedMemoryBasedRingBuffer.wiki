@@ -16,12 +16,15 @@ The following ring buffer implementation has the following characteristics:
 `rb.h`:
 
 {{{
+
 #ifndef RB_H
 #define RB_H
 
 /* Define the open modes (bitfield) */
 #define RB_MODE_RD 1
 #define RB_MODE_WR 2
+
+extern int rb_init(void *p_cfg);
 
 extern int rb_open(int id, unsigned long size, unsigned long flags);
 
@@ -31,13 +34,14 @@ extern int rb_write(int desc, char *buf, unsigned long len);
 
 extern int rb_read(int desc, char *buf, unsigned long len);
 
-
 #endif /* RB_H */
+
 }}}
 
 `rb.c`:
 
 {{{
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -56,15 +60,15 @@ extern int rb_read(int desc, char *buf, unsigned long len);
 #if defined(RB_DBGFLAGS) && (RB_DBGFLAGS & 1)
 #include <assert.h>
 #else
-//#define assert(...)
+#define assert(...)
 #endif
 
 
 typedef struct
 {
-    unsigned long flags;
-    unsigned long r_idx;
-    unsigned long w_idx;
+    volatile unsigned long flags;
+    volatile unsigned long r_idx;
+    volatile unsigned long w_idx;
 } RB_HDR;
 
 typedef struct
@@ -75,6 +79,9 @@ typedef struct
     unsigned long flags;
     RB_HDR *hdr;
     char *shm;
+#if defined(RB_DBGFLAGS) && (RB_DBGFLAGS & 1)
+    char *shm_e;
+#endif
 } RB;
 
 union semun
@@ -158,7 +165,8 @@ static void rb_locksem(int semid)
     sb.sem_num = 0;
     sb.sem_op = -1;
     sb.sem_flg = SEM_UNDO;
-    if (semop(semid, &sb, 1) == -1) {
+    if (semop(semid, &sb, 1) == -1)
+    {
         perror("semop(rb_locksem)");
     }
 }
@@ -169,9 +177,15 @@ static void rb_unlocksem(int semid)
     sb.sem_num = 0;
     sb.sem_op = 1;
     sb.sem_flg = SEM_UNDO;
-    if (semop(semid, &sb, 1) == -1) {
+    if (semop(semid, &sb, 1) == -1)
+    {
         perror("semop(rb_locksem)");
     }
+}
+
+int rb_init(void *p_cfg)
+{
+    return 0;
 }
 
 int rb_open(int id, unsigned long size, unsigned long flags)
@@ -181,6 +195,7 @@ int rb_open(int id, unsigned long size, unsigned long flags)
     char *p;
     struct shmid_ds shmds;
     RB_HDR *hdr;
+    unsigned long totalsize;
 
     /* Sanity check: have to request a mode, can not be both simultaneously */
     assert((flags & (RB_MODE_RD | RB_MODE_WR)) &&
@@ -216,8 +231,8 @@ int rb_open(int id, unsigned long size, unsigned long flags)
     rb_locksem(p_rb->semid);
 
     /* Create the SHM segment: read/write mode */
-    p_rb->shmid = shmget(key, size + (unsigned long)(((RB_HDR *)0) + 1), 
-            IPC_CREAT | 0666);
+    totalsize = size + (unsigned long) (((RB_HDR *)0)+1);
+    p_rb->shmid = shmget(key, totalsize, IPC_CREAT | 0666);
     if (p_rb->shmid < 0)
     {
         perror("shmget");
@@ -248,7 +263,9 @@ int rb_open(int id, unsigned long size, unsigned long flags)
     /* Save the header pointer */
     hdr = p_rb->hdr = (RB_HDR *)p;
     p_rb->shm = (char *)(hdr + 1);
-
+#if defined(RB_DBGFLAGS) && (RB_DBGFLAGS & 1)
+    p_rb->shm_e = p + totalsize;
+#endif
     /* Check if this is the first user of the SHM */
     if (shmds.shm_nattch == 1)
     {
@@ -358,7 +375,7 @@ int rb_write(int desc, char *buf, unsigned long len)
     /* Check that data will not be thrown away */
     if (len > p_rb->size)
     {
-        printf("rb_write: Too much data added at once (%d), data will be lost\n", len);
+        printf("rb_write: Too much data added at once (%lu), data will be lost\n", len);
     }
 
     /* Get the header : after checking the close was not called */
@@ -369,10 +386,13 @@ int rb_write(int desc, char *buf, unsigned long len)
     {
         unsigned long available;
         /* Compute the size available for write (always keep 1 element free) */
-        available = ((hdr->r_idx + p_rb->size - hdr->w_idx) % p_rb->size) - 1;
+        available = (hdr->r_idx + p_rb->size - hdr->w_idx - 1) % p_rb->size;
 
         /* Check if the size available is greater than requested len */
-        if (available > remain) available = remain;
+        if (available > remain)
+        {
+            available = remain;
+        }
 
         /* Check if the write is contiguous */
         if ((hdr->w_idx + available) <= p_rb->size)
@@ -383,7 +403,9 @@ int rb_write(int desc, char *buf, unsigned long len)
             /* Move the pointer */
             hdr->w_idx += available;
             if (hdr->w_idx == p_rb->size)
+            {
                 hdr->w_idx = 0;
+            }
         }
         else
         {
@@ -402,6 +424,9 @@ int rb_write(int desc, char *buf, unsigned long len)
         /* Decrement the remaining size */
         remain -= available;
 
+        assert(hdr->w_idx < p_rb->size);
+        assert(p_rb->shm <= &p_rb->shm[hdr->w_idx]);
+        assert(p_rb->shm_e > &p_rb->shm[hdr->w_idx]);
 #if defined(RB_DBGFLAGS) && (RB_DBGFLAGS & 4)
         buf += available;
 #else
@@ -413,9 +438,9 @@ int rb_write(int desc, char *buf, unsigned long len)
 
 int rb_read(int desc, char *buf, unsigned long len)
 {
-    unsigned long available;
     RB *p_rb = (RB *)desc;
     RB_HDR *hdr;
+    unsigned long available;
 
     /* Sanity check */
     assert(len != 0);
@@ -460,7 +485,9 @@ int rb_read(int desc, char *buf, unsigned long len)
         /* Move the pointer */
         hdr->r_idx = available - partlen;
     }
-
+    assert(hdr->r_idx < p_rb->size);
+    assert(p_rb->shm <= &p_rb->shm[hdr->r_idx]);
+    assert(p_rb->shm_e > &p_rb->shm[hdr->r_idx]);
     return available;
 }
 
