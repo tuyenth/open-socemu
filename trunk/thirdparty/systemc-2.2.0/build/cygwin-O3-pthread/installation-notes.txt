@@ -1,8 +1,5 @@
 installation-notes.txt
 
- Created on: 23 janv. 2009
-     Author: cionescu
-
 Installation steps:
 1/ Install cygwin with the following packages:
    - gcc
