@@ -1,0 +1,29 @@
+After running:
+  tar xvf systemc-2.2.0.tgz
+  cd systemc-2.2.0
+  mkdir objdir
+  cd objdir
+  ../configure
+  make
+  
+I was facing the following error:
+../../../../src/sysc/utils/sc_utils_ids.cpp:110: error: ‘getenv’ is not a member of ‘std’
+../../../../src/sysc/utils/sc_utils_ids.cpp:111: error: ‘strcmp’ was not declared in this scope
+
+I found in the web the following solution:
+I had the same compilation issue. I added the following headers in systemc-2.2.0/src/sysc/utils/sc_utils_ids.cpp
+
+
+#include "string.h"
+#include "cstdlib"
+
+After this my make, install and check all passed successfully.
+
+I added the following lines in 
+#include <cstring>
+#include <cstdlib> 
+
+then it compiled fine:
+make
+make install
+
