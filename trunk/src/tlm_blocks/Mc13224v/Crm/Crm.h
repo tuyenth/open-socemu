@@ -38,7 +38,7 @@ struct Crm : Peripheral<REG_CRM_COUNT>
 private:
     /// Override the virtual function to be able to generate interrupt from debugger
     unsigned int
-    Crm::reg_s_transport_dbg(tlm::tlm_generic_payload& trans);
+    reg_s_transport_dbg(tlm::tlm_generic_payload& trans);
 
     /** Register read function
      * @param[in] offset Offset of the register to read
