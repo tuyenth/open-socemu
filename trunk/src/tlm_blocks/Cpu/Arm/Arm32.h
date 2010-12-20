@@ -1184,13 +1184,13 @@ protected:
                     // check if the sign bit is set
                     if ((int32_t)tmp2 > 0x40000000)
                     {
-                        // TODO: this was copied from QEMU but not sure about reason
+                        // TODO: not sure about reason
                         tmp2 = ~0x80000000;
                         this->QF = 1;
                     }
                     else if ((int32_t)tmp2 < (int32_t)0xC0000000)
                     {
-                        // TODO: this was copied from QEMU but not sure about reason
+                        // TODO: not sure about reason
                         tmp2 = 0x80000000;
                         this->QF = 1;
                     }
