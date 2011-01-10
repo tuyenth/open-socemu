@@ -73,6 +73,9 @@ enum
 
 struct Pmu : Peripheral<REG_PMU_COUNT>
 {
+    // Module has a thread
+    SC_HAS_PROCESS(Pmu);
+
     /// Constructor
     Pmu(sc_core::sc_module_name name)
     : Peripheral<REG_PMU_COUNT>(name)
@@ -80,9 +83,16 @@ struct Pmu : Peripheral<REG_PMU_COUNT>
         // initialize the registers content
         m_reg[REG_CR_MEM_CTL] = 0x1E;
         m_reg[REG_XTAL_STRAP] = 8 | 0x30 | 0x80;
+
+        // create the module thread
+        SC_THREAD(thread_process);
     }
 
 private:
+    /// Module thread
+    void
+    thread_process();
+
     /** Register read function
      * @param[in] offset Offset of the register to read
      * @return The value read
@@ -97,6 +107,8 @@ private:
     void
     reg_wr(uint32_t offset, uint32_t value);
 
+    /// Event used to wake up the thread
+    sc_core::sc_event m_event;
 };
 
 #endif /*PMU_H_*/
