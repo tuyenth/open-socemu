@@ -55,7 +55,6 @@ Sri::reg_wr(uint32_t offset, uint32_t value)
         m_reg[index] = value;
         break;
     case REG_DC_SRI_JTAG_ACCESS:
-        //
         // check if it is a start
         if (m_reg[REG_DC_SRI_JTAG_ACCESS] & 1)
         {
