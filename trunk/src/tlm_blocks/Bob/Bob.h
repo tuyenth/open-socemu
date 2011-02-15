@@ -22,6 +22,7 @@
 #include "Bob/Ptu/Ptu.h"
 #include "Bob/Sri/Sri.h"
 #include "Bob/Dc/Dc.h"
+#include "Bob/Fm/Fm.h"
 
 /// Bob level platform module
 struct Bob : sc_core::sc_module
@@ -52,6 +53,8 @@ struct Bob : sc_core::sc_module
     Sri* sri;
     /// DC peripheral
     Dc* dc;
+    /// FM peripheral
+    Fm* fm;
 
     /** Constructor of the top level module
      * @param[in] name Name of the module

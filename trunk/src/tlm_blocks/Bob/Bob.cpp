@@ -16,6 +16,7 @@
 #define SRI_BASE_ADDR   (0x000E8510)
 #define RBG_BASE_ADDR   (0x000E9A00)
 #define PMU_BASE_ADDR   (0x000F0000)
+#define FM_BASE_ADDR    (0x000F2000)
 #define GPIO2_BASE_ADDR (0x000FB000)
 #define GPIO_BASE_ADDR  (0x000FC000)
 
@@ -149,6 +150,16 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     if (this->addrdec->bind(*this->dc, DC_BASE_ADDR))
     {
         TLM_ERR("DC address range wrong %d", 0);
+        return;
+    }
+
+    // FM:
+    //   - create the instance
+    this->fm = new Fm("fm");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->fm, FM_BASE_ADDR))
+    {
+        TLM_ERR("FM address range wrong %d", 0);
         return;
     }
 
