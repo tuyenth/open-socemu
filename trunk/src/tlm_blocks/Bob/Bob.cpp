@@ -10,6 +10,7 @@
 #define FLASH_SIZE (512*1024)
 
 // peripherals base addresses
+#define IC_BASE_ADDR    (0x000C0000)
 #define PRC_BASE_ADDR   (0x000D8000)
 #define PTU_BASE_ADDR   (0x000E0074)
 #define DC_BASE_ADDR    (0x000E8024)
@@ -160,6 +161,16 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     if (this->addrdec->bind(*this->fm, FM_BASE_ADDR))
     {
         TLM_ERR("FM address range wrong %d", 0);
+        return;
+    }
+
+    // IC:
+    //   - create the instance
+    this->ic = new Pl190("ic");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->ic, IC_BASE_ADDR))
+    {
+        TLM_ERR("IC address range wrong %d", 0);
         return;
     }
 
