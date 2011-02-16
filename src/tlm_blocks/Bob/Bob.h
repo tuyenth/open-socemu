@@ -17,6 +17,7 @@
 #include "Generic/Rom/Rom.h"
 #include "Pmu/Pmu.h"
 #include "Arm/PrimeCells/Pl061/Pl061.h"
+#include "Arm/PrimeCells/Pl190/Pl190.h"
 #include "Bob/Prc/Prc.h"
 #include "Bob/Rbg/Rbg.h"
 #include "Bob/Ptu/Ptu.h"
@@ -55,6 +56,8 @@ struct Bob : sc_core::sc_module
     Dc* dc;
     /// FM peripheral
     Fm* fm;
+    /// IC peripheral
+    Pl190 *ic;
 
     /** Constructor of the top level module
      * @param[in] name Name of the module

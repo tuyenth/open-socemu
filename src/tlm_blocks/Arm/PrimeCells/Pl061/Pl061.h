@@ -1,6 +1,8 @@
 #ifndef PL061_H_
 #define PL061_H_
 
+/// ARM GPIO IP
+
 #include "Generic/Peripheral/Peripheral.h"
 
 /// Registers definition
