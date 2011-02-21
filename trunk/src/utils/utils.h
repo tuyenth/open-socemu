@@ -280,6 +280,4 @@ do {                                                                        \
 /// @param[in] __a 16 bit object to read
 #define U16(__o) (*((uint16_t*)(&(__o))))
 
-extern int rand_ps();
-
 #endif /*UTILS_H_*/
