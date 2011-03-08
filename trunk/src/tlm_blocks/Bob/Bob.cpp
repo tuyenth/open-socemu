@@ -13,11 +13,13 @@
 #define IC_BASE_ADDR    (0x000C0000)
 #define PRC_BASE_ADDR   (0x000D8000)
 #define PTU_BASE_ADDR   (0x000E0074)
+#define CR_BASE_ADDR    (0x000E8000)
 #define DC_BASE_ADDR    (0x000E8024)
 #define SRI_BASE_ADDR   (0x000E8510)
 #define RBG_BASE_ADDR   (0x000E9A00)
 #define PMU_BASE_ADDR   (0x000F0000)
 #define FM_BASE_ADDR    (0x000F2000)
+#define TIMER_BASE_ADDR (0x000FA000)
 #define GPIO2_BASE_ADDR (0x000FB000)
 #define GPIO_BASE_ADDR  (0x000FC000)
 
@@ -171,6 +173,26 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     if (this->addrdec->bind(*this->ic, IC_BASE_ADDR))
     {
         TLM_ERR("IC address range wrong %d", 0);
+        return;
+    }
+
+    // TIMER:
+    //   - create the instance
+    this->timer = new Sp804("timer");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->timer, TIMER_BASE_ADDR))
+    {
+        TLM_ERR("TIMER address range wrong %d", 0);
+        return;
+    }
+
+    // CR:
+    //   - create the instance
+    this->cr = new Cr("cr");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->cr, CR_BASE_ADDR))
+    {
+        TLM_ERR("CR address range wrong %d", 0);
         return;
     }
 
