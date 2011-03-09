@@ -19,6 +19,7 @@
 #define RBG_BASE_ADDR   (0x000E9A00)
 #define PMU_BASE_ADDR   (0x000F0000)
 #define FM_BASE_ADDR    (0x000F2000)
+#define RMP_BASE_ADDR   (0x000F8000)
 #define TIMER_BASE_ADDR (0x000FA000)
 #define GPIO2_BASE_ADDR (0x000FB000)
 #define GPIO_BASE_ADDR  (0x000FC000)
@@ -193,6 +194,16 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     if (this->addrdec->bind(*this->cr, CR_BASE_ADDR))
     {
         TLM_ERR("CR address range wrong %d", 0);
+        return;
+    }
+
+    // RMP:
+    //   - create the instance
+    this->rmp = new Rmp("rmp");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->rmp, RMP_BASE_ADDR))
+    {
+        TLM_ERR("RMP address range wrong %d", 0);
         return;
     }
 

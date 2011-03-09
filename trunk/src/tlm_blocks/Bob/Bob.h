@@ -26,6 +26,7 @@
 #include "Bob/Dc/Dc.h"
 #include "Bob/Fm/Fm.h"
 #include "Bob/Cr/Cr.h"
+#include "Bob/Rmp/Rmp.h"
 
 /// Bob level platform module
 struct Bob : sc_core::sc_module
@@ -64,6 +65,8 @@ struct Bob : sc_core::sc_module
     Sp804* timer;
     /// Controller registers
     Cr* cr;
+    /// Rmp registers
+    Rmp* rmp;
 
     /** Constructor of the top level module
      * @param[in] name Name of the module
