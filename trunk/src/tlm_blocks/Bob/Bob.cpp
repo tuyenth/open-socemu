@@ -17,9 +17,11 @@
 #define DC_BASE_ADDR    (0x000E8024)
 #define SRI_BASE_ADDR   (0x000E8510)
 #define RBG_BASE_ADDR   (0x000E9A00)
+#define RF_BASE_ADDR    (0x000EF800)
 #define PMU_BASE_ADDR   (0x000F0000)
 #define FM_BASE_ADDR    (0x000F2000)
 #define RMP_BASE_ADDR   (0x000F8000)
+#define WDOG_BASE_ADDR  (0x000F9000)
 #define TIMER_BASE_ADDR (0x000FA000)
 #define GPIO2_BASE_ADDR (0x000FB000)
 #define GPIO_BASE_ADDR  (0x000FC000)
@@ -204,6 +206,26 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     if (this->addrdec->bind(*this->rmp, RMP_BASE_ADDR))
     {
         TLM_ERR("RMP address range wrong %d", 0);
+        return;
+    }
+
+    // WDOG:
+    //   - create the instance
+    this->wdog = new Sp805("wdog");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->wdog, WDOG_BASE_ADDR))
+    {
+        TLM_ERR("WDOG address range wrong %d", 0);
+        return;
+    }
+
+    // RF:
+    //   - create the instance
+    this->rf = new Rf("rf");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->rf, RF_BASE_ADDR))
+    {
+        TLM_ERR("RF address range wrong %d", 0);
         return;
     }
 

@@ -17,6 +17,7 @@
 #include "Generic/Rom/Rom.h"
 #include "Pmu/Pmu.h"
 #include "Arm/PrimeCells/Sp804/Sp804.h"
+#include "Arm/PrimeCells/Sp805/Sp805.h"
 #include "Arm/PrimeCells/Pl061/Pl061.h"
 #include "Arm/PrimeCells/Pl190/Pl190.h"
 #include "Bob/Prc/Prc.h"
@@ -27,6 +28,7 @@
 #include "Bob/Fm/Fm.h"
 #include "Bob/Cr/Cr.h"
 #include "Bob/Rmp/Rmp.h"
+#include "Bob/Rf/Rf.h"
 
 /// Bob level platform module
 struct Bob : sc_core::sc_module
@@ -63,10 +65,14 @@ struct Bob : sc_core::sc_module
     Pl190* ic;
     /// Dual timer peripheral
     Sp804* timer;
-    /// Controller registers
+    /// Controller peripheral
     Cr* cr;
-    /// Rmp registers
+    /// Rmp peripheral
     Rmp* rmp;
+    /// Watchdog peripheral
+    Sp805* wdog;
+    /// RF frontend peripheral
+    Rf* rf;
 
     /** Constructor of the top level module
      * @param[in] name Name of the module
