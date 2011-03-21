@@ -13,9 +13,7 @@
 #define IC_BASE_ADDR    (0x000C0000)
 #define PRC_BASE_ADDR   (0x000D8000)
 #define PTU_BASE_ADDR   (0x000E0074)
-#define CR_BASE_ADDR    (0x000E8000)
-#define DC_BASE_ADDR    (0x000E8024)
-#define SRI_BASE_ADDR   (0x000E8510)
+#define PHY_BASE_ADDR   (0x000E8000)
 #define RBG_BASE_ADDR   (0x000E9A00)
 #define RF_BASE_ADDR    (0x000EF800)
 #define PMU_BASE_ADDR   (0x000F0000)
@@ -79,6 +77,16 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         return;
     }
 
+    // PHY:
+    //   - create the instance
+    this->phy = new Phy("phy");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->phy, PHY_BASE_ADDR))
+    {
+        TLM_ERR("PHY address range wrong %d", 0);
+        return;
+    }
+
     // PMU:
     //   - create the instance
     this->pmu = new Pmu("pmu");
@@ -139,26 +147,6 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         return;
     }
 
-    // SRI:
-    //   - create the instance
-    this->sri = new Sri("sri");
-    //   - bind interface (hook to the address decoder)
-    if (this->addrdec->bind(*this->sri, SRI_BASE_ADDR))
-    {
-        TLM_ERR("SRI address range wrong %d", 0);
-        return;
-    }
-
-    // DC:
-    //   - create the instance
-    this->dc = new Dc("dc");
-    //   - bind interface (hook to the address decoder)
-    if (this->addrdec->bind(*this->dc, DC_BASE_ADDR))
-    {
-        TLM_ERR("DC address range wrong %d", 0);
-        return;
-    }
-
     // FM:
     //   - create the instance
     this->fm = new Fm("fm");
@@ -186,16 +174,6 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     if (this->addrdec->bind(*this->timer, TIMER_BASE_ADDR))
     {
         TLM_ERR("TIMER address range wrong %d", 0);
-        return;
-    }
-
-    // CR:
-    //   - create the instance
-    this->cr = new Cr("cr");
-    //   - bind interface (hook to the address decoder)
-    if (this->addrdec->bind(*this->cr, CR_BASE_ADDR))
-    {
-        TLM_ERR("CR address range wrong %d", 0);
         return;
     }
 

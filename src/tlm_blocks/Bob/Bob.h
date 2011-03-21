@@ -20,13 +20,11 @@
 #include "Arm/PrimeCells/Sp805/Sp805.h"
 #include "Arm/PrimeCells/Pl061/Pl061.h"
 #include "Arm/PrimeCells/Pl190/Pl190.h"
+#include "Bob/Phy/Phy.h"
 #include "Bob/Prc/Prc.h"
 #include "Bob/Rbg/Rbg.h"
 #include "Bob/Ptu/Ptu.h"
-#include "Bob/Sri/Sri.h"
-#include "Bob/Dc/Dc.h"
 #include "Bob/Fm/Fm.h"
-#include "Bob/Cr/Cr.h"
 #include "Bob/Rmp/Rmp.h"
 #include "Bob/Rf/Rf.h"
 
@@ -43,6 +41,8 @@ struct Bob : sc_core::sc_module
     Memory* sram;
     /// FLASH instance pointer
     Rom* flash;
+    /// PHY instance pointer
+    Phy* phy;
     /// PMU instance pointer
     Pmu* pmu;
     /// Gpio peripheral
@@ -55,18 +55,12 @@ struct Bob : sc_core::sc_module
     Ptu* ptu;
     /// PRC peripheral
     Prc* prc;
-    /// SRI peripheral
-    Sri* sri;
-    /// DC peripheral
-    Dc* dc;
     /// FM peripheral
     Fm* fm;
     /// IC peripheral
     Pl190* ic;
     /// Dual timer peripheral
     Sp804* timer;
-    /// Controller peripheral
-    Cr* cr;
     /// Rmp peripheral
     Rmp* rmp;
     /// Watchdog peripheral
