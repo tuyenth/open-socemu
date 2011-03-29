@@ -19,6 +19,7 @@
 #include "Arm/PrimeCells/Sp804/Sp804.h"
 #include "Arm/PrimeCells/Sp805/Sp805.h"
 #include "Arm/PrimeCells/Pl061/Pl061.h"
+#include "Arm/PrimeCells/Pl081/Pl081.h"
 #include "Arm/PrimeCells/Pl190/Pl190.h"
 #include "Bob/Phy/Phy.h"
 #include "Bob/Prc/Prc.h"
@@ -67,6 +68,8 @@ struct Bob : sc_core::sc_module
     Sp805* wdog;
     /// RF frontend peripheral
     Rf* rf;
+    /// DMA controller peripheral
+    Pl081* dmac;
 
     /** Constructor of the top level module
      * @param[in] name Name of the module

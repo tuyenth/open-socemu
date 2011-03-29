@@ -11,8 +11,9 @@
 
 // peripherals base addresses
 #define IC_BASE_ADDR    (0x000C0000)
+#define DMAC_BASE_ADDR  (0x000C8000)
 #define PRC_BASE_ADDR   (0x000D8000)
-#define PTU_BASE_ADDR   (0x000E0074)
+#define PTU_BASE_ADDR   (0x000E0000)
 #define PHY_BASE_ADDR   (0x000E8000)
 #define RBG_BASE_ADDR   (0x000E9A00)
 #define RF_BASE_ADDR    (0x000EF800)
@@ -204,6 +205,16 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     if (this->addrdec->bind(*this->rf, RF_BASE_ADDR))
     {
         TLM_ERR("RF address range wrong %d", 0);
+        return;
+    }
+
+    // DMAC:
+    //   - create the instance
+    this->dmac = new Pl081("dmac");
+    //   - bind interface (hook to the address decoder)
+    if (this->addrdec->bind(*this->dmac, DMAC_BASE_ADDR))
+    {
+        TLM_ERR("DMAC address range wrong %d", 0);
         return;
     }
 

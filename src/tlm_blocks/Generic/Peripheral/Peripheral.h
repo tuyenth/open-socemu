@@ -8,12 +8,13 @@ struct Peripheral : BusSlave
     /// Constructor
     Peripheral(sc_core::sc_module_name name) : BusSlave(name, m_reg, sizeof(m_reg))
     {
-        // clear all the registers
+        // clear all registers
         memset(m_reg, 0, sizeof(m_reg));
     }
 
-    /// Override the virtual function
-    void
+protected:
+    /// Specific blocking transport method
+    virtual void
     slave_b_transport(tlm::tlm_generic_payload& trans, sc_core::sc_time& delay)
     {
         TLM_WORD_SANITY(trans);
@@ -33,11 +34,11 @@ struct Peripheral : BusSlave
 
         if (trans.get_command() == tlm::TLM_READ_COMMAND)
         {
-            *ptr = reg_rd(trans.get_address());
+            *ptr = this->reg_rd(trans.get_address());
         }
         else
         {
-            reg_wr(trans.get_address(), *ptr);
+            this->reg_wr(trans.get_address(), *ptr);
         }
 
         // there was no error in the processing
