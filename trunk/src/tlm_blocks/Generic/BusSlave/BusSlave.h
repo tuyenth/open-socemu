@@ -66,7 +66,6 @@ struct BusSlave : sc_core::sc_module
     {
         // internal delay
         sc_core::wait(m_delay, sc_core::SC_NS);
-
     }
 
     /** Get the internal delay of the module in nanoseconds
