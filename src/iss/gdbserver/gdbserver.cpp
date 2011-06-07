@@ -450,7 +450,7 @@ int gdbserver::handlesig(int sig)
     m_state = RS_IDLE;
     m_running_state = 0;
     while (m_running_state == 0) {
-        n = read(m_clientfd, buf, 256);
+        n = read(m_clientfd, buf, sizeof(buf));
         if (n > 0)
         {
             int i;
