@@ -116,12 +116,12 @@ struct Arm32: CpuBase<GDB>
         // check the current execution mode
         if (this->TF)
         {
-            // try to execute a thumb operation
+            // thumb instruction
             this->decode_thumb(hdlr);
         }
         else
         {
-            // try to execute a thumb operation
+            // arm instruction
             this->decode_arm(hdlr);
         }
     }
@@ -852,9 +852,6 @@ protected:
         uint64_t tmp64;
 
         ARM32_TLM_DBG(2, "%s 0x%08X", __func__, this->insn);
-
-        // by default, move to the next instruction
-        this->set_pc(this->get_pc() + 4);
 
         // retrieve the condition flags
         cond = insn >> 28;
