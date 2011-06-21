@@ -64,7 +64,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //   - bind interface (ROM is hooked to the address decoder)
     if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR, ROM_BASE_ADDR+this->rom->get_size()))
     {
-        TLM_ERR("ROM address range wrong %d", 0);
+        TLM_ERR("ROM address range wrong");
         return;
     }
 
@@ -74,7 +74,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //   - bind interface (sram is hooked to the address decoder)
     if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, SRAM_BASE_ADDR+this->sram->get_size()))
     {
-        TLM_ERR("SRAM address range wrong %d", 0);
+        TLM_ERR("SRAM address range wrong");
         return;
     }
 
@@ -88,7 +88,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //      -> address decoder
     if (this->addrdec->bind(*this->itc, REG_ITC_BASE_ADDR))
     {
-        TLM_ERR("ITC address range wrong %d", 0);
+        TLM_ERR("ITC address range wrong");
         return;
     }
 
@@ -99,7 +99,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //      -> address decoder
     if (this->addrdec->bind(*this->crm, REG_CRM_BASE_ADDR))
     {
-        TLM_ERR("CRM address range wrong %d", 0);
+        TLM_ERR("CRM address range wrong");
         return;
     }
     //      -> interrupt hooked to ITC
@@ -115,7 +115,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //      -> address decoder
     if (this->addrdec->bind(*this->spif, REG_SPIF_BASE_ADDR))
     {
-        TLM_ERR("SPIF address range wrong %d", 0);
+        TLM_ERR("SPIF address range wrong");
         return;
     }
     //      -> interrupt hooked to ITC
@@ -128,7 +128,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //      -> address decoder
     if (this->addrdec->bind(*this->spi, REG_SPI_BASE_ADDR))
     {
-        TLM_ERR("SPI address range wrong %d", 0);
+        TLM_ERR("SPI address range wrong");
         return;
     }
     //      -> interrupt hooked to ITC
@@ -141,7 +141,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //      -> address decoder
     if (this->addrdec->bind(*this->gpio, REG_GPIO_BASE_ADDR))
     {
-        TLM_ERR("GPIO address range wrong %d", 0);
+        TLM_ERR("GPIO address range wrong");
         return;
     }
 
@@ -152,7 +152,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //      -> address decoder
     if (this->addrdec->bind(*this->uart1, REG_UART1_BASE_ADDR))
     {
-        TLM_ERR("UART1 address range wrong %d", 0);
+        TLM_ERR("UART1 address range wrong");
         return;
     }
     //      -> interrupt hooked to ITC
@@ -165,7 +165,7 @@ Mc13224v::Mc13224v(sc_core::sc_module_name name, Parameters& parameters, MSP& co
     //      -> address decoder
     if (this->addrdec->bind(*this->uart2, REG_UART2_BASE_ADDR))
     {
-        TLM_ERR("UART2 address range wrong %d", 0);
+        TLM_ERR("UART2 address range wrong");
         return;
     }
     //      -> interrupt hooked to ITC

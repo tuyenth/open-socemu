@@ -216,7 +216,7 @@ struct Arm : CpuBase
     void
     wfi(void)
     {
-        ARM_TLM_DBG(1, "WFI: enter %d", 0);
+        ARM_TLM_DBG(1, "WFI: enter");
 
 #if 0
         // check if neither the IRQ nor the FIQ is asserted
@@ -237,7 +237,7 @@ struct Arm : CpuBase
             }
         }
 #endif
-        ARM_TLM_DBG(1, "WFI: exit %d", 0);
+        ARM_TLM_DBG(1, "WFI: exit");
     }
 
     int

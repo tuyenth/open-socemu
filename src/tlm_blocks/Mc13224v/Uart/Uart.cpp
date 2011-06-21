@@ -11,7 +11,7 @@
 #define UART_TLM_DBG(__l, __f, ...)                                                     \
     do {                                                                                \
         if (UART_DEBUG_LEVEL >= __l) {                                                  \
-            TLM_DBG(__f, __VA_ARGS__);                                                  \
+            TLM_DBG(__f, ##__VA_ARGS__);                                                \
         }                                                                               \
     } while (false)
 
@@ -45,7 +45,7 @@ Uart::thread_tx(void)
 
         // check: is the output enabled
         if (m_reg[UCON_INDEX] & TX_OEN_B_BIT)
-            UART_TLM_DBG(0, "WARNING: character TX'd but TXD wire output disabled %d", 0);
+            UART_TLM_DBG(0, "WARNING: character TX'd but TXD wire output disabled");
 
         // pop the first element from the queue
         c = m_tx.fifo.front();
@@ -144,7 +144,7 @@ Uart::reg_rd(uint32_t offset)
         }
         else
         {
-            UART_TLM_DBG(0, "Reading UDATA while RX FIFO empty %d", 0);
+            UART_TLM_DBG(0, "Reading UDATA while RX FIFO empty");
             result = 0;
         }
         break;
@@ -233,7 +233,7 @@ Uart::reg_wr(uint32_t offset, uint32_t value)
                 m_tx.event.notify();
         }
         else
-            UART_TLM_DBG(0, "Pushing UDATA while TX FIFO full %d", 0);
+            UART_TLM_DBG(0, "Pushing UDATA while TX FIFO full");
         break;
     case URXCON_INDEX:
         // sanity check

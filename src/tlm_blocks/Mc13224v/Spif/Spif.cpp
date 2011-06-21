@@ -15,7 +15,7 @@
 #define SPIF_TLM_DBG(__l, __f, ...)                                                     \
     do {                                                                                \
         if (SPIF_DEBUG_LEVEL >= __l) {                                                  \
-            TLM_DBG(__f, __VA_ARGS__);                                                  \
+            TLM_DBG(__f, ##__VA_ARGS__);                                                \
         }                                                                               \
     } while (false)
 
@@ -54,7 +54,7 @@ Spif::thread_flash(void)
                     TLM_ERR("READ ID command not correctly sent 0x%X",
                             spif_data_length_getf());
                 }
-                SPIF_TLM_DBG(1, "flash read ID %d", 0);
+                SPIF_TLM_DBG(1, "flash read ID");
                 break;
 
             case 0x03:

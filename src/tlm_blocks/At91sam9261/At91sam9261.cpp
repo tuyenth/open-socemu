@@ -32,7 +32,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
     //   - set range
     if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR, (SRAM_BASE_ADDR+this->sram->get_size())))
     {
-        TLM_ERR("SRAM address range wrong %d", 0);
+        TLM_ERR("SRAM address range wrong");
         return;
     }
 
@@ -42,13 +42,13 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
     //   - set range (registers map)
     if (this->addrdec->bind(*this->smc, REG_SMC_BASE_ADDR, REG_SMC_BASE_ADDR+this->smc->get_size()))
     {
-        TLM_ERR("SMC registers address range wrong %d", 0);
+        TLM_ERR("SMC registers address range wrong");
         return;
     }
     //   - set range (memory map)
     if (this->addrdec->bind(this->smc->bus_s_socket, 0x10000000, 0x90000000))
     {
-        TLM_ERR("SMC memory address range wrong %d", 0);
+        TLM_ERR("SMC memory address range wrong");
         return;
     }
 
@@ -58,7 +58,7 @@ At91sam9261::At91sam9261(sc_core::sc_module_name name, Parameters& parameters, M
     //   - set range
     if (this->addrdec->bind(*this->aic, REG_AIC_BASE_ADDR, REG_AIC_BASE_ADDR+this->aic->get_size()))
     {
-        TLM_ERR("AIC address range wrong %d", 0);
+        TLM_ERR("AIC address range wrong");
         return;
     }
     //   - bind interfaces
