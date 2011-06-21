@@ -54,7 +54,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR))
     {
-        TLM_ERR("ROM address range wrong %d", 0);
+        TLM_ERR("ROM address range wrong");
         return;
     }
 
@@ -64,7 +64,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR))
     {
-        TLM_ERR("SRAM address range wrong %d", 0);
+        TLM_ERR("SRAM address range wrong");
         return;
     }
 
@@ -74,7 +74,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR))
     {
-        TLM_ERR("FLASH address range wrong %d", 0);
+        TLM_ERR("FLASH address range wrong");
         return;
     }
 
@@ -84,7 +84,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->phy, PHY_BASE_ADDR))
     {
-        TLM_ERR("PHY address range wrong %d", 0);
+        TLM_ERR("PHY address range wrong");
         return;
     }
 
@@ -94,7 +94,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->pmu, PMU_BASE_ADDR))
     {
-        TLM_ERR("PMU address range wrong %d", 0);
+        TLM_ERR("PMU address range wrong");
         return;
     }
 
@@ -104,7 +104,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->gpio, GPIO_BASE_ADDR))
     {
-        TLM_ERR("GPIO address range wrong %d", 0);
+        TLM_ERR("GPIO address range wrong");
         return;
     }
 
@@ -114,7 +114,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->gpio2, GPIO2_BASE_ADDR))
     {
-        TLM_ERR("GPIO2 address range wrong %d", 0);
+        TLM_ERR("GPIO2 address range wrong");
         return;
     }
 
@@ -124,7 +124,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->rbg, RBG_BASE_ADDR))
     {
-        TLM_ERR("RBG address range wrong %d", 0);
+        TLM_ERR("RBG address range wrong");
         return;
     }
 
@@ -134,7 +134,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->ptu, PTU_BASE_ADDR))
     {
-        TLM_ERR("PTU address range wrong %d", 0);
+        TLM_ERR("PTU address range wrong");
         return;
     }
 
@@ -144,7 +144,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->prc, PRC_BASE_ADDR))
     {
-        TLM_ERR("PRC address range wrong %d", 0);
+        TLM_ERR("PRC address range wrong");
         return;
     }
 
@@ -154,7 +154,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->fm, FM_BASE_ADDR))
     {
-        TLM_ERR("FM address range wrong %d", 0);
+        TLM_ERR("FM address range wrong");
         return;
     }
 
@@ -164,7 +164,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->ic, IC_BASE_ADDR))
     {
-        TLM_ERR("IC address range wrong %d", 0);
+        TLM_ERR("IC address range wrong");
         return;
     }
 
@@ -174,7 +174,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->timer, TIMER_BASE_ADDR))
     {
-        TLM_ERR("TIMER address range wrong %d", 0);
+        TLM_ERR("TIMER address range wrong");
         return;
     }
 
@@ -184,7 +184,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->rmp, RMP_BASE_ADDR))
     {
-        TLM_ERR("RMP address range wrong %d", 0);
+        TLM_ERR("RMP address range wrong");
         return;
     }
 
@@ -194,7 +194,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->wdog, WDOG_BASE_ADDR))
     {
-        TLM_ERR("WDOG address range wrong %d", 0);
+        TLM_ERR("WDOG address range wrong");
         return;
     }
 
@@ -204,7 +204,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->rf, RF_BASE_ADDR))
     {
-        TLM_ERR("RF address range wrong %d", 0);
+        TLM_ERR("RF address range wrong");
         return;
     }
 
@@ -214,7 +214,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->dmac, DMAC_BASE_ADDR))
     {
-        TLM_ERR("DMAC address range wrong %d", 0);
+        TLM_ERR("DMAC address range wrong");
         return;
     }
 

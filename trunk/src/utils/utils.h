@@ -32,12 +32,18 @@
         __r |= (__v) << (__p);                                              \
     } while (0)
 
+/// Macro to test a bit in a register
+/// @param[in] __r register value
+/// @param[in] __p position of the bit to test
+#define BIT_SET(__r, __p)                                                   \
+    (((__r) & (1 << (__p))) != 0)
+
 /// Macro to print error and exit
 /// @param[in] format print format
 #define TLM_ERR(format, ...)                                                \
 do {                                                                        \
     char __mystring[1024];                                                  \
-    sprintf(__mystring, "%s: " format, this->name(), __VA_ARGS__);          \
+    sprintf(__mystring, "%s: " format, this->name(), ##__VA_ARGS__);        \
     std::cerr<<__mystring <<" at "<<sc_core::sc_time_stamp()<<std::endl;    \
     exit(-1);                                                               \
 } while (0)
@@ -48,7 +54,7 @@ do {                                                                        \
 #define SYS_ERR(name, format, ...)                                          \
 do {                                                                        \
     char __mystring[1024];                                                  \
-    sprintf(__mystring, "%s: " format, name, __VA_ARGS__);                  \
+    sprintf(__mystring, "%s: " format, name, ##__VA_ARGS__);                \
     std::cerr<<__mystring <<" at "<<sc_core::sc_time_stamp()<<std::endl;    \
     exit(-1);                                                               \
 } while (0)
@@ -58,7 +64,7 @@ do {                                                                        \
 #define TLM_DBG(format, ...)                                                \
 do {                                                                        \
     char __mystring[1024];                                                  \
-    sprintf(__mystring, "%s: " format, this->name(), __VA_ARGS__);          \
+    sprintf(__mystring, "%s: " format, this->name(), ##__VA_ARGS__);        \
     std::cout<<__mystring <<" at "<<sc_core::sc_time_stamp()<<std::endl;    \
 } while (0)
 
@@ -68,7 +74,7 @@ do {                                                                        \
 #define SYS_DBG(name, format, ...)                                          \
 do {                                                                        \
     char __mystring[1024];                                                  \
-    sprintf(__mystring, "%s: " format, name, __VA_ARGS__);                  \
+    sprintf(__mystring, "%s: " format, name, ##__VA_ARGS__);                \
     std::cout<<__mystring <<" at "<<sc_core::sc_time_stamp()<<std::endl;    \
 } while (0)
 

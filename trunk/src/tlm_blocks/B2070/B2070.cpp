@@ -40,7 +40,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->rom, ROM_BASE_ADDR))
     {
-        TLM_ERR("ROM address range wrong %d", 0);
+        TLM_ERR("ROM address range wrong");
         return;
     }
 
@@ -50,7 +50,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->sram, SRAM_BASE_ADDR))
     {
-        TLM_ERR("SRAM address range wrong %d", 0);
+        TLM_ERR("SRAM address range wrong");
         return;
     }
 
@@ -60,7 +60,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->flash, FLASH_BASE_ADDR))
     {
-        TLM_ERR("FLASH address range wrong %d", 0);
+        TLM_ERR("FLASH address range wrong");
         return;
     }
 
@@ -70,7 +70,7 @@ B2070::B2070(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     //   - bind interface (hook to the address decoder)
     if (this->addrdec->bind(*this->pmu, PMU_BASE_ADDR))
     {
-        TLM_ERR("PMU address range wrong %d", 0);
+        TLM_ERR("PMU address range wrong");
         return;
     }
 

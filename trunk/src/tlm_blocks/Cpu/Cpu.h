@@ -20,7 +20,7 @@
 #define CPU_TLM_DBG(__l, __f, ...)                                                      \
     do {                                                                                \
         if (CPU_DEBUG_LEVEL >= __l) {                                                   \
-            TLM_DBG(__f, __VA_ARGS__);                                                  \
+            TLM_DBG(__f, ##__VA_ARGS__);                                                \
         }                                                                               \
     } while (false)
 
@@ -172,7 +172,7 @@ struct Cpu : BusMaster
     void
     wfi(void)
     {
-        CPU_TLM_DBG(1, "WFI: enter %d", 0);
+        CPU_TLM_DBG(1, "WFI: enter");
 
         // check if neither the IRQ nor the FIQ is asserted
         while ((!m_arm->irq_get()) && (!m_arm->fiq_get()))
@@ -191,7 +191,7 @@ struct Cpu : BusMaster
                 }
             }
         }
-        CPU_TLM_DBG(1, "WFI: exit %d", 0);
+        CPU_TLM_DBG(1, "WFI: exit");
     }
 
     /** Callback to read a word from the system, going through timing process
