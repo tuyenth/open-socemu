@@ -36,7 +36,10 @@ struct Sp805 : Peripheral<REG_SP805_COUNT>
 
     /// Constructor
     Sp805(sc_core::sc_module_name name)
-    : Peripheral<REG_SP805_COUNT>(name)
+    : Peripheral<REG_SP805_COUNT>(name),
+      m_freq(sc_core::sc_time(100, sc_core::SC_NS)),
+      m_inted(false),
+      m_stopped(true)
     {
         // initialize the registers content
         m_reg[REG_SP805_WDOGLOAD] = 0xFFFFFFFF;
@@ -58,11 +61,91 @@ struct Sp805 : Peripheral<REG_SP805_COUNT>
     }
 
 private:
+    /// Check if there is a change in the interrupt state
+    void
+    update_int()
+    {
+        if (BIT_SET(m_reg[REG_SP805_WDOGCONTROL], 0) && 
+            BIT_SET(m_reg[REG_SP805_WDOGRIS], 0))
+        {
+            // TODO: set interrupt
+        }
+        else
+        {
+            // TODO: clear interrupt
+        }
+    }
+    
+    /// Reload the counter
+    /// @param[in] reset True to fully reset the mechanism
+    void
+    reload_counter(bool reset)
+    {
+        // reset the starttime
+        m_starttime = sc_core::sc_time_stamp();
+        
+        // cancel the current event
+        m_event.cancel();
+        
+        if (reset)
+        {
+            m_inted = false;
+            m_stopped = false;
+        }
+        
+        // reload the event
+        m_event.notify(m_freq * m_reg[REG_SP805_WDOGLOAD]);
+    }
+
+    /// Stop the counter
+    void
+    stop_counter()
+    {
+        // mark stopped
+        m_stopped = true;
+
+        // cancel the current event
+        m_event.cancel();
+
+        // compute the counter value
+        m_reg[REG_SP805_WDOGVALUE] = (uint32_t)((sc_core::sc_time_stamp() - m_starttime)/m_freq);
+    }
+
     /// Module thread
     void
     thread_process()
     {
+        while (true)
+        {
+            // wait for an event
+            sc_core::wait(m_event);
 
+            // check if this is the first time
+            if (!m_inted)
+            {
+                m_inted = true;
+
+                // set the raw interrupt
+                m_reg[REG_SP805_WDOGRIS] |= 1;
+                
+                // reload the counter
+                this->reload_counter(false);
+            }
+            else
+            {
+                if (BIT_SET(m_reg[REG_SP805_WDOGCONTROL], 1))
+                {
+                    TLM_ERR("WATCHDOG expired -> reset");
+                }
+                else
+                {
+                    TLM_DBG("WATCHDOG expired -> reset masked out");
+                }
+            }
+            
+            // update interrupt
+            this->update_int();
+        }
     }
 
     /** Register read function
@@ -84,11 +167,25 @@ private:
 
         switch (index)
         {
+        case REG_SP805_WDOGVALUE:
+            if (m_stopped)
+            {
+                // read the register value
+                result = m_reg[index];
+            }
+            else
+            {
+                result = (uint32_t)((sc_core::sc_time_stamp() - m_starttime)/m_freq);
+            }
+            break;
+        case REG_SP805_WDOGINTCLR:
+            // this does nothing but it is not an error
+            break;
         case REG_SP805_WDOGLOCK:
             if (m_locked) result = 1;
             else result = 0;
             break;
-        case REG_SP805_WDOGINTCLR:
+        case REG_SP805_WDOGITOP:
             // this does nothing but it is not an error
             break;
         default:
@@ -119,13 +216,55 @@ private:
 
         switch (index)
         {
+        case REG_SP805_WDOGLOAD:
+            if (m_locked)
+            {
+                TLM_ERR("Accessing register %d while locked", index);
+                break;
+            }
+            if (!value)
+            {
+                TLM_ERR("Writing 0 into SP805 LOAD register");
+                break;
+            }
+            m_reg[index] = value;
+            this->reload_counter(true);
+            break;
+            
         case REG_SP805_WDOGCONTROL:
+            if (m_locked)
+            {
+                TLM_ERR("Accessing register %d while locked", index);
+                break;
+            }
             // check if the interrupt is re-enabled
             if ((!BIT_SET(m_reg[index], 0)) && BIT_SET(value, 0))
             {
-                
+                this->reload_counter(true);
             }
+            // check if the interrupt is disabled
+            if (BIT_SET(m_reg[index], 0) && (!BIT_SET(value, 0)))
+            {
+                this->stop_counter();
+            }
+            
+            m_reg[index] = value;
             break;
+            
+        case REG_SP805_WDOGINTCLR:
+            if (m_locked)
+            {
+                TLM_ERR("Accessing register %d while locked", index);
+                break;
+            }
+            
+            // clear the pending interrupts
+            m_reg[REG_SP805_WDOGRIS] &= ~1;
+
+            // reset entirely the counting mechanism
+            this->reload_counter(true);
+            break;
+            
         case REG_SP805_WDOGLOCK:
             if (value == 0x1ACCE551)
             {
@@ -136,7 +275,10 @@ private:
                 m_locked = true;
             }
             break;
+            
         case REG_SP805_WDOGVALUE:
+        case REG_SP805_WDOGRIS:
+        case REG_SP805_WDOGMIS:
         case REG_SP805_PERIPHID0:
         case REG_SP805_PERIPHID1:
         case REG_SP805_PERIPHID2:
@@ -153,9 +295,23 @@ private:
             m_reg[index] = value;
             break;
         }
+        
+        // update interrupt
+        this->update_int();
     }
 
+    /// Increment frequency
+    sc_core::sc_time m_freq;
+    /// Indicate if the registers are locked or not
     bool m_locked;
+    /// Event used to wake up the thread
+    sc_core::sc_event m_event;
+    /// Indicate if the interrupt was already triggered
+    bool m_inted;
+    /// Indicate that currently, the timer is stopped
+    bool m_stopped;
+    /// Counter start time
+    sc_core::sc_time m_starttime;
 };
 
 #endif /*SP805_H_*/
