@@ -10,7 +10,6 @@ using namespace std;
 uint32_t
 Fm::reg_rd(uint32_t offset)
 {
-    sc_core::sc_time sctime;
     uint32_t result;
     // retrieve the required parameters
     uint32_t index = offset/4;
