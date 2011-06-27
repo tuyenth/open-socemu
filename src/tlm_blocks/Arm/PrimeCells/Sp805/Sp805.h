@@ -4,6 +4,7 @@
 /// ARM Watchdog IP
 
 #include "Generic/Peripheral/Peripheral.h"
+#include "Generic/IntMaster/IntMaster.h"
 #include "utils.h"
 
 /// Registers definition
@@ -60,6 +61,9 @@ struct Sp805 : Peripheral<REG_SP805_COUNT>
         m_locked = true;
     }
 
+    /// interrupt
+    IntMaster intsource;
+
 private:
     /// Check if there is a change in the interrupt state
     void
@@ -68,11 +72,11 @@ private:
         if (BIT_SET(m_reg[REG_SP805_WDOGCONTROL], 0) && 
             BIT_SET(m_reg[REG_SP805_WDOGRIS], 0))
         {
-            // TODO: set interrupt
+            intsource.set();
         }
         else
         {
-            // TODO: clear interrupt
+            intsource.clear();
         }
     }
     
