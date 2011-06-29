@@ -3,6 +3,7 @@
 
 /// ARM GPIO IP
 
+#include "utils.h"
 #include "Generic/Peripheral/Peripheral.h"
 
 /// Registers definition
@@ -50,14 +51,52 @@ private:
      * @return The value read
      */
     uint32_t
-    reg_rd(uint32_t offset);
+    reg_rd(uint32_t offset)
+    {
+        uint32_t result;
+        // retrieve the required parameters
+        uint32_t index = offset/4;
+
+        // sanity check
+        assert(index < REG_PL061_COUNT);
+
+        // internal delay
+        this->delay();
+
+        switch (index)
+        {
+        default:
+            // read the register value
+            result = m_reg[index];
+            break;
+        }
+
+        return result;
+    }
 
     /** Register write function
      * @param[in] offset Offset of the register to read
      * @param[in] offset Value to write in the register
      */
     void
-    reg_wr(uint32_t offset, uint32_t value);
+    reg_wr(uint32_t offset, uint32_t value)
+    {
+        // retrieve the required parameters
+        uint32_t index = offset/4;
+
+        // sanity check
+        assert(index < REG_PL061_COUNT);
+
+        // internal delay
+        this->delay();
+
+        switch (index)
+        {
+        default:
+            m_reg[index] = value;
+            break;
+        }
+    }
 
 };
 

@@ -3,9 +3,9 @@
 
 /// ARM Watchdog IP
 
+#include "utils.h"
 #include "Generic/Peripheral/Peripheral.h"
 #include "Generic/IntMaster/IntMaster.h"
-#include "utils.h"
 
 /// Registers definition
 enum
@@ -38,7 +38,7 @@ struct Sp805 : Peripheral<REG_SP805_COUNT>
     /// Constructor
     Sp805(sc_core::sc_module_name name)
     : Peripheral<REG_SP805_COUNT>(name),
-      m_freq(sc_core::sc_time(100, sc_core::SC_NS)),
+      m_ckperiod(sc_core::sc_time(100, sc_core::SC_NS)),
       m_inted(false),
       m_stopped(true)
     {
@@ -54,14 +54,22 @@ struct Sp805 : Peripheral<REG_SP805_COUNT>
         m_reg[REG_SP805_PCELLID2] = 0x05;
         m_reg[REG_SP805_PCELLID3] = 0xB1;
 
+        // initialize the status
+        m_locked = true;
+
         // create the module thread
         SC_THREAD(thread_process);
 
-        // initialize the status
-        m_locked = true;
     }
 
-    /// interrupt
+    /// Set the watchdog counter period
+    void
+    set_clock_period(sc_core::sc_time period)
+    {
+        this->m_ckperiod = period;
+    }
+
+    /// Interrupt source
     IntMaster intsource;
 
 private:
@@ -88,7 +96,7 @@ private:
         // reset the starttime
         m_starttime = sc_core::sc_time_stamp();
         
-        // cancel the current event
+        // cancel the event
         m_event.cancel();
         
         if (reset)
@@ -97,8 +105,8 @@ private:
             m_stopped = false;
         }
         
-        // reload the event
-        m_event.notify(m_freq * m_reg[REG_SP805_WDOGLOAD]);
+        // restart the event
+        m_event.notify(m_ckperiod * m_reg[REG_SP805_WDOGLOAD]);
     }
 
     /// Stop the counter
@@ -112,7 +120,8 @@ private:
         m_event.cancel();
 
         // compute the counter value
-        m_reg[REG_SP805_WDOGVALUE] = (uint32_t)((sc_core::sc_time_stamp() - m_starttime)/m_freq);
+        m_reg[REG_SP805_WDOGVALUE] = m_reg[REG_SP805_WDOGLOAD] - 
+                (uint32_t)((sc_core::sc_time_stamp() - m_starttime)/m_ckperiod);
     }
 
     /// Module thread
@@ -179,7 +188,8 @@ private:
             }
             else
             {
-                result = (uint32_t)((sc_core::sc_time_stamp() - m_starttime)/m_freq);
+                result = m_reg[REG_SP805_WDOGLOAD] - 
+                        (uint32_t)((sc_core::sc_time_stamp() - m_starttime)/m_ckperiod);
             }
             break;
         case REG_SP805_WDOGINTCLR:
@@ -304,8 +314,8 @@ private:
         this->update_int();
     }
 
-    /// Increment frequency
-    sc_core::sc_time m_freq;
+    /// Increment clock period
+    sc_core::sc_time m_ckperiod;
     /// Indicate if the registers are locked or not
     bool m_locked;
     /// Event used to wake up the thread
