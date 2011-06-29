@@ -3,6 +3,7 @@
 
 /// ARM Interrupt Controller IP
 
+#include "utils.h"
 #include "Generic/Peripheral/Peripheral.h"
 #include "Generic/IntSlave/IntSlave.h"
 #include "Generic/IntMaster/IntMaster.h"

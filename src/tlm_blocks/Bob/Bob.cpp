@@ -218,6 +218,13 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         return;
     }
 
+    // hook the interrupts
+    this->timer->intsource[0].bind(*this->ic->vicintsource[6]);
+    this->timer->intsource[1].bind(*this->ic->vicintsource[7]);
+    this->wdog->intsource.bind(*this->ic->vicintsource[14]);
+    this->ic->fiq.bind(this->cpu->fiq);
+    this->ic->irq.bind(this->cpu->irq);
+    
     // hook the ARM input interrupts to dummies if not yet connected
     if (!this->cpu->fiq.is_bound())
     {
