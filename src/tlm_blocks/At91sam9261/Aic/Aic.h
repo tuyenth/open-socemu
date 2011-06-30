@@ -74,7 +74,7 @@ private:
 
     /// End of elaboration:  unhooked interrupt should be connected
     void
-    end_of_elaboration()
+    before_end_of_elaboration()
     {
         // initialize the slave interrupt
         for (int i = 0; i < 32; i++)
