@@ -25,7 +25,6 @@ Fm::reg_rd(uint32_t offset)
     default:
         // read the register value
         result = m_reg[index];
-        TLM_DBG("m_reg[%d] = 0x%08X", index, result);
         break;
     }
 
@@ -47,7 +46,6 @@ Fm::reg_wr(uint32_t offset, uint32_t value)
     switch (index)
     {
     default:
-        TLM_DBG("m_reg(0x%X) = 0x%02X", offset, value);
         m_reg[index] = value;
         break;
     }
