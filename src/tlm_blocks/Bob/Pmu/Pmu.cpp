@@ -62,7 +62,6 @@ Pmu::reg_wr(uint32_t offset, uint32_t value)
         m_event.notify();
         break;
     default:
-        TLM_DBG("m_reg(0x%X) = 0x%02X", offset, value);
         m_reg[index] = value;
         break;
     }
