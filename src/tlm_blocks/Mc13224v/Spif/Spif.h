@@ -19,6 +19,7 @@ struct Spif : Peripheral<REG_SPIF_COUNT>
     /// Constructor
     Spif(sc_core::sc_module_name name, uint8_t *flashdata, uint32_t flashsize)
     : Peripheral<REG_SPIF_COUNT>(name)
+    , interrupt("interrupt")
     {
         // initialized the register access
         reg_spif = &(m_reg[0]);

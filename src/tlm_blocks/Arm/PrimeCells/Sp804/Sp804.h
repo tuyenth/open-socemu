@@ -44,17 +44,21 @@ struct Sp804 : Peripheral<REG_SP804_COUNT>
 
     /// Constructor
     Sp804(sc_core::sc_module_name name)
-    : Peripheral<REG_SP804_COUNT>(name),
-      m_t1ckperiod(sc_core::sc_time(100, sc_core::SC_NS)),
-      m_t2ckperiod(sc_core::sc_time(100, sc_core::SC_NS)),
-      m_t1stopped(true),
-      m_t2stopped(true)
+    : Peripheral<REG_SP804_COUNT>(name)
+    , t1int("t1int")
+    , t2int("t2int")
+    , m_t1ckperiod(sc_core::sc_time(100, sc_core::SC_NS))
+    , m_t2ckperiod(sc_core::sc_time(100, sc_core::SC_NS))
+    , m_t1stopped(true)
+    , m_t2stopped(true)
     {
         // initialize the registers content
         m_reg[REG_SP804_TIMER1_VALUE] = 0xFFFFFFFF;
         m_reg[REG_SP804_TIMER2_VALUE] = 0xFFFFFFFF;
         m_reg[REG_SP804_TIMER1_CONTROL] = 0x20;
         m_reg[REG_SP804_TIMER2_CONTROL] = 0x20;
+        m_reg[REG_SP804_TIMER1_BGLOAD] = 0;
+        m_reg[REG_SP804_TIMER2_BGLOAD] = 0;
         m_reg[REG_SP804_PERIPHID0] = 0x04;
         m_reg[REG_SP804_PERIPHID1] = 0x18;
         m_reg[REG_SP804_PERIPHID2] = 0x14;
@@ -84,7 +88,8 @@ struct Sp804 : Peripheral<REG_SP804_COUNT>
     }
 
     /// Timer N interrupt
-    IntMaster intsource[2];
+    IntMaster t1int;
+    IntMaster t2int;
     
 
 private:
@@ -93,6 +98,7 @@ private:
     void
     update_int(void)
     {
+        PERIPHERAL_DBG("update_int");
         // check if timer1 is enabled
         if ((m_reg[REG_SP804_TIMER1_CONTROL] & (1 << 5)) && 
             (m_reg[REG_SP804_TIMER1_CONTROL] & (1 << 7)))
@@ -116,19 +122,19 @@ private:
         
         if (m_reg[REG_SP804_TIMER1_MIS])
         {
-            intsource[0].set();
+            t1int.set();
         }
         else
         {
-            intsource[0].clear();
+            t1int.clear();
         }
         if (m_reg[REG_SP804_TIMER2_MIS])
         {
-            intsource[1].set();
+            t2int.set();
         }
         else
         {
-            intsource[1].clear();
+            t2int.clear();
         }
     }
     
@@ -136,6 +142,8 @@ private:
     void
     start_t1_counter(void)
     {
+        PERIPHERAL_DBG("t1 start counter");
+
         // cancel the current event
         m_t1event.cancel();
 
@@ -150,6 +158,7 @@ private:
             // reset the starttime
             m_t1starttime = sc_core::sc_time_stamp();
             
+            PERIPHERAL_DBG("start t1 value = 0x%08X", m_reg[REG_SP804_TIMER1_VALUE]);
             // restart the event
             m_t1event.notify(m_t1ckperiod * m_reg[REG_SP804_TIMER1_VALUE] * 
                     (1 << (GETF(m_reg[REG_SP804_TIMER1_CONTROL], 0xc, 2) * 4)));
@@ -190,6 +199,7 @@ private:
             // reset the starttime
             m_t2starttime = sc_core::sc_time_stamp();
             
+            PERIPHERAL_DBG("start t2 value = 0x%08X", m_reg[REG_SP804_TIMER2_VALUE]);
             // restart the event
             m_t2event.notify(m_t2ckperiod * m_reg[REG_SP804_TIMER2_VALUE] * 
                     (1 << (GETF(m_reg[REG_SP804_TIMER2_CONTROL], 0xc, 2) * 4)));
@@ -221,6 +231,11 @@ private:
             // wait for an event
             sc_core::wait(m_t1event);
             
+            PERIPHERAL_DBG("t1 expired");
+
+            // reset the BGLOAD
+            m_reg[REG_SP804_TIMER1_BGLOAD] = 0;
+
             // interrupt
             m_reg[REG_SP804_TIMER1_RIS] = 1;
             this->update_int();
@@ -241,7 +256,7 @@ private:
             else
             {
                 // periodic
-                m_reg[REG_SP804_TIMER1_VALUE] = m_reg[REG_SP804_TIMER1_BGLOAD];
+                m_reg[REG_SP804_TIMER1_VALUE] = m_reg[REG_SP804_TIMER1_LOAD];
                 this->start_t1_counter();
             }
         }
@@ -255,6 +270,11 @@ private:
         {
             // wait for an event
             sc_core::wait(m_t2event);
+
+            PERIPHERAL_DBG("t2 expired");
+
+            // reset the BGLOAD
+            m_reg[REG_SP804_TIMER2_BGLOAD] = 0;
 
             // interrupt
             m_reg[REG_SP804_TIMER2_RIS] = 1;
@@ -276,7 +296,7 @@ private:
             else
             {
                 // periodic
-                m_reg[REG_SP804_TIMER2_VALUE] = m_reg[REG_SP804_TIMER2_BGLOAD];
+                m_reg[REG_SP804_TIMER2_VALUE] = m_reg[REG_SP804_TIMER2_LOAD];
                 this->start_t2_counter();
             }
         }
@@ -329,12 +349,12 @@ private:
             }
             break;
 
-        case REG_SP804_TIMER1_LOAD:
-            result = m_reg[REG_SP804_TIMER1_BGLOAD];
+        case REG_SP804_TIMER1_BGLOAD:
+            result = m_reg[REG_SP804_TIMER1_LOAD];
             break;
 
-        case REG_SP804_TIMER2_LOAD:
-            result = m_reg[REG_SP804_TIMER2_BGLOAD];
+        case REG_SP804_TIMER2_BGLOAD:
+            result = m_reg[REG_SP804_TIMER2_LOAD];
             break;
 
         case REG_SP804_TIMER1_INTCLR:
@@ -438,23 +458,35 @@ private:
             break;
             
         case REG_SP804_TIMER1_LOAD:
+            // check if the BGLOAD was not already configured
+            if (m_reg[REG_SP804_TIMER1_BGLOAD] == 0)
+            {
+                m_reg[REG_SP804_TIMER1_LOAD] = value;
+            }
             m_reg[REG_SP804_TIMER1_VALUE] = value;
             this->start_t1_counter();
             break;
 
         case REG_SP804_TIMER2_LOAD:
+            // check if the BGLOAD was not already configured
+            if (m_reg[REG_SP804_TIMER2_BGLOAD] == 0)
+            {
+                m_reg[REG_SP804_TIMER2_LOAD] = value;
+            }
             m_reg[REG_SP804_TIMER2_VALUE] = value;
             this->start_t2_counter();
             break;
 
         case REG_SP804_TIMER1_BGLOAD:
             // write the load value without reloading immediately the counter
-            m_reg[REG_SP804_TIMER1_BGLOAD] = value;
+            m_reg[REG_SP804_TIMER1_BGLOAD] = 1;
+            m_reg[REG_SP804_TIMER1_LOAD] = value;
             break;
 
         case REG_SP804_TIMER2_BGLOAD:
             // write the load value without reloading immediately the counter
-            m_reg[REG_SP804_TIMER2_BGLOAD] = value;
+            m_reg[REG_SP804_TIMER2_BGLOAD] = 1;
+            m_reg[REG_SP804_TIMER2_LOAD] = value;
             break;
 
         case REG_SP804_TIMER1_VALUE:

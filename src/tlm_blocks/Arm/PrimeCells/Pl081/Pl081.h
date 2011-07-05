@@ -136,7 +136,6 @@ private:
         switch (index)
         {
         default:
-            TLM_DBG("m_reg(0x%X) = 0x%02X", offset, value);
             m_reg[index] = value;
             break;
         }

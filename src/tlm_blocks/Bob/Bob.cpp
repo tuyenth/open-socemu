@@ -177,6 +177,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         TLM_ERR("TIMER address range wrong");
         return;
     }
+    this->timer->set_debug(false);
 
     // RMP:
     //   - create the instance
@@ -197,6 +198,8 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         TLM_ERR("WDOG address range wrong");
         return;
     }
+    this->wdog->set_lock_mode(false);
+    this->wdog->set_debug(false);
 
     // RF:
     //   - create the instance
@@ -207,6 +210,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         TLM_ERR("RF address range wrong");
         return;
     }
+    this->rf->set_debug(false);
 
     // DMAC:
     //   - create the instance
@@ -219,8 +223,8 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     }
 
     // hook the interrupts
-    this->timer->intsource[0].bind(*this->ic->vicintsource[6]);
-    this->timer->intsource[1].bind(*this->ic->vicintsource[7]);
+    this->timer->t1int.bind(*this->ic->vicintsource[6]);
+    this->timer->t2int.bind(*this->ic->vicintsource[7]);
     this->wdog->intsource.bind(*this->ic->vicintsource[14]);
     this->ic->fiq.bind(this->cpu->fiq);
     this->ic->irq.bind(this->cpu->irq);

@@ -19,6 +19,8 @@ struct Aic : Peripheral<REG_AIC_COUNT>
     /// Constructor
     Aic(sc_core::sc_module_name name)
     : Peripheral<REG_AIC_COUNT>(name)
+    , irq("irq")
+    , fiq("fiq")
     {
         // initialize the register access
         reg_aic = &(m_reg[0]);

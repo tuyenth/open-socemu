@@ -21,6 +21,8 @@ struct Itc : Peripheral<REG_ITC_COUNT>
     /// Constructor
     Itc(sc_core::sc_module_name name)
     : Peripheral<REG_ITC_COUNT>(name)
+    , irq("irq")
+    , fiq("fiq")
     {
         // initialized the register access
         reg_itc = &(m_reg[0]);

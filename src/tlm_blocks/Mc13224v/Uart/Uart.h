@@ -26,6 +26,7 @@ struct Uart : Peripheral<REG_UART_COUNT>
 
     Uart(sc_core::sc_module_name name, int instance)
     : Peripheral<REG_UART_COUNT>(name)
+    , interrupt("interrupt")
     , instance(instance)
     , m_rx_eq("rx_eq")
     {
