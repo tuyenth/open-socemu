@@ -18,6 +18,7 @@ struct Crm : Peripheral<REG_CRM_COUNT>
      */
     Crm(sc_core::sc_module_name name)
     : Peripheral<REG_CRM_COUNT>(name)
+    , interrupt("interrupt")
     {
         // initialized the register access
         reg_crm = &(m_reg[0]);

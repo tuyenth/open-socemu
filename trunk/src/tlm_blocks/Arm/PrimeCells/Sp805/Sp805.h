@@ -37,10 +37,12 @@ struct Sp805 : Peripheral<REG_SP805_COUNT>
 
     /// Constructor
     Sp805(sc_core::sc_module_name name)
-    : Peripheral<REG_SP805_COUNT>(name),
-      m_ckperiod(sc_core::sc_time(100, sc_core::SC_NS)),
-      m_inted(false),
-      m_stopped(true)
+    : Peripheral<REG_SP805_COUNT>(name)
+    , intsource("intsource")
+    , m_ckperiod(sc_core::sc_time(100, sc_core::SC_NS))
+    , m_lock_enabled(true)
+    , m_inted(false)
+    , m_stopped(true)
     {
         // initialize the registers content
         m_reg[REG_SP805_WDOGLOAD] = 0xFFFFFFFF;
@@ -62,11 +64,22 @@ struct Sp805 : Peripheral<REG_SP805_COUNT>
 
     }
 
-    /// Set the watchdog counter period
+    /** Set the watchdog counter period
+     * @param[in] period Watchdog timer counter period
+     */
     void
     set_clock_period(sc_core::sc_time period)
     {
         this->m_ckperiod = period;
+    }
+    
+    /** Enable/disable the watchdog lock mode
+     * @param[in] enable Watchdog timer counter period
+     */
+    void
+    set_lock_mode(bool enable)
+    {
+        m_lock_enabled = enable;
     }
 
     /// Interrupt source
@@ -231,7 +244,7 @@ private:
         switch (index)
         {
         case REG_SP805_WDOGLOAD:
-            if (m_locked)
+            if (m_lock_enabled && m_locked)
             {
                 TLM_ERR("Accessing register %d while locked", index);
                 break;
@@ -246,7 +259,7 @@ private:
             break;
             
         case REG_SP805_WDOGCONTROL:
-            if (m_locked)
+            if (m_lock_enabled && m_locked)
             {
                 TLM_ERR("Accessing register %d while locked", index);
                 break;
@@ -266,7 +279,7 @@ private:
             break;
             
         case REG_SP805_WDOGINTCLR:
-            if (m_locked)
+            if (m_lock_enabled && m_locked)
             {
                 TLM_ERR("Accessing register %d while locked", index);
                 break;
@@ -305,7 +318,6 @@ private:
             break;
             
         default:
-            TLM_DBG("m_reg(0x%X) = 0x%02X", offset, value);
             m_reg[index] = value;
             break;
         }
@@ -316,6 +328,8 @@ private:
 
     /// Increment clock period
     sc_core::sc_time m_ckperiod;
+    /// Indicate if the lock mechanism is enabled
+    bool m_lock_enabled;
     /// Indicate if the registers are locked or not
     bool m_locked;
     /// Event used to wake up the thread

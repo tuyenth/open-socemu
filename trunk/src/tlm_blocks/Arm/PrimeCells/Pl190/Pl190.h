@@ -49,8 +49,10 @@ struct Pl190 : Peripheral<REG_PL190_COUNT>
 
     /// Constructor
     Pl190(sc_core::sc_module_name name)
-    : Peripheral<REG_PL190_COUNT>(name),
-      m_vicintsource(0)
+    : Peripheral<REG_PL190_COUNT>(name)
+    , irq("irq")
+    , fiq("fiq")
+    , m_vicintsource(0)
     {
         // create all the interrupts
         for (int i = 0; i < NUM_INT; i++)
@@ -153,7 +155,6 @@ private:
             break;
             
         default:
-            TLM_DBG("m_reg(0x%X) = 0x%02X", offset, value);
             m_reg[index] = value;
             break;
         }
@@ -167,6 +168,8 @@ private:
     int_set_cb(void* opaque)
     {
         int i = (int)opaque;
+        
+        PERIPHERAL_DBG("int_set_cb: %d", i);
         
         // set the interrupt
         m_vicintsource |= 1 << i;
@@ -182,6 +185,8 @@ private:
     {
         int i = (int)opaque;
 
+        PERIPHERAL_DBG("int_clr_cb: %d", i);
+        
         // clear the interrupt
         m_vicintsource &= ~(1 << i);
 
@@ -197,7 +202,7 @@ private:
         // OR with the soft interrupt sources
         m_reg[REG_PL190_RAWINTR] = m_vicintsource | m_reg[REG_PL190_SOFTINT];
         
-        // set IRQ or FOQ if enabled
+        // set IRQ or FIQ if enabled
         m_reg[REG_PL190_IRQSTATUS] = m_reg[REG_PL190_RAWINTR] & m_reg[REG_PL190_INTENABLE] & 
                 (~m_reg[REG_PL190_INTSELECT]);
         m_reg[REG_PL190_FIQSTATUS] = m_reg[REG_PL190_RAWINTR] & m_reg[REG_PL190_INTENABLE] & 

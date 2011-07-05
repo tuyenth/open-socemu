@@ -15,10 +15,13 @@
 // for the helper macros
 #include "utils.h"
 
-struct IntMaster
+struct IntMaster : sc_core::sc_module
 {
-    /// Constructor
-    IntMaster()
+    /** Constructor
+    * @param[in] name Name of the module
+    */
+    IntMaster(sc_core::sc_module_name name)
+    : master_socket("int_master")
     {
         // force the default values of the BUS transaction
         master_b_pl.set_streaming_width(4);

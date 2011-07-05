@@ -1,15 +1,33 @@
 #ifndef PERIPHERAL_H_
 #define PERIPHERAL_H_
 
+// derived class
 #include "Generic/BusSlave/BusSlave.h"
+
+#define PERIPHERAL_DBG(...)                                                 \
+do {                                                                        \
+    if (this->m_debug) {                                                    \
+        TLM_DBG(__VA_ARGS__);                                               \
+    }                                                                       \
+} while (0)
+
 template <int REG_COUNT>
 struct Peripheral : BusSlave
 {
     /// Constructor
-    Peripheral(sc_core::sc_module_name name) : BusSlave(name, m_reg, sizeof(m_reg))
+    Peripheral(sc_core::sc_module_name name) 
+    : BusSlave(name, m_reg, sizeof(m_reg))
+    , m_debug(false)
     {
         // clear all registers
         memset(m_reg, 0, sizeof(m_reg));
+    }
+    
+    /// Configure the debug mode
+    void
+    set_debug(bool debug)
+    {
+        m_debug = debug;
     }
 
 protected:
@@ -35,9 +53,11 @@ protected:
         if (trans.get_command() == tlm::TLM_READ_COMMAND)
         {
             *ptr = this->reg_rd(trans.get_address());
+            PERIPHERAL_DBG("RD[%X] <= %X", (uint32_t)trans.get_address(), *ptr);
         }
         else
         {
+            PERIPHERAL_DBG("WR[%X] <= %X", (uint32_t)trans.get_address(), *ptr);
             this->reg_wr(trans.get_address(), *ptr);
         }
 
@@ -52,7 +72,6 @@ protected:
         return;
     }
 
-protected:
     /** Register read function
      * @param[in] offset Offset of the register to read
      * @return The value read
@@ -107,7 +126,9 @@ protected:
 
     /// Registers content
     uint32_t m_reg[REG_COUNT];
-
+    
+    /// Debug mode
+    bool m_debug;
 };
 
 #endif /*PERIPHERAL_H_*/

@@ -40,6 +40,7 @@ struct Dummy : Peripheral<REG_DUMMY_COUNT>
      */
     Dummy(sc_core::sc_module_name name)
     : Peripheral<REG_DUMMY_COUNT>(name)
+    , interrupt("interrupt")
     {
         // create the module thread
         SC_THREAD(thread_process);

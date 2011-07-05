@@ -27,6 +27,8 @@ struct IntCtrl : Peripheral<REG_INTCTRL_COUNT>
     /// Constructor
     IntCtrl(sc_core::sc_module_name name)
     : Peripheral<REG_INTCTRL_COUNT>(name)
+    , fiq("fiq")
+    , irq("irq")
     {
         // save the interrupt callbacks
         this->interrupt.init(this, &IntCtrl::interrupt_set, &IntCtrl::interrupt_clr, NULL);

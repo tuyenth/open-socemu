@@ -19,6 +19,7 @@ struct Spi : Peripheral<REG_SPI_COUNT>
     /// Constructor
     Spi(sc_core::sc_module_name name)
     : Peripheral<REG_SPI_COUNT>(name)
+    , interrupt("interrupt")
     {
         // initialized the register access
         reg_spi = &(m_reg[0]);
