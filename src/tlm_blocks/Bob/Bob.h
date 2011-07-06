@@ -11,6 +11,7 @@
 #include "Parameters.h"
 
 // necessary for system definition
+#include "Generic/Mpa/Mpa.h"
 #include "Generic/AddrDec/AddrDec.h"
 #include "Cpu/Cpu.h"
 #include "Generic/Memory/Memory.h"
@@ -32,6 +33,15 @@
 /// Bob level platform module
 struct Bob : sc_core::sc_module
 {
+    // Module has a thread
+    SC_HAS_PROCESS(Bob);
+    
+    /// Main module thread
+    void
+    thread_process();
+
+    /// Multi port arbiter
+    Mpa<2>* mpa;
     /// Address decoder instance pointer
     AddrDec* addrdec;
     /// CPU instance pointer

@@ -78,6 +78,7 @@ protected:
      * @warn This prevents can only be used for blocking accesses
      */
     tlm::tlm_generic_payload master_b_pl;
+
     /** Time object for delay to use for master blocking requests.  This is used
      * to speed up the simulation by not allocating dynamically a time object for
      * each blocking transaction.
@@ -89,7 +90,7 @@ protected:
     virtual void
     thread_process()
     {
-        // by default, wait forever
+        // by default, do nothing
     }
 
     /** slave_socket non-blocking forward transport method (default behavior, can be overridden)

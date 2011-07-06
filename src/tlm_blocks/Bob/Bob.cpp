@@ -38,15 +38,16 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     }
     cpu_parameter = config["cpu"];
     cpu_config = cpu_parameter->get_config();
+    
+    // create the multi port arbiter
+    this->mpa = new Mpa<2>("mpa");
 
     // create the address decoder instance
     this->addrdec = new AddrDec("addrdec");
-
+    
     // CPU:
     //   - create instance
     this->cpu = new Cpu("cpu", *cpu_parameter->get_string(), parameters, *cpu_config);
-    //   - bind interfaces (CPU access to address decoder)
-    this->cpu->bind(*this->addrdec);
 
     // ROM:
     //   - create the instance
@@ -221,8 +222,15 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         TLM_ERR("DMAC address range wrong");
         return;
     }
+    this->dmac->set_debug(true);
+
+    // hook the bus connections
+    this->cpu->bind(*this->mpa->get_slave(0));
+    this->dmac->bind(*this->mpa->get_slave(1));
+    this->mpa->bind(*this->addrdec);
 
     // hook the interrupts
+    this->dmac->intsource.bind(*this->ic->vicintsource[5]);
     this->timer->t1int.bind(*this->ic->vicintsource[6]);
     this->timer->t2int.bind(*this->ic->vicintsource[7]);
     this->wdog->intsource.bind(*this->ic->vicintsource[14]);
@@ -243,6 +251,21 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
 
         dummy_m_socket = new tlm_utils::simple_initiator_socket<Bob>("dummy_irq_m_socket");
         dummy_m_socket->bind(this->cpu->irq);
+    }
+
+    // create the module thread
+    SC_THREAD(thread_process);
+}
+
+void
+Bob::thread_process()
+{
+    while (true)
+    {
+        TLM_DBG("tick");
+
+        // wait for 1 second
+        sc_core::wait(sc_core::sc_time(50, sc_core::SC_MS));
     }
 }
 
