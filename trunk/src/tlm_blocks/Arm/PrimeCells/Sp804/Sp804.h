@@ -87,10 +87,11 @@ struct Sp804 : Peripheral<REG_SP804_COUNT>
         this->m_t2ckperiod = period;
     }
 
-    /// Timer N interrupt
+    /// Timer 1 interrupt line
     IntMaster t1int;
+
+    /// Timer 2 interrupt line
     IntMaster t2int;
-    
 
 private:
     
