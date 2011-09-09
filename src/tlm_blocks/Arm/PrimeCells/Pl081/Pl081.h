@@ -84,7 +84,9 @@ struct Pl081 : Peripheral<REG_PL081_COUNT>
     /// Constructor
     Pl081(sc_core::sc_module_name name)
     : Peripheral<REG_PL081_COUNT>(name)
-    , intsource("intsource")
+      , inttc("inttc")
+      , interr("interr")
+      , intr("intr")
     , master_socket("master_socket")
     {
         // force the default values of the BUS transaction
@@ -116,10 +118,30 @@ struct Pl081 : Peripheral<REG_PL081_COUNT>
         this->master_socket.bind(slave_socket);
     }
 
-    /// Interrupt source
-    IntMaster intsource;
+    /// Terminal count interrupt
+    IntMaster inttc;
+    /// Error interrupt
+    IntMaster interr;
+    /// Combined Terminal count and error interrupt
+    IntMaster intr;
 
 private:
+    /// Update the interrupts
+    void
+    update_int(void)
+    { 
+        // generate the interrupts from the raw status
+        m_reg[REG_PL081_DMACINTTCSTAT] = m_reg[REG_PL081_DMACRAWINTC];
+        if (m_reg[REG_PL081_DMACINTTCSTAT]) inttc.set();
+        else                                inttc.clear();
+        m_reg[REG_PL081_DMACINTERRSTAT] = m_reg[REG_PL081_DMACRAWINTERR];
+        if (m_reg[REG_PL081_DMACINTERRSTAT]) interr.set();
+        else                                 interr.clear();
+        m_reg[REG_PL081_DMACINTSTAT] = m_reg[REG_PL081_DMACINTTCSTAT] | m_reg[REG_PL081_DMACINTERRSTAT];
+        if (m_reg[REG_PL081_DMACINTSTAT]) intr.set();
+        else                              intr.clear();
+    }
+    
     /// TLM-2 master socket, defaults to 32-bits wide, base protocol
     tlm_utils::simple_initiator_socket<Pl081> master_socket;
 
@@ -189,6 +211,14 @@ private:
 
         switch (index)
         {
+        case REG_PL081_DMACINTTCCLR:
+            m_reg[REG_PL081_DMACRAWINTC] &= ~value;
+            break;
+            
+        case REG_PL081_DMACINTERRCLR:
+            m_reg[REG_PL081_DMACRAWINTERR] &= ~value;
+            break;
+            
         case REG_PL081_DMACINTSTAT:
         case REG_PL081_DMACINTTCSTAT:
         case REG_PL081_DMACINTERRSTAT:
@@ -210,6 +240,7 @@ private:
             m_reg[index] = value;
             break;
         }
+        this->update_int();
     }
 
     /** slave_socket non-blocking forward transport method (default behavior, can be overridden)

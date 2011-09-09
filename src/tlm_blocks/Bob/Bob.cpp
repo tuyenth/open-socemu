@@ -230,7 +230,7 @@ Bob::Bob(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     this->mpa->bind(*this->addrdec);
 
     // hook the interrupts
-    this->dmac->intsource.bind(*this->ic->vicintsource[5]);
+    this->dmac->intr.bind(*this->ic->vicintsource[5]);
     this->timer->t1int.bind(*this->ic->vicintsource[6]);
     this->timer->t2int.bind(*this->ic->vicintsource[7]);
     this->wdog->intsource.bind(*this->ic->vicintsource[14]);
