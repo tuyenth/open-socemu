@@ -1,7 +1,13 @@
 #ifndef PL081_H_
 #define PL081_H_
 
-/// ARM DMA controller IP
+/// ARM Single Master DMA controller IP
+/// Currently not supported:
+/// - the DMA signals to peripherals (and therefore peripheral controlled
+//    DMAs)
+/// - the endianness
+/// Currently not emulated:
+/// - the bursts
 
 #include "utils.h"
 #include "Generic/Peripheral/Peripheral.h"
@@ -81,12 +87,15 @@ enum
 
 struct Pl081 : Peripheral<REG_PL081_COUNT>
 {
+    // Module has a thread
+    SC_HAS_PROCESS(Pl081);
+
     /// Constructor
     Pl081(sc_core::sc_module_name name)
     : Peripheral<REG_PL081_COUNT>(name)
-      , inttc("inttc")
-      , interr("interr")
-      , intr("intr")
+    , inttc("inttc")
+    , interr("interr")
+    , intr("intr")
     , master_socket("master_socket")
     {
         // force the default values of the BUS transaction
@@ -106,6 +115,13 @@ struct Pl081 : Peripheral<REG_PL081_COUNT>
         m_reg[REG_PL081_DMACPCELLID1] = 0xF0;
         m_reg[REG_PL081_DMACPCELLID2] = 0x05;
         m_reg[REG_PL081_DMACPCELLID3] = 0xB1;
+
+        // reset the DMA states
+        m_dma[0].state = 0;
+        m_dma[1].state = 0;
+        
+        // create the module threads
+        SC_THREAD(thread_process);
     }
 
     /** Bind a slave socket to the local master socket
@@ -126,22 +142,6 @@ struct Pl081 : Peripheral<REG_PL081_COUNT>
     IntMaster intr;
 
 private:
-    /// Update the interrupts
-    void
-    update_int(void)
-    { 
-        // generate the interrupts from the raw status
-        m_reg[REG_PL081_DMACINTTCSTAT] = m_reg[REG_PL081_DMACRAWINTC];
-        if (m_reg[REG_PL081_DMACINTTCSTAT]) inttc.set();
-        else                                inttc.clear();
-        m_reg[REG_PL081_DMACINTERRSTAT] = m_reg[REG_PL081_DMACRAWINTERR];
-        if (m_reg[REG_PL081_DMACINTERRSTAT]) interr.set();
-        else                                 interr.clear();
-        m_reg[REG_PL081_DMACINTSTAT] = m_reg[REG_PL081_DMACINTTCSTAT] | m_reg[REG_PL081_DMACINTERRSTAT];
-        if (m_reg[REG_PL081_DMACINTSTAT]) intr.set();
-        else                              intr.clear();
-    }
-    
     /// TLM-2 master socket, defaults to 32-bits wide, base protocol
     tlm_utils::simple_initiator_socket<Pl081> master_socket;
 
@@ -158,7 +158,115 @@ private:
      * @warn This can only be used for blocking accesses
      */
     sc_core::sc_time master_b_delay;
+    
+    enum
+    {
+        IDLE = 0,
+        FETCH,
+        COPY
+    };
+    
+    struct
+    {
+        uint32_t src;
+        uint32_t dest;
+        uint32_t lli;
+        uint32_t ctrl;
+        uint32_t state;
+    } m_dma[2];
 
+    /// Event used to indicate that a DMA is enabled
+    sc_core::sc_event m_dma_event;
+
+    /** Handle a DMA channel activity
+     * This function handle a DMA channel activity, it must return each time the 
+     * priority between channels can be reevaluated
+     * @param[in] channel index of the DMA channel to process
+     * @return true if there was channel activity to process, false otherwise
+     */
+    bool
+    handle_channel(int channel)
+    {
+        uint32_t tmp32;
+        
+        // check if the channel is enabled and not halted
+        if ((m_reg[REG_PL081_DMACC0CONFIG + (channel * 8)] & (0x4001)) != 1)
+        {
+            return false;
+        }
+        
+        switch (m_dma[channel].state)
+        {
+        case IDLE:
+            // nothing to do
+            return false;
+
+        case FETCH:
+            // fetch the LLI structure
+            tmp32 = m_dma[channel].lli & (~3);
+            TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, tmp32, m_dma[channel].src);
+            TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, tmp32+4, m_dma[channel].dest);
+            TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, tmp32+8, m_dma[channel].lli);
+            TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, tmp32+12, m_dma[channel].ctrl);
+            m_dma[channel].state = COPY;
+            return true;
+
+        case COPY:
+            // check the copy flow controller (peripheral not supported)
+            assert((m_reg[REG_PL081_DMACC0CONFIG + (channel * 8)] & (0x2000)) == 0);
+            
+            // mark the FIFO not empty
+            m_reg[REG_PL081_DMACC0CONFIG + (channel * 8)] |= 1<<17;
+            
+            // mark the FIFO empty
+            m_reg[REG_PL081_DMACC0CONFIG + (channel * 8)] &= ~(1<<17);
+
+            return true;
+
+        default:
+            TLM_ERR("Unsupported DMA channel state");
+            return false;
+        }
+    }
+    
+    /// Module thread
+    void
+    thread_process(void)
+    {
+        while (true)
+        {
+            // if SMDMAC is enabled and
+            // one of the DMA channel is enabled and active
+            if ((m_reg[REG_PL081_DMACCONFIG] & 1) &&
+                ((this->handle_channel(0)) || 
+                 (this->handle_channel(1))))
+            {
+                // just keep looping
+            }
+            else
+            {
+                // othewise wait for an event to wake it up
+                sc_core::wait(m_dma_event);
+            }
+        }
+    }
+    
+    /// Update the interrupts
+    void
+    update_int(void)
+    { 
+        // generate the interrupts from the raw status
+        m_reg[REG_PL081_DMACINTTCSTAT] = m_reg[REG_PL081_DMACRAWINTC];
+        if (m_reg[REG_PL081_DMACINTTCSTAT]) inttc.set();
+        else                                inttc.clear();
+        m_reg[REG_PL081_DMACINTERRSTAT] = m_reg[REG_PL081_DMACRAWINTERR];
+        if (m_reg[REG_PL081_DMACINTERRSTAT]) interr.set();
+        else                                 interr.clear();
+        m_reg[REG_PL081_DMACINTSTAT] = m_reg[REG_PL081_DMACINTTCSTAT] | m_reg[REG_PL081_DMACINTERRSTAT];
+        if (m_reg[REG_PL081_DMACINTSTAT]) intr.set();
+        else                              intr.clear();
+    }
+    
     /** Register read function
      * @param[in] offset Offset of the register to read
      * @return The value read
