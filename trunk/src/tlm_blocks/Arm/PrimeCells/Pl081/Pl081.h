@@ -163,6 +163,7 @@ private:
     {
         IDLE = 0,
         FETCH,
+        SANITYCHECK,
         COPY
     };
     
@@ -188,9 +189,13 @@ private:
     handle_channel(int channel)
     {
         uint32_t tmp32;
+        uint32_t cfg;
         
+        // read the channel configuration
+        cfg = m_reg[REG_PL081_DMACC0CONFIG + 
+                    ((REG_PL081_DMACC1CONFIG - REG_PL081_DMACC0CONFIG) * channel)];
         // check if the channel is enabled and not halted
-        if ((m_reg[REG_PL081_DMACC0CONFIG + (channel * 8)] & (0x4001)) != 1)
+        if ((cfg & 0x4001) != 1)
         {
             return false;
         }
@@ -208,6 +213,21 @@ private:
             TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, tmp32+4, m_dma[channel].dest);
             TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, tmp32+8, m_dma[channel].lli);
             TLM_B_RD_WORD(master_socket, master_b_pl, master_b_delay, tmp32+12, m_dma[channel].ctrl);
+
+            m_dma[channel].state = COPY;
+            return true;
+
+        case SANITYCHECK:
+            // sanity check
+            if (GETF(m_dma[channel].ctrl, (7 << 21), 21) > 2)
+            {
+                TLM_DBG("DMA destination width unsupported");
+            }
+            if (GETF(m_dma[channel].ctrl, (7 << 18), 18) > 2)
+            {
+                TLM_DBG("DMA source width unsupported");
+            }
+            
             m_dma[channel].state = COPY;
             return true;
 
@@ -217,6 +237,8 @@ private:
             
             // mark the FIFO not empty
             m_reg[REG_PL081_DMACC0CONFIG + (channel * 8)] |= 1<<17;
+            
+            // handle the data copy
             
             // mark the FIFO empty
             m_reg[REG_PL081_DMACC0CONFIG + (channel * 8)] &= ~(1<<17);
@@ -277,6 +299,7 @@ private:
         uint32_t result;
         // retrieve the required parameters
         uint32_t index = offset/4;
+        uint32_t dmach = 0;
 
         // sanity check
         assert(index < REG_PL081_COUNT);
@@ -286,6 +309,35 @@ private:
 
         switch (index)
         {
+        case REG_PL081_DMACENBLDCHNS:
+            result = ((m_reg[REG_PL081_DMACC0CONFIG] & 1) << 0) | 
+                     ((m_reg[REG_PL081_DMACC1CONFIG] & 1) << 1);
+            break;
+            
+        case REG_PL081_DMACC1SRCADDR:
+            dmach = 1;
+        case REG_PL081_DMACC0SRCADDR:
+            result = m_dma[dmach].src;
+            break;
+            
+        case REG_PL081_DMACC1DESTADDR:
+            dmach = 1;
+        case REG_PL081_DMACC0DESTADDR:
+            result = m_dma[dmach].dest;
+            break;
+            
+        case REG_PL081_DMACC1LLIREG:
+            dmach = 1;
+        case REG_PL081_DMACC0LLIREG:
+            result = m_dma[dmach].lli;
+            break;
+            
+        case REG_PL081_DMACC1CONTROL:
+            dmach = 1;
+        case REG_PL081_DMACC0CONTROL:
+            result = m_dma[dmach].ctrl;
+            break;
+
         case REG_PL081_DMACINTTCCLR:
         case REG_PL081_DMACINTERRCLR:
             TLM_ERR("read access to write-only register (%d)", index);
@@ -308,8 +360,10 @@ private:
     void
     reg_wr(uint32_t offset, uint32_t value)
     {
+        uint32_t tmp32;
         // retrieve the required parameters
         uint32_t index = offset/4;
+        uint32_t dmach = 0;
 
         // sanity check
         assert(index < REG_PL081_COUNT);
@@ -325,6 +379,60 @@ private:
             
         case REG_PL081_DMACINTERRCLR:
             m_reg[REG_PL081_DMACRAWINTERR] &= ~value;
+            break;
+            
+        case REG_PL081_DMACC1SRCADDR:
+            dmach = 1;
+        case REG_PL081_DMACC0SRCADDR:
+            m_dma[dmach].src = value;
+            break;
+            
+        case REG_PL081_DMACC1DESTADDR:
+            dmach = 1;
+        case REG_PL081_DMACC0DESTADDR:
+            m_dma[dmach].dest = value;
+            break;
+            
+        case REG_PL081_DMACC1LLIREG:
+            dmach = 1;
+        case REG_PL081_DMACC0LLIREG:
+            m_dma[dmach].lli = value;
+            break;
+            
+        case REG_PL081_DMACC1CONTROL:
+            dmach = 1;
+        case REG_PL081_DMACC0CONTROL:
+            m_dma[dmach].ctrl = value;
+            break;
+            
+        case REG_PL081_DMACC1CONFIG:
+            dmach = 1;
+        case REG_PL081_DMACC0CONFIG:
+            // sanity check
+            if (value & 0xFFF80420)
+            {
+                TLM_DBG("DMACC0CONFIG: writing in reserved bits");
+            }
+            tmp32 = GETF(value, 7 << 11, 11);
+            if (tmp32 > 3)
+            {
+                TLM_DBG("DMACC0CONFIG: using unsupported transfer type (x%x)", tmp32);
+            }
+
+            // clear bits that are not meaningful (bit 17)
+            value &= ~(1 << 17);
+            
+            tmp32 = m_reg[REG_PL081_DMACC0CONFIG + 
+                          ((REG_PL081_DMACC1CONFIG - REG_PL081_DMACC0CONFIG) * dmach)];
+            m_reg[REG_PL081_DMACC0CONFIG + 
+                  ((REG_PL081_DMACC1CONFIG - REG_PL081_DMACC0CONFIG) * dmach)] = value;
+            // check if there is new enabled channel
+            if (!(tmp32 & 1) && (value & 1))
+            {
+                m_dma[dmach].state = SANITYCHECK;
+                // wake up the DMA thread
+                m_dma_event.notify();
+            }
             break;
             
         case REG_PL081_DMACINTSTAT:
