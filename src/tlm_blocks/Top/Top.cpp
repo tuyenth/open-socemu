@@ -1,6 +1,7 @@
 #include "Top.h"
 #include "GdbServerNone/GdbServerTcp.h"
 #include "Cpu/Arm/Arm32.h"
+#include "Generic/IntSlave/IntSlave.h"
 
 const struct {
     uint32_t size;
@@ -36,15 +37,15 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     {
         cpubase = new CpuBase<GdbServerTcp>("cpu", parameters, *cpu_parameter);
         cpubase->bind(*(bus->targ_socket[0]));
-        irq = new tlm::tlm_target_socket<>("false_irq");
-        fiq = new tlm::tlm_target_socket<>("false_fiq");
+        irq = (tlm::tlm_target_socket<> *)new IntSlave< CpuBase<GdbServerTcp> >();
+        fiq = (tlm::tlm_target_socket<> *)new IntSlave< CpuBase<GdbServerTcp> >();
     }
     else if (*cpu_parameter == "Arm32")
     {
         cpubase = new Arm32<GdbServerTcp>("cpu", parameters, *cpu_parameter);
         cpubase->bind(*(bus->targ_socket[0]));
-        irq = new tlm::tlm_target_socket<>("false_irq");
-        fiq = new tlm::tlm_target_socket<>("false_fiq");
+        irq = (tlm::tlm_target_socket<> *)new IntSlave< Arm32<GdbServerTcp> >();
+        fiq = (tlm::tlm_target_socket<> *)new IntSlave< Arm32<GdbServerTcp> >();
     }
     else
     {
@@ -57,6 +58,7 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
         irq = cpu->irq;
         fiq = cpu->fiq;
     }
+    TLM_DBG("Top: building memories");
     for (i = 0; i < sizeof(Memories)/sizeof(Memories[0]); i++)
     {
         // create the MEMORY instance with specific size
@@ -76,7 +78,7 @@ Top::Top(sc_core::sc_module_name name, Parameters& parameters, MSP& config)
     (*(bus->init_socket[TOP_NUM_MEMORIES])).bind(*intctrl);
     intctrl->irq.bind(*irq);
     intctrl->fiq.bind(*fiq);
-
+    
     // specify the INTCTRL address range from the BUS perspective
     if (bus->set_range(TOP_NUM_MEMORIES, 0x01000000, 0xFFFFFFFFFF000000LL))
     {
