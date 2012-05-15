@@ -17,7 +17,7 @@
 
 #define UNSUPPORTED()                                                                   \
     do {                                                                                \
-        hdlr->fn = HDLR_FN(Arm32::illegalop);                                           \
+        hdlr->fn = &Arm32::illegalop;                                                   \
         return;                                                                         \
     } while (false)
 
@@ -45,8 +45,12 @@
 template<typename GDB>
 struct Arm32: CpuBase<GDB>
 {
-    /// Define the INSNHDLR type
-    typedef void (CpuBase<GDB>::*INSNHDLR)(void* params[]);
+    /// Arm32 instruction handler
+    struct InsnHandler
+    {
+        void (Arm32::*fn)(void *params[]);
+        uint32_t params[1];
+    };
 
    /** Arm32 constructor
      * @param[in] name Name of the module
@@ -65,6 +69,17 @@ struct Arm32: CpuBase<GDB>
     virtual bool
     handle_exception()
     {
+        switch(this->exception)
+        {
+        case EXCEPT_ILLEGAL_OP:
+            break;
+        case EXCEPT_IRQ:
+            break;
+        case EXCEPT_FIQ:
+            break;
+        default:
+            break;
+        }
         return false;
     }
 
@@ -105,6 +120,17 @@ struct Arm32: CpuBase<GDB>
     {
         // fetch the next instruction
         this->insn = this->rd_l(this->get_pc());
+    }
+
+    /// Allocate an instruction structure
+    virtual void *
+    alloc_insn()
+    {
+        struct InsnHandler* insnhdlr = new InsnHandler;
+        
+        insnhdlr->fn = NULL;
+        
+        return (void *)insnhdlr;
     }
 
     /** Decode an instruction
@@ -180,8 +206,10 @@ protected:
     {
         /// Illegal operation
         EXCEPT_ILLEGAL_OP = 1<<0,
-        /// Regular interrupt
-        EXCEPT_INTERRUPT = 1<<1
+        /// IRQ exception
+        EXCEPT_IRQ = 1<<1,
+        /// FIQ exception
+        EXCEPT_FIQ = 1<<2
     };
 
     /// Flags in the Program Status Registers
@@ -342,7 +370,7 @@ protected:
     bool
     IS_USER()
     {
-        if (has_M())
+        if (this->has_M())
         {
             // not implemented yet
             assert(0);
@@ -880,15 +908,15 @@ protected:
             }
             if ((insn & 0x0d70f000) == 0x0550f000) {
                 // insn PLD
-                hdlr->fn = HDLR_FN(Arm32::pld_arm);
+                hdlr->fn = &Arm32::pld_arm;
                 return;
             }
             else if ((insn & 0x0ffffdff) == 0x01010000) {
                 // insn SETEND
                 // params[0] = endianstate
                 ARCH(6);
-                hdlr->fn = HDLR_FN(Arm32::setend_arm);
-                hdlr->params[0] = HDLR_PARAM(insn & (1 << 9));
+                hdlr->fn = &Arm32::setend_arm;
+                hdlr->params[0] = insn & (1 << 9);
                 return;
             } else if ((insn & 0x0fffff00) == 0x057ff000) {
                 switch ((insn >> 4) & 0xf) {
@@ -916,8 +944,8 @@ protected:
                 // params[3] = wb_offset (only if writeback is set)
                 int32_t offset;
                 ARCH(6);
-                hdlr->fn = HDLR_FN(Arm32::srs_arm);
-                hdlr->params[0] = HDLR_PARAM(insn & 0x1f);
+                hdlr->fn = &Arm32::srs_arm;
+                hdlr->params[0] = insn & 0x1f;
                 i = (insn >> 23) & 3;
                 switch (i) {
                 case 0: offset = -4; break; // DA
@@ -926,8 +954,8 @@ protected:
                 case 3: offset = 4; break; // IB
                 default: assert(0);
                 }
-                hdlr->params[1] = HDLR_PARAM(offset);
-                hdlr->params[2] = HDLR_PARAM(insn & (1 << 21));
+                hdlr->params[1] = offset;
+                hdlr->params[2] = insn & (1 << 21);
                 if (insn & (1 << 21)) {
                     // Base writeback
                     switch (i) {
@@ -937,7 +965,7 @@ protected:
                     case 3: offset = 0; break;
                     default: assert(0);
                     }
-                    hdlr->params[3] = HDLR_PARAM(offset);
+                    hdlr->params[3] = offset;
                 }
                 return;
             } else if ((insn & 0x0e50ffe0) == 0x08100a00) {
@@ -948,8 +976,8 @@ protected:
                 // params[3] = wb_offset (only if writeback is set)
                 int32_t offset;
                 ARCH(6);
-                hdlr->fn = HDLR_FN(Arm32::rfe_arm);
-                hdlr->params[0] = HDLR_PARAM((insn >> 16) & 0xf);
+                hdlr->fn = &Arm32::rfe_arm;
+                hdlr->params[0] = (insn >> 16) & 0xf;
                 i = (insn >> 23) & 3;
                 switch (i) {
                 case 0: offset = -4; break; // DA
@@ -958,8 +986,8 @@ protected:
                 case 3: offset = 4; break; // IB
                 default: assert(0);
                 }
-                hdlr->params[1] = HDLR_PARAM(offset);
-                hdlr->params[2] = HDLR_PARAM(insn & (1 << 21));
+                hdlr->params[1] = offset;
+                hdlr->params[2] = insn & (1 << 21);
                 if (insn & (1 << 21)) {
                     // Base writeback
                     switch (i) {
@@ -969,7 +997,7 @@ protected:
                     case 3: offset = 0; break;
                     default: abort();
                     }
-                    hdlr->params[3] = HDLR_PARAM(offset);
+                    hdlr->params[3] = offset;
                 }
                 return;
             } else if ((insn & 0x0e000000) == 0x0a000000) {
@@ -978,14 +1006,14 @@ protected:
                 // params[1] = bit1 (2 aligned, hbit)
                 // params[2] = bit0 (1 aligned, thumbbit)
                 int32_t offset;
-                hdlr->fn = HDLR_FN(Arm32::blx_arm);
+                hdlr->fn = &Arm32::blx_arm;
                 offset = (((int32_t)insn) << 8) >> 6;
                 // pipeline offset
                 offset += 4;
-                hdlr->params[0] = HDLR_PARAM(offset);
-                hdlr->params[1] = HDLR_PARAM((insn >> 23) & 2);
-                // from ARM switch to thumb)
-                hdlr->params[2] = HDLR_PARAM(1);
+                hdlr->params[0] = offset;
+                hdlr->params[1] = (insn >> 23) & 2;
+                // from ARM switch to thumb
+                hdlr->params[2] = 1;
                 return;
             } else if ((insn & 0x0e000f00) == 0x0c000100) {
                 ARCH(IWMMXT);
@@ -1028,12 +1056,12 @@ protected:
                 }
                 // if there is no mask, just NOP
                 if (likely(mask != 0)) {
-                    hdlr->fn = HDLR_FN(Arm32::cps_arm);
-                    hdlr->params[0] = HDLR_PARAM(mask);
-                    hdlr->params[1] = HDLR_PARAM(val);
+                    hdlr->fn = &Arm32::cps_arm;
+                    hdlr->params[0] = mask;
+                    hdlr->params[1] = val;
                 }
                 else {
-                    hdlr->fn = HDLR_FN(Arm32::nop_arm);
+                    hdlr->fn = &Arm32::nop_arm;
                 }
                 return;
             }
