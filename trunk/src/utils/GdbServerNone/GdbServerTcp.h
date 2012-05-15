@@ -26,7 +26,7 @@
 #define GDBSERVERTCP_TLM_DBG(__l, __f, ...)                                             \
     do {                                                                                \
         if (GDBSERVERTCP_DEBUG_LEVEL >= __l) {                                          \
-            SYS_DBG("gdbservertcp", __f, __VA_ARGS__);                                  \
+            SYS_DBG("gdbservertcp", __f, ##__VA_ARGS__);                                \
         }                                                                               \
     } while (false)
 
@@ -159,14 +159,11 @@ struct GdbServerTcp:GdbServerNone
             val = 1;
             setsockopt(this->clientfd, IPPROTO_TCP, TCP_NODELAY, (char *)&val, sizeof(val));
 
-            fcntl(this->clientfd, F_SETFL, O_NONBLOCK);
-
             // this is a first connection -> handle messages from debugger
             this->handlesig(0);
-
         }
 
-        // check if there was a single step or a breakpoint reached or a break received
+        // check if single stepping or breakpoint reached or break received
         if ((this->singlestep) || this->brkpts.count(pc) || this->checkctrlc())
         {
             this->handlesig(SIGTRAP);
@@ -614,7 +611,7 @@ private:
     handlesig(int sig)
     {
         char buf[256];
-        int n;
+        int n, saved_fl;
 
         // disable single step if it was enabled
         this->set_singlestep(false);
@@ -626,11 +623,17 @@ private:
             this->put_packet(buf);
         }
 
+        // blocking mode when handling a signal
+        saved_fl = fcntl(this->clientfd, F_GETFL);
+        saved_fl &= ~O_NONBLOCK;
+        fcntl(this->clientfd, F_SETFL, saved_fl);
+        
         this->state = DS_IDLE;
         this->run = false;
         while (!this->run) {
             // read a chunk of bytes at once
             n = read(this->clientfd, buf, sizeof(buf));
+            GDBSERVERTCP_TLM_DBG(2, "handlesig: read -> %d", n);
             if (n > 0)
             {
                 int i;
@@ -649,6 +652,11 @@ private:
                 this->set_singlestep(false);
             }
         }
+        
+        // nonblocking mode when resuming running
+        saved_fl = fcntl(this->clientfd, F_GETFL);
+        saved_fl |= O_NONBLOCK;
+        fcntl(this->clientfd, F_SETFL, saved_fl);
     }
 
     bool
@@ -658,6 +666,7 @@ private:
         int n;
 
         n = read(this->clientfd, buf, 256);
+        GDBSERVERTCP_TLM_DBG(2, "checkctrlc: read -> %d", n);
         // check if ctrl-c was received
         if ((n == 1) && buf[0] == 3)
         {
