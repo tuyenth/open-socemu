@@ -33,20 +33,12 @@
 template<typename GDB=GdbServerNone>
 struct CpuBase: BusMaster
 {
-    typedef void (CpuBase::*INSNHDLR)(void* params[]);
-
-    /// Structure containing the instruction compiled handler
+    /// CpuBase instruction handler
     struct InsnHandler
     {
-        /// Pointer to the method of the class that executes the instruction
-        INSNHDLR fn;
-        /// Parameters to the method
-        void* params[16];
+        void (CpuBase::*fn)(void *params[]);
+        void *params[1];
     };
-
-    #define HDLR_PARAM(x) (void*)(x)
-    #define HDLR_FN(x) (INSNHDLR)(&x)
-
 
     /** CpuBase constructor
      * @param[in] name Name of the module
@@ -138,21 +130,37 @@ struct CpuBase: BusMaster
     {
     }
 
-    /// Fake instruction
-    void
-    fake_hdlr(void* params[])
+    /// Allocate an instruction structure
+    virtual void *
+    alloc_insn()
     {
-        // increment the PC
-        this->pc += 4;
+        struct InsnHandler* insnhdlr = new InsnHandler;
+        
+        insnhdlr->fn = NULL;
+        
+        return (void *)insnhdlr;
     }
 
     /** Decode an instruction
      * @param hdlr Instruction handler to fill for execution
      */
     virtual void
-    decode_insn(struct InsnHandler* hdlr)
+    decode_insn(void* hdlr)
     {
-        hdlr->fn = &CpuBase::fake_hdlr;
+        struct InsnHandler* insnhdlr = (struct InsnHandler*)hdlr;
+        
+        insnhdlr->fn = &CpuBase::fake_hdlr;
+    }
+
+    /** Execute an instruction
+     * @param hdlr Instruction handler to fill for execution
+     */
+    virtual void
+    exec_insn(void* hdlr)
+    {
+        struct InsnHandler* insnhdlr = (struct InsnHandler*)hdlr;
+        
+        (this->*insnhdlr->fn)(insnhdlr->params);
     }
 
     /// Main module thread, runs the CPU startup and instruction loop
@@ -170,11 +178,11 @@ struct CpuBase: BusMaster
 
         while (true)
         {
-            struct InsnHandler* insnhdlr;
+            void* insn;
 
             CPUBASE_TLM_DBG(2, "Fetch @0x%08llX", this->get_pc());
 
-            // fetch the next instruction
+            // fetch the next instruction (allow waiting for the appropriate amount of time)
             this->fetch_insn();
 
             // check if there is a pending exception
@@ -192,33 +200,27 @@ struct CpuBase: BusMaster
             }
 
             // check if the handler is already present in cache
-            insnhdlr = this->insncache[this->get_pc()];
+            insn = this->insncache[this->get_pc()];
 
-            if (insnhdlr == NULL)
+            if (insn == NULL)
             {
+                
                 // allocate a new instruction handler to be filled
-                insnhdlr = new InsnHandler;
-
-                insnhdlr->fn = NULL;
+                insn = this->alloc_insn();
 
                 // decode the instruction fetched
-                this->decode_insn(insnhdlr);
+                this->decode_insn(insn);
 
-                // if the instruction was not executed during decoding
-                if (insnhdlr->fn != NULL)
-                {
-                    // add the handler to the cache
-                    this->insncache[this->get_pc()] = insnhdlr;
-                    // execute the instruction
-                    (this->*insnhdlr->fn)(insnhdlr->params);
-                }
-                else
-                    free(insnhdlr);
+                // add the handler to the cache
+                this->insncache[this->get_pc()] = insn;
+
+                // execute the instruction
+                this->exec_insn(insn);
             }
             else
             {
                 // execute the instruction
-                (this->*insnhdlr->fn)(insnhdlr->params);
+                this->exec_insn(insn);
             }
         }
     }
@@ -497,7 +499,16 @@ private:
     uint32_t pc;
 
     /// Instructions cache: associative array address to instruction handlers
-    std::map<uint64_t, struct InsnHandler*> insncache;
+    std::map<uint64_t, void*> insncache;
+
+    /// Fake instruction
+    void
+    fake_hdlr(void* params[])
+    {
+        // increment the PC
+        this->pc += 4;
+    }
+
 };
 
 #endif /* CPUBASE_H_ */
